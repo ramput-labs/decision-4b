@@ -351,7 +351,17 @@ Kev-4B's published numbers: binding 0.943; semif 0.847 on the 144 clean rows (`r
 in Kev's `runs/breadth-v1-report/report.md` (compare `accuracy_by_source` on single-question datasets; Kev scores
 `sata_bench` and `bfcl` record by record).
 
-`compare` prints accuracy per file for both runs and ends with `ship: <run>`. It picks round 2 only if its mean
+`compare` prints accuracy per file for both runs and ends with `ship: <run>`. Then the same two runs question by
+question, which says whether round 2's gain is beyond noise (95% intervals from resampling records):
+
+```bash
+uv run den compare --paired runs/kev-recipe/4-skills runs/round2
+```
+
+Every `den evaluate` above also wrote `reports/runs/<run>/` (each file's report and every question's probabilities).
+Commit `reports/runs/` with the release record in phase 8: it is the evidence behind every number you report.
+
+`compare` (the plain one) picks the shipped run. It picks round 2 only if its mean
 accuracy is higher **and** it doesn't lose more than 1 point on any single file, so a breadth gain can't hide a
 regression on Kev's own tasks. `dev/transfer` and the eval-only sources (`dev/sources/transfer/*`,
 `dev/sources/devtools/*`) are never trained on by either round, so they measure out-of-domain transfer honestly; the
@@ -371,8 +381,14 @@ TEST="test/core.jsonl test/documents.jsonl test/skills.jsonl test/devtools.jsonl
 SRC_TEST=$(cd data/clean && ls test/sources/*/*.jsonl | tr '\n' ' ')
 uv run den evaluate --final --run "$SHIP" $TEST                       # or: make final-test RUN=$SHIP
 uv run den evaluate --final --run "$SHIP" --limit 1000 $SRC_TEST     # 1,000 sampled records per source file
-uv run den publish --run "$SHIP" --repo "$HF_REPO" --logs runs-timing.log runs-train.log runs-round2.log
+make release VERSION=v1 RUN="$SHIP" REPO="$HF_REPO" ARGS="--logs runs-timing.log runs-train.log runs-round2.log"
 ```
+
+`make release` runs `den publish`, tags that Hub commit `v1`, and writes `releases/v1.json` (lineage, data hashes,
+dev and test results, file hashes, and the paired comparison with its parent). Commit it with `reports/runs/`
+(every evaluation's report and per-question rows) and push: the next version continues from `release:v1`, and its
+release is compared with v1 question by question from that evidence.
+If the data was uploaded with `make upload-data`, add `DATA_REPO=<org>/<name>@<commit or tag>` so v1 records it.
 
 What the Hub repo then holds (`den publish` bundles it):
 

@@ -51,6 +51,16 @@ One flat package, `den/`, at the repo root (plus `scripts/` for tools, below), l
   flags (`den train ...`).
 - `evaluate.py`: loads a trained run (`merged/` + `head.safetensors`/`head.json`) through `device.load`, so a run is scored by the same
   backbone code that serves it. `den evaluate` (acc/NLL/ECE, `--final` for test) and `den predict`.
+- `evidence.py`: every `den evaluate` writes `reports/runs/<run>/<file>/report.json` + `rows.json` (each question's
+  probabilities) and `provenance.json`, committed like Kev's runs/ (no weights). `den compare --paired A B` compares two
+  runs question by question (`metrics.paired_bootstrap`, records resampled, 95% intervals). `reports/claims.json` ties
+  printed numbers to that evidence; `scripts/verify_claims.py` (in `make check`) fails on any that drifts.
+- `release.py`: `den release create|list|show` (`make release`, `make releases`). Versions v1, v2, ...: a release
+  publishes a finished run, tags the Hub commit with the version and writes `releases/<version>.json` (lineage, data
+  hashes, dev/test results, file hashes, data repo commit). `release:<version>` resolves to `hf:<repo>@<version>` for
+  `--init-from`, `--run`. A release refuses: an existing version, a failed integrity check, no locked-test results, a
+  different base than its parent, or any dev file more than 1 point below its parent unless `--accept-regression`
+  says why (recorded). The record names its evidence folder and holds the paired comparison with its parent.
 - `licences.py`: `den licences` (`make licences`). Every source's licence, class (open / share-alike / non-commercial
   / unspecified / restricted) and the primary-source evidence for it; each file in `data/` takes its most restrictive
   source (`_meta.source`, or the raw item it sits under). Writes `data/README.md` (Hub card), `data/LICENSES.md`,
@@ -170,6 +180,10 @@ import `scripts` from `den`. ruff and mypy cover it like `den/`.
 - `den evaluate --final` refuses to re-read a test file a run already has in `eval.json`. `den baselines D=.. A=..`
   writes the A/B/C/D table to the shipped run's `baselines.json`; the card shows it. `make post-train RUN=..` and
   `make final-test RUN=..` run the after-training steps.
+- Versions: v1 is the shipped run of the two rounds; each later version continues from the last release on new data
+  with replay of Kev's suites, `make train-next FROM=v1 OUT=runs/v2 DATA="..."` (round 2's settings), then
+  `make post-train`, `make final-test`, `make release VERSION=v2 RUN=runs/v2 REPO=... PARENT=v1`. Tag the data copy it
+  trained from too (`make upload-data ... TAG=data-v2`). Never edit a record in `releases/`.
 - The release recipe is Kev-4B's, `make train-kev`: four stages (core ×2 at 5e-5 with 25% none minimal pairs →
   dates → documents → skills+devtools, at 2e-5 with 2k/2k/4k `core` replay), each `--init-from` the last. It is
   sourced from Kev's model card and `kev/train.py`/`kev/data.py`; change it only with evidence, and say so.

@@ -58,7 +58,7 @@ def pinned(root: Path, present_only: bool) -> list[str]:
     return problems
 
 
-def upload(repo: str, root: Path = DATA, private: bool = True) -> str:
+def upload(repo: str, root: Path = DATA, private: bool = True, tag: str | None = None) -> str:
     """Upload `root` as a dataset repo, with its manifest; returns the commit to pin a download to."""
     from huggingface_hub import HfApi, create_repo, upload_large_folder
 
@@ -97,6 +97,10 @@ def upload(repo: str, root: Path = DATA, private: bool = True) -> str:
     if absent := sorted(set(listed) - remote):
         raise SystemExit(f"uploaded, but {repo} lacks {len(absent)} files ({absent[:3]}): run the same command again")
     sha: str = api.dataset_info(repo).sha or "main"
+    if tag:  # a data version: `make download-data DATA_REPO=<repo>@<tag>` and `den release --data-repo` name it
+        if tag in {t.name for t in api.list_repo_refs(repo, repo_type="dataset").tags}:
+            raise SystemExit(f"{repo} already has a tag {tag}: data versions are immutable (commit {sha} is uploaded)")
+        api.create_tag(repo, tag=tag, revision=sha, repo_type="dataset", tag_message=f"den data {tag}")
     return sha
 
 
@@ -138,10 +142,11 @@ def upload_main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="publish publicly (leaves out unlicensed files too); automatic for a public repo",
     )
+    p.add_argument("--tag", help="tag this data version on the Hub (e.g. data-v1); tags are immutable")
     args = p.parse_args(argv)
-    sha = upload(args.repo, private=not args.public)
+    sha = upload(args.repo, private=not args.public, tag=args.tag)
     print(f"https://huggingface.co/datasets/{args.repo}  commit {sha}")
-    print(f"pin it: make download-data DATA_REPO={args.repo}@{sha}")
+    print(f"pin it: make download-data DATA_REPO={args.repo}@{args.tag or sha}")
     return 0
 
 

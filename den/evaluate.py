@@ -25,8 +25,10 @@ from typing import Any
 import torch
 from tokenizers import Tokenizer
 
+from . import evidence
 from .api import Json, Question, Record, RecordError, parse, read
 from .device import load
+from .fetch import digest
 from .metrics import Answer, Row, robustness, summarize
 from .model import load_head
 from .prompt import LETTERS, Style, encode, none_pair, perturb, rotate_options, split
@@ -36,7 +38,11 @@ CLEAN = Path("data/clean")
 
 
 def locate(run: str) -> Path:
-    """A run directory: a local path, or `hf:<org>/<name>[@<revision>]`, downloaded once into the Hub cache."""
+    """A run directory: a local path, `hf:<org>/<name>[@<revision>]` or `release:<version>`, downloaded once into the
+    Hub cache."""
+    from .release import resolve
+
+    run = resolve(run)  # release:<version> -> hf:<repo>@<version>
     if not run.startswith("hf:"):
         return Path(run)
     from huggingface_hub import snapshot_download
@@ -183,18 +189,22 @@ def row(item: Scored, meta: dict[str, Json] | None = None) -> Row:
                text("sibling"), text("control_id"), text("source") or "")  # fmt: skip
 
 
-def metrics(model: Model, records: Sequence[Record], meta: dict[str, dict[str, Json]] | None = None) -> dict[str, Any]:
+type Scoring = tuple[dict[str, Any], list[Row]]  # the report, and every question's row (`evidence`)
+
+
+def metrics(model: Model, records: Sequence[Record], meta: dict[str, dict[str, Json]] | None = None) -> Scoring:
     """`metrics.summarize` at the run's temperature, with the same headline numbers uncalibrated beside it, and, given
     the file's `_meta`, Kev's robustness checks (`metrics.robustness`) on whatever structure it has."""
     items = scored(model, records)
     result = report([c for _, _, c, _ in items], [r for _, _, _, r in items])
     result["unscored_questions"] = sum(len(r.questions) for r in records) - result["questions"] - result["soft_skipped"]
-    if meta is not None and (checks := robustness([row(i, meta.get(i[0])) for i in items])):
+    rows = [row(i, (meta or {}).get(i[0])) for i in items]
+    if meta is not None and (checks := robustness(rows)):
         result["robustness"] = checks
-    return result
+    return result, rows
 
 
-def permutation_metrics(model: Model, records: Sequence[Record]) -> dict[str, Any]:
+def permutation_metrics(model: Model, records: Sequence[Record]) -> Scoring:
     """Option order: every choice question read again with its options rotated (`prompt.rotate_options`), scored as
     usual, plus `robustness.permutation` against the original order: how much the probabilities move and how often the
     answer changes. Isolation needs no such check: each question is always read with the state alone (`split`)."""
@@ -205,7 +215,7 @@ def permutation_metrics(model: Model, records: Sequence[Record]) -> dict[str, An
     clean = [row(i) for i in original]
     shifted = [row(i, {"variant": "permuted", "parent_id": i[0]}) for i in moved]
     result["robustness"] = {"permutation": robustness(clean + shifted)["permutation"]} if moved else {}
-    return result
+    return result, clean + shifted
 
 
 def report(calibrated: Sequence[Answer], raw: Sequence[Answer]) -> dict[str, Any]:
@@ -223,7 +233,7 @@ def perturbed(records: Sequence[Record], mode: str | None) -> list[Record]:
     return [perturb(r, random.Random(f"perturb:{i}"), mode) for i, r in enumerate(rows)]  # type: ignore[arg-type]
 
 
-def pair_metrics(model: Model, records: Sequence[Record]) -> dict[str, Any]:
+def pair_metrics(model: Model, records: Sequence[Record]) -> Scoring:
     """Kev's minimal pairs: each eligible choice question twice, with the true option present (a "none" option is
     wrong) and removed (the same "none" option is right). `pair_accuracy` counts pairs with both halves right: the
     model must read whether the evidence matches an option, not just pick a familiar one."""
@@ -231,7 +241,8 @@ def pair_metrics(model: Model, records: Sequence[Record]) -> dict[str, Any]:
     for i, r in enumerate(one for rec in records for one in split(rec)):
         if (pair := none_pair(r, random.Random(f"pair:{i}"))) is not None:
             halves += pair
-    calibrated, raw = answers(model, halves)
+    items = scored(model, halves)
+    calibrated, raw = [c for _, _, c, _ in items], [r for _, _, _, r in items]
     result = report(calibrated, raw)
     right = [max(range(len(a.probs)), key=a.probs.__getitem__) == a.label for a in calibrated]
     pairs = list(zip(right[::2], right[1::2], strict=True))
@@ -239,7 +250,9 @@ def pair_metrics(model: Model, records: Sequence[Record]) -> dict[str, Any]:
     result["pair_accuracy"] = sum(a and b for a, b in pairs) / max(len(pairs), 1)
     result["accuracy_present"] = sum(a for a, _ in pairs) / max(len(pairs), 1)
     result["accuracy_absent"] = sum(b for _, b in pairs) / max(len(pairs), 1)
-    return result
+    halves_rows = [row(i, {"variant": "pair_present" if n % 2 == 0 else "pair_absent", "pair_id": f"{i[0]}#{n // 2}",
+                           "sibling": "ab"[n % 2]}) for n, i in enumerate(items)]  # fmt: skip
+    return result, halves_rows
 
 
 def evaluate_main(argv: list[str] | None = None) -> int:
@@ -261,15 +274,20 @@ def evaluate_main(argv: list[str] | None = None) -> int:
         "change when every choice question's options are rotated",
     )
     p.add_argument("--backend")
+    p.add_argument("--no-evidence", action="store_true", help="don't write reports/runs/<run>/ (a throwaway check)")
     args = p.parse_args(argv)
     if not args.final and any(Path(f).parts[0] == "test" for f in args.files):
         raise SystemExit("test partitions are read once per release candidate: pass --final for that one read")
-    report_path = Path(args.run) / "eval.json" if not args.run.startswith("hf:") else None  # never into the Hub cache
+    remote = args.run.startswith(("hf:", "release:"))
+    report_path = None if remote else Path(args.run) / "eval.json"  # never into the Hub cache
     report = json.loads(report_path.read_text(encoding="utf-8")) if report_path and report_path.is_file() else {}
     suffix = (f"+{args.augment}" if args.augment else "") + (f"+max{args.max_options}" if args.max_options else "")
-    if again := [f + suffix for f in args.files if Path(f).parts[0] == "test" and f + suffix in report]:
+    read_before = set(report) | set(evidence.keys(args.run))  # local eval.json, or the committed evidence of any run
+    if again := [f + suffix for f in args.files if Path(f).parts[0] == "test" and f + suffix in read_before]:
         raise SystemExit(f"{args.run} has already read {again}: the locked test set is read once per run")
-    model = Model(locate(args.run), args.backend)
+    path = locate(args.run)
+    model = Model(path, args.backend)
+    scored_files: dict[str, dict[str, Any]] = {}
     for f in args.files:
         records = sample(CLEAN / f, args.limit, seed=0) if args.limit else list(read(CLEAN / f))
         if args.max_options:
@@ -277,11 +295,13 @@ def evaluate_main(argv: list[str] | None = None) -> int:
             records = [r for r in rows if len(r.questions[0].options) <= args.max_options]
         started = time.perf_counter()
         if args.augment == "pairs":
-            result = pair_metrics(model, records)
+            result, answered = pair_metrics(model, records)
         elif args.augment == "permute":
-            result = permutation_metrics(model, records)
+            result, answered = permutation_metrics(model, records)
         else:  # the file's own variants, pairs and controls are only meaningful unperturbed
-            result = metrics(model, perturbed(records, args.augment), None if args.augment else metas(CLEAN / f))
+            result, answered = metrics(
+                model, perturbed(records, args.augment), None if args.augment else metas(CLEAN / f)
+            )
         result["ms_per_question"] = round(
             1000 * (time.perf_counter() - started) / max(result["questions"] + result["soft_skipped"], 1), 1
         )
@@ -292,10 +312,23 @@ def evaluate_main(argv: list[str] | None = None) -> int:
         report[f + suffix] = result
         if report_path:  # after every file: a test file read is recorded even if a later one fails
             report_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+        if not args.no_evidence:
+            evidence.write(args.run, f + suffix, result, answered)
+            scored_files[f + suffix] = {
+                "sha256": digest(CLEAN / f),
+                "read_at": result["read_at"],
+                "questions": len(answered),
+                "sampled_records": result.get("sampled_records"),
+            }
         coverage = result["coverage_at_5%_error"]
         print(f"{f + suffix:<40} n {result['questions']:>6.0f}  acc {result['accuracy']:.4f}  nll {result['nll']:.4f}  "
               f"brier {result['brier']:.4f}  ece {result['ece']:.4f}  cov@5% {coverage:.3f}"
               + robust_line(result.get("robustness", {})), flush=True)  # fmt: skip
+    if scored_files:
+        from .train import commit
+
+        evidence.provenance(args.run, path, scored_files, commit())
+        print(f"evidence: {evidence.EVIDENCE / evidence.name(args.run)} (commit it)")
     return 0
 
 
@@ -330,10 +363,18 @@ def predict_main(argv: list[str] | None = None) -> int:
 def compare_main(argv: list[str] | None = None) -> int:
     """Pick the run to ship from dev results (`eval.json` of each run), never from test."""
     p = argparse.ArgumentParser(prog="den compare")
-    p.add_argument("runs", nargs="+", type=Path, help="run directories, each evaluated on the same dev files")
+    p.add_argument("runs", nargs="+", help="run directories, each evaluated on the same dev files")
     p.add_argument("--files", nargs="+", help="dev files to judge on (default: those every run has)")
     p.add_argument("--max-drop", type=float, default=0.01, help="largest accuracy drop on any file a winner may have")
+    p.add_argument(
+        "--paired",
+        action="store_true",
+        help="two runs (dirs, hf:, release:), question by question, with 95%% intervals",
+    )
     args = p.parse_args(argv)
+    if args.paired:
+        return paired_main(args.runs, args.files)
+    args.runs = [Path(r) for r in args.runs]
     reports = {run: json.loads((run / "eval.json").read_text(encoding="utf-8")) for run in args.runs}
     files = args.files or sorted(set.intersection(*(set(r) for r in reports.values())))
     if not files or any(Path(f).parts[0] == "test" for f in files):
@@ -350,6 +391,30 @@ def compare_main(argv: list[str] | None = None) -> int:
         if mean[run] > mean[best] and drop <= args.max_drop:
             best = run
     print(f"ship: {best}")
+    return 0
+
+
+def paired_main(runs: list[str], files: list[str] | None) -> int:
+    """b against a on the questions both answered (their committed rows, `evidence`): the accuracy and NLL change with
+    a 95% interval from resampling records, so a gain can be told apart from noise. Saved beside b's evidence."""
+    if len(runs) != 2:
+        raise SystemExit("--paired compares exactly two runs: A B (B against A)")
+    a, b = runs
+    shared = sorted(set(evidence.keys(a)) & set(evidence.keys(b)))
+    keys = files or [k for k in shared if Path(k).parts[0] != "test"]  # test only when named: it was read already
+    if not keys:
+        raise SystemExit(f"no evaluated file in common: evaluate both on the same files ({shared or 'none'})")
+    table = {k: got for k in keys if (got := evidence.paired(a, b, k)) is not None}
+    print(f"{'file':<36}{'n':>7}{'acc A':>9}{'acc B':>9}  {'B - A [95% CI]':<29}{'verdict':<21}{'nll B - A':>11}")
+    for k, t in table.items():
+        acc, nll = t["accuracy"], t["nll"]
+        ci = f"{acc['diff']:+.4f} [{acc['ci95'][0]:+.4f}, {acc['ci95'][1]:+.4f}]"
+        line = f"{k:<36}{t['questions']:>7}{acc['a']:>9.4f}{acc['b']:>9.4f}  {ci:<29}{acc['b_vs_a']:<21}"
+        print(f"{line}{nll['diff']:>+11.4f}")
+    target = evidence.EVIDENCE / evidence.name(b) / f"comparison-vs-{evidence.name(a).replace('/', '__')}.json"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(json.dumps({"a": a, "b": b, "files": table}, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    print(f"saved {target}")
     return 0
 
 

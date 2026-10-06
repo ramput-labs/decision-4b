@@ -540,6 +540,7 @@ def train(
         "tokens_per_second": round(seen / max(60 * minutes, 1e-9)),
         "sources_cap": args.sources_cap,
         "init_from": str(args.init_from) if args.init_from else None,
+        "init_from_spec": args.init_spec,  # release:<version> or hf:<repo>@<rev> when continued from a published one
         "replay": args.replay,
         "augment": args.augment,
         "p_none_pair": args.p_none_pair,
@@ -605,6 +606,20 @@ def train_history(log: Sequence[dict[str, Any]]) -> list[dict[str, Any]]:
         {k: v if isinstance(v, int | str) else round(float(v), 6) for k, v in row.items() if v is not None}
         for row in log
     ]
+
+
+def continued(spec: str) -> Path:
+    """The run directory `--init-from` names: a local run, or a published one (hf:<repo>@<rev>, release:<version>)
+    downloaded once into the Hub cache, so a later version can continue from one trained on another machine."""
+    if not spec.startswith(("hf:", "release:")):
+        return Path(spec)
+    from huggingface_hub import snapshot_download
+
+    from .release import resolve
+
+    repo, _, revision = resolve(spec).removeprefix("hf:").partition("@")
+    keep = ["adapter_model.safetensors", "adapter_config.json", "head.safetensors", "head.json", "run.json"]
+    return Path(snapshot_download(repo, revision=revision or None, allow_patterns=keep))  # no merged weights needed
 
 
 def parser() -> argparse.ArgumentParser:
@@ -674,7 +689,11 @@ def parser() -> argparse.ArgumentParser:
         "--eval-steps", type=int, default=0, help="validate on a dev sample every this many steps (0: epoch ends only)"
     )
     p.add_argument("--eval-max", type=int, default=600, help="questions in that dev sample")
-    p.add_argument("--init-from", type=Path, help="continue from a run: its adapter and head (same base, rank, head)")
+    p.add_argument(
+        "--init-from",
+        help="continue from a run (its adapter and head; same base, rank, head): a run directory, "
+        "hf:<org>/<name>@<rev>, or release:<version> (den release)",
+    )
     p.add_argument("--max-steps", type=int, default=0, help="stop after this many optimizer steps (a timing run)")
     p.add_argument(
         "--max-minutes", type=float, default=0, help="end training after this many minutes, then calibrate and save"
@@ -685,6 +704,7 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--max-state", type=int, default=MAX_STATE_TOKENS)
     p.add_argument("--seed", type=int, default=1)
     p.add_argument("--dry-run", action="store_true", help="tokenize and report; no model, no GPU")
+    p.set_defaults(init_spec=None)  # --init-from as given (main sets it), recorded beside the resolved run directory
     return p
 
 
@@ -698,8 +718,11 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit(f"--replay samples {sorted(twice)}, which --data already trains on in full")
     if any(Path(f).parts[0] != "train" for f in args.replay_from):
         raise SystemExit("--replay-from takes train/ files only")
-    if args.init_from and not args.dry_run and not (args.init_from / "head.json").is_file():
-        raise SystemExit(f"--init-from {args.init_from}: no head.json there")
+    args.init_spec = args.init_from  # as given: a path, hf:<repo>@<rev> or release:<version>; recorded in run.json
+    if args.init_from and not args.dry_run:
+        args.init_from = continued(args.init_from)
+        if not (args.init_from / "head.json").is_file():
+            raise SystemExit(f"--init-from {args.init_spec}: no head.json there")
 
     model_dir = Path("models") / args.model
     if not (model_dir / "tokenizer.json").is_file():

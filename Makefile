@@ -13,7 +13,7 @@ KEV_SUITES := train/core.jsonl train/dates-unknowable.jsonl train/documents.json
 TRAIN := $(UV) den train --model $(MODEL)
 DATA_REPO ?= $(DEN_DATA_REPO)
 
-.PHONY: licences breadth upload-data download-data post-train final-test test-cuda doctor train-kev train-round2 serve help setup check test-model list models model data data-raw-train data-raw-new data-raw-eval data-raw-bulk data-all verify normalize clean-data audit train-setup train-check train env smoke
+.PHONY: train-next release releases licences breadth upload-data download-data post-train final-test test-cuda doctor train-kev train-round2 serve help setup check test-model list models model data data-raw-train data-raw-new data-raw-eval data-raw-bulk data-all verify normalize clean-data audit train-setup train-check train env smoke
 
 help: ## show targets
 	@grep -E '^[a-z0-9-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-15s %s\n", $$1, $$2}'
@@ -26,6 +26,7 @@ check: ## lint, strict type-check, unit tests
 	$(UV) ruff format --check den scripts tests
 	$(UV) mypy
 	$(UV) pytest -q
+	$(UV) python -m scripts.verify_claims
 
 test-model: ## MLX vs PyTorch parity on the downloaded qwen3.5-4b (slow)
 	$(UV) pytest -q -m model
@@ -66,9 +67,9 @@ data-all: ## every set except raw-bulk
 licences: ## write each source's licence, evidence and texts into data/ (LICENSES.md, LICENSES/, README.md card)
 	$(UV) den licences $(ARGS)
 
-upload-data: ## upload data/ to the Hub, licence notices included, restricted sources left out: DATA_REPO=<org>/<name> [PUBLIC=1; automatic for a public repo]
+upload-data: ## upload data/ to the Hub, licence notices included, restricted sources left out: DATA_REPO=<org>/<name> [TAG=data-v1] [PUBLIC=1; automatic for a public repo]
 	@test -n "$(DATA_REPO)" || (echo "set DATA_REPO=<org>/<name> (or DEN_DATA_REPO)" && exit 1)
-	$(UV) python -m scripts.mirror upload --repo $(DATA_REPO) $(if $(PUBLIC),--public)
+	$(UV) python -m scripts.mirror upload --repo $(DATA_REPO) $(if $(PUBLIC),--public) $(if $(TAG),--tag $(TAG))
 
 download-data: ## download that copy into data/ and check every file: DATA_REPO=<org>/<name>[@commit]
 	@test -n "$(DATA_REPO)" || (echo "set DATA_REPO=<org>/<name>[@commit] (or DEN_DATA_REPO)" && exit 1)
@@ -124,6 +125,18 @@ post-train: ## after training RUN: integrity checks, dev metrics + Kev's robustn
 
 final-test: ## the locked test set, read once, for the shipped RUN only (refuses a second read)
 	$(UV) den evaluate --final --run $(RUN) $(TEST)
+
+train-next: ## the next version from a released one: FROM=v1 OUT=runs/v2 DATA="train/<new>.jsonl ..." [SOURCES=<cap>] [REPLAY=1500]
+	$(TRAIN) --data $(DATA) $(if $(SOURCES),--sources-cap $(SOURCES)) --replay $(or $(REPLAY),$(CAP)) \
+		--replay-from $(KEV_SUITES) --init-from release:$(FROM) --lr 2e-5 --batch 4 --accum 2 $(EVAL) \
+		--dev dev/core.jsonl dev/documents.jsonl dev/skills.jsonl dev/devtools.jsonl --merge --out $(OUT) $(ARGS)
+
+release: ## publish RUN as VERSION, tag it on REPO, record releases/VERSION.json: VERSION=v2 RUN=runs/v2 REPO=<org>/<name> [PARENT=v1] [DATA_REPO=<org>/<name>@<tag>]
+	$(UV) den release create --version $(VERSION) --run $(RUN) --repo $(REPO) $(if $(PARENT),--parent $(PARENT)) \
+		$(if $(DATA_REPO),--data-repo $(DATA_REPO)) $(ARGS)
+
+releases: ## every released version, its parent and headline numbers
+	$(UV) den release list
 
 serve: ## serve RUN (a run directory or hf:<org>/<name>) at POST /v1/systemone; PORT=8009
 	$(UV) den serve --run $(RUN) --port $(or $(PORT),8009)

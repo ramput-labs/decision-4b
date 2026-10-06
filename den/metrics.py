@@ -208,3 +208,32 @@ def unknowable(rows: Sequence[Row]) -> dict[str, Any] | None:
         "paired_confidence_drop": mean([c - u for u, c in paired]),
         "share_less_confident_than_control": mean([u < c for u, c in paired]),
     }
+
+
+BOOTSTRAP = 2000  # resamples for paired confidence intervals (Kev's kev.compare uses 2000)
+
+
+def paired_bootstrap(
+    groups: Sequence[str], a: Sequence[float], b: Sequence[float], resamples: int = BOOTSTRAP, seed: int = 0
+) -> dict[str, float]:
+    """Mean of b - a over paired questions, with a 95% percentile interval from resampling whole groups (records):
+    questions sharing a state are not independent, so they are drawn together. Seeded, so the interval reproduces."""
+    import random
+
+    sums: dict[str, list[float]] = {}
+    for g, x, y in zip(groups, a, b, strict=True):
+        s = sums.setdefault(g, [0.0, 0.0])
+        s[0] += y - x
+        s[1] += 1
+    cells = list(sums.values())
+    n = sum(c[1] for c in cells)
+    diff = sum(c[0] for c in cells) / max(n, 1)
+    rng = random.Random(seed)
+    draws = []
+    for _ in range(resamples if cells else 0):
+        picked = [cells[rng.randrange(len(cells))] for _ in cells]
+        draws.append(sum(c[0] for c in picked) / max(sum(c[1] for c in picked), 1))
+    draws.sort()
+    low = draws[int(0.025 * (len(draws) - 1))] if draws else diff
+    high = draws[int(0.975 * (len(draws) - 1))] if draws else diff
+    return {"diff": diff, "low": low, "high": high, "questions": n, "groups": len(cells)}

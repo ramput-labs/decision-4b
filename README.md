@@ -162,6 +162,17 @@ pinned raws, byte for byte against Kev's published sha256, into `data/{dev,test}
 Kev's robustness checks (option-order flips, contrastive pair flips, confidence on unknowable items) where a file
 carries them, and `--augment permute` measures option-order sensitivity on any file.
 
+Models are versioned: `make release VERSION=v1 RUN=<run> REPO=<org>/<name>` publishes a run, tags the Hub commit `v1`
+and records it in `releases/v1.json`. The next version continues from it on new data
+(`make train-next FROM=v1 OUT=runs/v2 DATA="train/<new>.jsonl"`, replaying Kev's suites so nothing is forgotten) and is
+released with `PARENT=v1`, which refuses it if any dev file fell more than a point below v1. `release:v1` works
+wherever a run does (`--init-from`, `--run`).
+
+Every evaluation is kept in git: `den evaluate` writes `reports/runs/<run>/` (each file's metrics, every question's
+probabilities, and where they came from), and `den compare --paired A B` says whether B beats A beyond noise, question
+by question with 95% intervals. Numbers printed in the docs are listed in `reports/claims.json` and checked against
+that evidence by `make check`.
+
 Every source's licence is recorded with its evidence in `den/licences.py`. `make licences` writes them into `data/`
 (`README.md` as the dataset card, `LICENSES.md` with each file's sources, `LICENSES/` with per-source terms, licence
 texts and the licence files shipped with the data), and a `SOURCE-LICENSE.md` beside every dataset saying what each

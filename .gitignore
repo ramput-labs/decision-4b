@@ -12,5 +12,6 @@ models/
 data/
 
 # training outputs: adapters, head.pt, configs
-runs/
+# training outputs (weights) at the repo root only; evaluation evidence in reports/runs/ is committed
+/runs/
 .unsloth-pins.txt

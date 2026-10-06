@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -34,3 +35,24 @@ def test_estimate_time_and_the_phase_3_decision(tmp_path: Path, capsys: pytest.C
 
 def test_env_version_parsing() -> None:
     assert version("5.17.0") == (5, 17) and version("2.14.1+cu130") == (2, 14) and version("5.9") < (5, 17)
+
+
+def test_claims_trace_to_their_evidence(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from scripts import verify_claims
+
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "report.json").write_text(json.dumps({"clean": {"accuracy": 0.86249}}))
+    (tmp_path / "README.md").write_text("den v1 scores 0.862 on core (86.2%).")
+    good: list[dict[str, Any]] = [
+        {"printed": "0.862", "in": ["README.md"], "source": "report.json", "path": ["clean", "accuracy"]},
+        {"printed": "86.2%", "in": ["README.md"], "source": "report.json", "path": ["clean", "accuracy"], "scale": 100},
+    ]
+    (tmp_path / "claims.json").write_text(json.dumps(good))
+    assert verify_claims.main(["--claims", "claims.json"]) == 0
+    bad = [{**good[0], "printed": "0.871"}, {**good[0], "path": ["clean", "nll"]}]
+    (tmp_path / "claims.json").write_text(json.dumps(bad))
+    assert verify_claims.main(["--claims", "claims.json"]) == 1
+    assert verify_claims.problems(bad[0]) == [
+        "'0.871' from report.json: not printed in README.md",
+        "'0.871' from report.json: the source says 0.862, the docs print 0.871",
+    ]
