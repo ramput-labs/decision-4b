@@ -3,6 +3,13 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 .pytest_cache/
-data/
+.claude/settings.local.json
 models/
 *.part
+
+# data/ is tracked: Kev's suites and manifests (~100 MB). Raw downloads and normalized outputs are rebuilt from
+# locks/ by `make data-raw-*` and `make normalize`, so they stay out of git.
+data/sources/
+data/*/sources/
+data/.normalize/
+data/**/.cache/

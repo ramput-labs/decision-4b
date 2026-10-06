@@ -63,7 +63,8 @@ make env             # show which backend this machine uses
 make test-model      # MLX vs PyTorch parity on the downloaded qwen3.5-4b
 ```
 
-`data/` and `models/` are gitignored. Commit `locks/` and `reports/`.
+`data/` is in git: Kev's suites and manifests (~100 MB). Raw downloads (`data/sources/`), normalized outputs
+(`data/*/sources/`) and `models/` are gitignored. They are rebuilt from `locks/`, which is committed with `reports/`.
 
 ## Backends
 
