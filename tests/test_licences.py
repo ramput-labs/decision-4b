@@ -128,4 +128,5 @@ def test_every_source_in_the_real_data_is_known() -> None:
         pytest.skip("no data/ here")
     rels = [r for r in data_files(root) if r.endswith(".jsonl") and "/sources/" not in r and not r.startswith("clean/")]
     classified = classify(root, rels)  # raises on any source without a recorded licence
-    assert classified["train/core.jsonl"][0] == "restricted"  # Kev's core holds Yelp and Amazon reviews
+    if "train/core.jsonl" in classified:  # a Hub copy (`make download-data`) leaves restricted files out
+        assert classified["train/core.jsonl"][0] == "restricted"  # Kev's core holds Yelp and Amazon reviews

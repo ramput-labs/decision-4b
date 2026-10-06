@@ -13,7 +13,7 @@ dependencies = [
     "pyarrow>=20",
     "tokenizers>=0.22",
     "torch>=2.8 ; sys_platform == 'linux'",
-    "transformers>=5.17",
+    "transformers>=5.17,<5.18",  # unsloth 2026.10 supports <=5.17; newer resolves a pre-Qwen3.5 unsloth
 ]
 
 [project.scripts]
@@ -30,6 +30,11 @@ module-root = ""  # flat layout: the package lives at the repo root, like kev/
 strict = true
 python_version = "3.12"
 files = ["den", "scripts", "tests"]
+
+[[tool.mypy.overrides]]
+# mlx/mlx-lm install only on Apple Silicon (see dependencies): on Linux the MLX backbone is checked without them
+module = ["mlx", "mlx.*", "mlx_lm", "mlx_lm.*"]
+ignore_missing_imports = true
 
 [tool.ruff]
 line-length = 120

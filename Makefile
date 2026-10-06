@@ -92,7 +92,7 @@ audit: ## check every record and source is fit to train on; writes reports/data-
 
 train-setup: ## install Unsloth, keeping the locked torch/transformers (Linux + NVIDIA GPU; see instructions.md phase 1)
 	uv pip freeze | grep -iE '^(torch|transformers|tokenizers|huggingface-hub|numpy|triton|flash-linear-attention|accelerate|peft)==' > .unsloth-pins.txt
-	uv pip install unsloth -c .unsloth-pins.txt
+	uv pip install "unsloth>=2026.9" -c .unsloth-pins.txt
 
 train-check: ## tokenize the clean training data and report its shape (no GPU needed)
 	$(UV) den train --dry-run --model $(MODEL)

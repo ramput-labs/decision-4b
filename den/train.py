@@ -276,8 +276,7 @@ def train(
         letter_ids = [vocab.encode(f" {c}", add_special_tokens=False).ids[0] for c in LETTERS]
         head.set_letters(backbone.get_input_embeddings().weight[letter_ids])  # type: ignore[operator]
     model = SystemOne(backbone, head, args.ordinal_weight)
-    device = next(backbone.parameters()).device
-    model.to(device)
+    model.to(next(backbone.parameters()).device)
     if args.init_from:
         from .model import warm_start
 
@@ -314,6 +313,7 @@ def train(
         labels: list[int] = []
         targets: list[tuple[float, ...] | None] = []
         dtype = torch.bfloat16 if bf16 else torch.float16
+        device = next(model.parameters()).device  # where the Trainer put it, not where it was loaded
         with torch.no_grad(), torch.autocast(device.type, dtype=dtype):
             for i in range(0, len(rows), args.batch):
                 batch = collate(rows[i : i + args.batch], pad)

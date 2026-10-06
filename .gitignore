@@ -15,3 +15,4 @@ data/
 # training outputs (weights) at the repo root only; evaluation evidence in reports/runs/ is committed
 /runs/
 .unsloth-pins.txt
+unsloth_compiled_cache/
