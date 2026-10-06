@@ -1,0 +1,15 @@
+uv run pytest -q -m cuda
+...                                                                      [100%]
+=============================== warnings summary ===============================
+tests/test_cuda.py::test_unsloth_qwen_lora_pointer_step
+  /den/.venv/lib/python3.12/site-packages/unsloth/__init__.py:1635: UserWarning: WARNING: Unsloth should be imported before [transformers, peft] to ensure all optimizations are applied. Your code may run slower or encounter memory issues without these optimizations.
+  
+  Please restructure your imports with 'import unsloth' at the top of your file.
+    from ._gpu_init import *
+
+tests/test_cuda.py::test_unsloth_qwen_lora_pointer_step
+tests/test_cuda.py::test_unsloth_qwen_lora_pointer_step
+  <frozen abc>:119: FutureWarning: `torch.distributed.reduce_op` is deprecated, please use `torch.distributed.ReduceOp` instead
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+3 passed, 192 deselected, 3 warnings in 121.85s (0:02:01)

@@ -9,7 +9,9 @@ Licences decide what goes up (`den/licences.py`): the notices (`README.md` as th
 `LICENSES/`, a `SOURCE-LICENSE.md` per raw source) are written first; files whose sources forbid redistribution are
 never uploaded, and files with no stated licence only to a private repo (a repo that is already public always gets
 the public rules). What was left out is listed in the card and the
-manifest, with the command that rebuilds it from the pinned originals.
+manifest, and the download rebuilds them from the pinned originals (`rebuild`), so `make download-data` alone gives
+a complete `data/`: the fetches skip every file already present and matching its lock, and breadth, normalize and
+clean are deterministic, so the files the copy did carry are rewritten byte for byte.
 
     uv run python -m scripts.mirror upload   --repo <org>/den-data         # make upload-data DATA_REPO=<org>/den-data
     uv run python -m scripts.mirror download --repo <org>/den-data[@rev]   # make download-data DATA_REPO=...
@@ -21,7 +23,7 @@ import argparse
 import json
 import sys
 import time
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from pathlib import Path
 from typing import Any
 
@@ -32,6 +34,7 @@ DATA = Path("data")
 LOCKS = Path("locks")
 MANIFEST = "MANIFEST.json"
 REBUILD = "make data data-raw-train data-raw-new data-raw-eval breadth normalize clean-data"
+REBUILD_SETS = ("suites", "raw-train", "raw-new", "raw-eval")
 
 
 def files(root: Path, leave_out: Iterable[str] = ()) -> dict[str, dict[str, Any]]:
@@ -104,8 +107,27 @@ def upload(repo: str, root: Path = DATA, private: bool = True, tag: str | None =
     return sha
 
 
-def download(spec: str, root: Path = DATA) -> list[str]:
-    """Download `<org>/<name>[@revision]` into `root`; returns every integrity problem (none: the copy is exact)."""
+def rebuild(root: Path, excluded: Iterable[str]) -> list[str]:
+    """`REBUILD`, run here: the files the licences kept out of the copy, from their pinned originals; returns any still
+    missing. Needs the model's tokenizer (`make model`) for breadth."""
+    from den.cli import main as den
+    from scripts import breadth
+
+    steps: list[tuple[str, Callable[[], int]]] = [
+        ("fetch", lambda: den(["data", *REBUILD_SETS])),
+        ("breadth", lambda: breadth.main([])),
+        ("normalize", lambda: den(["normalize"])),
+        ("clean", lambda: den(["clean"])),
+    ]
+    for name, step in steps:
+        if code := step():
+            raise SystemExit(f"rebuilding the left-out files failed at {name} (exit {code}); fix it and rerun")
+    return [f"still missing after the rebuild: {rel}" for rel in sorted(excluded) if not (root / rel).is_file()]
+
+
+def download(spec: str, root: Path = DATA, rebuild_excluded: bool = True) -> list[str]:
+    """Download `<org>/<name>[@revision]` into `root` and rebuild what the licences left out of it; returns every
+    integrity problem (none: `root` is complete and exact)."""
     from huggingface_hub import hf_hub_download, snapshot_download
 
     repo, _, revision = spec.partition("@")
@@ -127,9 +149,13 @@ def download(spec: str, root: Path = DATA) -> list[str]:
             problems.append(f"missing {rel}")
         elif path.stat().st_size != f["bytes"] or digest(path) != f["sha256"]:
             problems.append(f"{rel} differs from the uploaded file")
-    for rel, why in sorted(manifest.get("excluded", {}).items()):
+    excluded = manifest.get("excluded", {})
+    for rel, why in sorted(excluded.items()):
         print(f"  not in this copy: {rel}  ({why})")
-    if manifest.get("excluded"):
+    if excluded and not problems and rebuild_excluded:
+        print(f"rebuilding those {len(excluded)} files from the pinned originals (~20 min)", flush=True)
+        problems = rebuild(root, excluded)
+    elif excluded:
         print(f"rebuild them from the pinned originals: {manifest.get('rebuild_excluded', REBUILD)}")
     return problems + pinned(root, present_only=True)
 
@@ -153,8 +179,9 @@ def upload_main(argv: list[str] | None = None) -> int:
 def download_main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="scripts.mirror download")
     p.add_argument("--repo", required=True, help="<org>/<name>[@revision] of a `make upload-data` copy")
+    p.add_argument("--no-rebuild", action="store_true", help="don't rebuild the files the licences left out")
     args = p.parse_args(argv)
-    problems = download(args.repo)
+    problems = download(args.repo, rebuild_excluded=not args.no_rebuild)
     for problem in problems:
         print(f"  BAD {problem}")
     print(f"data/ from datasets/{args.repo}: " + ("ok, every file matches" if not problems else "FAILED"))
