@@ -51,6 +51,12 @@ One flat package, `den/`, at the repo root (plus `scripts/` for tools, below), l
   flags (`den train ...`).
 - `evaluate.py`: loads a trained run (`merged/` + `head.safetensors`/`head.json`) through `device.load`, so a run is scored by the same
   backbone code that serves it. `den evaluate` (acc/NLL/ECE, `--final` for test) and `den predict`.
+- `licences.py`: `den licences` (`make licences`). Every source's licence, class (open / share-alike / non-commercial
+  / unspecified / restricted) and the primary-source evidence for it; each file in `data/` takes its most restrictive
+  source (`_meta.source`, or the raw item it sits under). Writes `data/README.md` (Hub card), `data/LICENSES.md`,
+  `data/LICENSES/` (per-source pages, SPDX texts from `licences/`, upstream licence files) and a `SOURCE-LICENSE.md`
+  beside every dataset (each raw source, each folder of suite/normalized/clean files): every file there, its sources,
+  licence, class and whether the copy has it. A new pin or `_meta.source` must get an entry: `tests/test_licences.py` fails otherwise.
 - `integrity.py`: `den check-run`, run after `--merge` and before every upload: head/adapter finite, `merged/` has
   the base's layout and files with exactly the adapted weights changed, sha256 of every model file -> `integrity.json`.
 - `publish.py`: `den publish` bundles `stages/`, `data/` (exact training data + every scored file, sha256
@@ -77,11 +83,15 @@ import `scripts` from `den`. ruff and mypy cover it like `den/`.
    path is enforced in `catalog.py` and its tests.
 3. **Temperature `T` is fitted only on calibration files**, never on dev or test. By default, leave
    `calibration/heldout` out: 18 of its 22 unknowable families also appear in `train/dates-unknowable`.
-4. **Do not edit pinned files.** Kev's suites in `data/{train,calibration,dev,test}/*.jsonl`, `data/manifests/`, and
+4. **Never upload data the licences exclude.** `scripts/mirror.py` leaves out restricted sources (Yelp, Amazon
+   reviews, raw files holding HellaSwag's wikiHow items) always and unlicensed ones from public copies; a repo that is
+   already public always gets the public rules. Change a
+   source's class in `den/licences.py` only with evidence from its own terms, and record it there.
+5. **Do not edit pinned files.** Kev's suites in `data/{train,calibration,dev,test}/*.jsonl`, `data/manifests/`, and
    `locks/*.json` are sha256-pinned. Fix data by changing `clean.py`/`normalize.py`/`sources.py` and regenerating, not by hand.
-5. **Determinism.** Normalize and clean outputs must be byte-identical across runs. Use seeded `random.Random`, not
+6. **Determinism.** Normalize and clean outputs must be byte-identical across runs. Use seeded `random.Random`, not
    global randomness.
-6. **One forward pass, no generation.** Scores come from hidden states at known token positions, never from LM logits.
+7. **One forward pass, no generation.** Scores come from hidden states at known token positions, never from LM logits.
 
 ## Pointer head and prompt invariants
 

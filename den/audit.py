@@ -15,7 +15,7 @@ import pyarrow.parquet as pq
 from tokenizers import Tokenizer
 
 from .api import Record, RecordError, question_key, read
-from .catalog import ROLES, Hub, Url, Use
+from .catalog import NOTICE_FILE, ROLES, Hub, Url, Use
 from .fetch import digest
 from .pins import BREADTH, SUITES
 
@@ -236,7 +236,7 @@ def _rows(path: Path) -> int | None:
 
 def _check_sources(report: Report, root: Path) -> None:
     for path in sorted((root / "sources").rglob("*")):
-        if not path.is_file() or ".cache" in path.parts or path.name in {".gitattributes", "README.md"}:
+        if not path.is_file() or ".cache" in path.parts or path.name in {".gitattributes", "README.md", NOTICE_FILE}:
             continue
         rel = path.relative_to(root).as_posix()
         try:

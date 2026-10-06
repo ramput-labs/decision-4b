@@ -5,6 +5,12 @@ copy, a fresh machine (the GPU box) gets the same bytes in one resumable downloa
 The upload refuses pinned files that don't match `locks/`, and sends a sha256 manifest of every file. The download
 checks every file against that manifest, then the pinned ones against `locks/` again.
 
+Licences decide what goes up (`den/licences.py`): the notices (`README.md` as the dataset card, `LICENSES.md`,
+`LICENSES/`, a `SOURCE-LICENSE.md` per raw source) are written first; files whose sources forbid redistribution are
+never uploaded, and files with no stated licence only to a private repo (a repo that is already public always gets
+the public rules). What was left out is listed in the card and the
+manifest, with the command that rebuilds it from the pinned originals.
+
     uv run python -m scripts.mirror upload   --repo <org>/den-data         # make upload-data DATA_REPO=<org>/den-data
     uv run python -m scripts.mirror download --repo <org>/den-data[@rev]   # make download-data DATA_REPO=...
 """
@@ -15,26 +21,24 @@ import argparse
 import json
 import sys
 import time
-from fnmatch import fnmatch
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
 from den.fetch import digest, read_lock
+from den.licences import IGNORE, data_files, notices
 
 DATA = Path("data")
 LOCKS = Path("locks")
 MANIFEST = "MANIFEST.json"
-IGNORE = (".normalize/*", ".cache/*", "*/.cache/*", "*.part", "*.tmp", ".DS_Store", "*/.DS_Store", MANIFEST)
+REBUILD = "make data data-raw-train data-raw-new data-raw-eval breadth normalize clean-data"
 
 
-def files(root: Path) -> dict[str, dict[str, Any]]:
+def files(root: Path, leave_out: Iterable[str] = ()) -> dict[str, dict[str, Any]]:
     """Every file under `root` that belongs in the copy, by relative path: its size and sha256."""
-    found = (p for p in sorted(root.rglob("*")) if p.is_file())
-    return {
-        rel: {"bytes": p.stat().st_size, "sha256": digest(p)}
-        for p in found
-        if not any(fnmatch(rel := p.relative_to(root).as_posix(), pattern) for pattern in IGNORE)
-    }
+    skip = set(leave_out)
+    return {rel: {"bytes": (root / rel).stat().st_size, "sha256": digest(root / rel)}
+            for rel in data_files(root) if rel not in skip}  # fmt: skip
 
 
 def pinned(root: Path, present_only: bool) -> list[str]:
@@ -60,13 +64,28 @@ def upload(repo: str, root: Path = DATA, private: bool = True) -> str:
 
     if problems := pinned(root, present_only=True):
         raise SystemExit("pinned files differ from locks/, not uploading:\n  " + "\n  ".join(problems[:20]))
-    listed = files(root)
-    manifest = {"created": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "files": listed}
-    total = sum(f["bytes"] for f in listed.values())
-    print(f"uploading {len(listed)} files, {total / 1e9:.2f} GB, to datasets/{repo}", flush=True)
-    create_repo(repo, repo_type="dataset", private=private, exist_ok=True)
-    upload_large_folder(repo, root, repo_type="dataset", private=private, ignore_patterns=list(IGNORE))
     api = HfApi()
+    public = not private
+    if not public and api.repo_exists(repo, repo_type="dataset") and not api.dataset_info(repo).private:
+        print(f"{repo} is public: uploading under public rules (files with no stated licence are left out too)")
+        public = True  # the stricter copy; a private one would publish what may only be kept privately
+    classified, excluded = notices(root, public=public, repo=repo)  # writes the card and licence files into root
+    listed = files(root, excluded)
+    manifest = {"created": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "files": listed,
+                "licences": {rel: {"class": k, "sources": keys} for rel, (k, keys) in classified.items()},
+                "excluded": excluded, "rebuild_excluded": REBUILD}  # fmt: skip
+    total = sum(f["bytes"] for f in listed.values())
+    print(f"uploading {len(listed)} files, {total / 1e9:.2f} GB, to datasets/{repo}; leaving out {len(excluded)} "
+          f"(licence: see README.md)", flush=True)  # fmt: skip
+    create_repo(repo, repo_type="dataset", private=not public, exist_ok=True)
+    if not public and not api.dataset_info(repo).private:  # made public between the check and now: refuse
+        raise SystemExit(f"{repo} became public during the upload; run it again to upload under public rules")
+    stale = sorted(set(api.list_repo_files(repo, repo_type="dataset")) & set(excluded))
+    if stale:  # an earlier upload carried files the licences now leave out
+        api.delete_files(
+            repo, delete_patterns=stale, repo_type="dataset", commit_message="den: remove files the licences exclude"
+        )
+    upload_large_folder(repo, root, repo_type="dataset", private=not public, ignore_patterns=[*IGNORE, *excluded])
     api.upload_file(  # last: a manifest on the Hub means every file before it landed
         path_or_fileobj=(json.dumps(manifest, indent=2) + "\n").encode(),
         path_in_repo=MANIFEST,
@@ -104,13 +123,21 @@ def download(spec: str, root: Path = DATA) -> list[str]:
             problems.append(f"missing {rel}")
         elif path.stat().st_size != f["bytes"] or digest(path) != f["sha256"]:
             problems.append(f"{rel} differs from the uploaded file")
+    for rel, why in sorted(manifest.get("excluded", {}).items()):
+        print(f"  not in this copy: {rel}  ({why})")
+    if manifest.get("excluded"):
+        print(f"rebuild them from the pinned originals: {manifest.get('rebuild_excluded', REBUILD)}")
     return problems + pinned(root, present_only=True)
 
 
 def upload_main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="scripts.mirror upload")
     p.add_argument("--repo", required=True, help="<org>/<name>: a Hugging Face dataset repo, created private")
-    p.add_argument("--public", action="store_true", help="publish publicly; private by default")
+    p.add_argument(
+        "--public",
+        action="store_true",
+        help="publish publicly (leaves out unlicensed files too); automatic for a public repo",
+    )
     args = p.parse_args(argv)
     sha = upload(args.repo, private=not args.public)
     print(f"https://huggingface.co/datasets/{args.repo}  commit {sha}")

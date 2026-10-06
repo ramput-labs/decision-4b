@@ -12,7 +12,7 @@ from typing import TypedDict
 import httpx
 from huggingface_hub import hf_hub_download, snapshot_download
 
-from .catalog import Hub, Item, Model, Sha256, Url
+from .catalog import NOTICE_FILE, Hub, Item, Model, Sha256, Url
 
 CHUNK = 1 << 20
 
@@ -126,7 +126,8 @@ def _snapshot(hub: Hub, dest: Path) -> list[Path]:
     snapshot_download(
         hub.repo, repo_type=hub.repo_type, revision=hub.revision, allow_patterns=list(hub.patterns), local_dir=dest
     )
-    files = sorted(p for p in dest.rglob("*") if p.is_file() and ".cache" not in p.relative_to(dest).parts)
+    skip = (".cache", NOTICE_FILE)
+    files = sorted(p for p in dest.rglob("*") if p.is_file() and not set(p.relative_to(dest).parts) & set(skip))
     if not files:
         raise IntegrityError(f"{hub.ref}: patterns {hub.patterns} matched no files")
     return files

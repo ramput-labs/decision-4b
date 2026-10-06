@@ -13,7 +13,7 @@ KEV_SUITES := train/core.jsonl train/dates-unknowable.jsonl train/documents.json
 TRAIN := $(UV) den train --model $(MODEL)
 DATA_REPO ?= $(DEN_DATA_REPO)
 
-.PHONY: breadth upload-data download-data post-train final-test test-cuda doctor train-kev train-round2 serve help setup check test-model list models model data data-raw-train data-raw-new data-raw-eval data-raw-bulk data-all verify normalize clean-data audit train-setup train-check train env smoke
+.PHONY: licences breadth upload-data download-data post-train final-test test-cuda doctor train-kev train-round2 serve help setup check test-model list models model data data-raw-train data-raw-new data-raw-eval data-raw-bulk data-all verify normalize clean-data audit train-setup train-check train env smoke
 
 help: ## show targets
 	@grep -E '^[a-z0-9-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-15s %s\n", $$1, $$2}'
@@ -63,9 +63,12 @@ data-raw-bulk: ## CFPB, CommitPackFT, CodeReviewer, FlakeFlagger raws (~5 GB)
 data-all: ## every set except raw-bulk
 	$(UV) den data all
 
-upload-data: ## upload data/ (suites, sources, clean) as a private Hub dataset: DATA_REPO=<org>/<name>
+licences: ## write each source's licence, evidence and texts into data/ (LICENSES.md, LICENSES/, README.md card)
+	$(UV) den licences $(ARGS)
+
+upload-data: ## upload data/ to the Hub, licence notices included, restricted sources left out: DATA_REPO=<org>/<name> [PUBLIC=1; automatic for a public repo]
 	@test -n "$(DATA_REPO)" || (echo "set DATA_REPO=<org>/<name> (or DEN_DATA_REPO)" && exit 1)
-	$(UV) python -m scripts.mirror upload --repo $(DATA_REPO)
+	$(UV) python -m scripts.mirror upload --repo $(DATA_REPO) $(if $(PUBLIC),--public)
 
 download-data: ## download that copy into data/ and check every file: DATA_REPO=<org>/<name>[@commit]
 	@test -n "$(DATA_REPO)" || (echo "set DATA_REPO=<org>/<name>[@commit] (or DEN_DATA_REPO)" && exit 1)

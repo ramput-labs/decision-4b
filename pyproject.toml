@@ -36,7 +36,7 @@ line-length = 120
 target-version = "py312"
 
 [tool.ruff.format]
-exclude = ["den/pins.py"]  # pin tables: one source per line
+exclude = ["den/pins.py", "den/licences.py"]  # pin and licence tables: one source per line
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "SIM", "RUF", "ANN"]
@@ -74,3 +74,4 @@ dev = [
 
 [tool.ruff.lint.per-file-ignores]
 "den/pins.py" = ["E501"]  # pin tables: one source per line
+"den/licences.py" = ["E501"]  # licence table: one source per entry, its evidence quoted whole

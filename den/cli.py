@@ -17,6 +17,7 @@ den check-run --run R           integrity of a finished run: head, adapter, merg
 den overfit [--n 100]           gate: the head must fit 100 real examples; behavioral checks after
 den probe --dev F [--train F]   modes A (zero-shot letters) and C (frozen backbone + head) on cached features
 den publish --run R --repo O/N  upload a run as a private Hub model with a generated card
+den licences [--public]         whose data is in data/, under what terms: writes the licence files and card
 den audit [--model M]       check every record and source is fit to train and evaluate on
 den env                     show the backend this machine uses
 den doctor [--require cuda]       versions, GPU, BF16, driver, Unsloth, model revision; a readiness gate
@@ -244,6 +245,7 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("probe")  # flags are parsed by den.overfit
     sub.add_parser("doctor")  # flags are parsed by den.doctor
     sub.add_parser("publish")  # flags are parsed by den.publish
+    sub.add_parser("licences")  # flags are parsed by den.licences
     sub.add_parser("audit").add_argument("--model", default=_default_model())
     sub.add_parser("env")
     smoke = sub.add_parser("smoke")
@@ -280,6 +282,10 @@ def main(argv: list[str] | None = None) -> int:
         sys.stdout.flush()
         sys.stderr.flush()
         os._exit(code)
+    if args.cmd == "licences":
+        from .licences import main as licences_main
+
+        return licences_main(rest)
     if args.cmd == "publish":
         from .publish import publish_main
 

@@ -162,6 +162,14 @@ pinned raws, byte for byte against Kev's published sha256, into `data/{dev,test}
 Kev's robustness checks (option-order flips, contrastive pair flips, confidence on unknowable items) where a file
 carries them, and `--augment permute` measures option-order sensitivity on any file.
 
+Every source's licence is recorded with its evidence in `den/licences.py`. `make licences` writes them into `data/`
+(`README.md` as the dataset card, `LICENSES.md` with each file's sources, `LICENSES/` with per-source terms, licence
+texts and the licence files shipped with the data), and a `SOURCE-LICENSE.md` beside every dataset saying what each
+of its files holds, under which licence, and whether the uploaded copy has it. `make upload-data` never uploads sources whose terms forbid
+redistribution (Yelp, Amazon reviews, the raw HellaSwag and RouterBench files), and keeps unlicensed ones out of
+public copies; Kev's `core` suite holds Yelp and Amazon reviews, so it is rebuilt from its pinned original with
+`make data` after `make download-data`.
+
 `data/` and `models/` are gitignored. `make data` (Kev's suites and manifests), `make data-raw-*`, `make normalize` and
 `make clean-data` rebuild `data/` from `locks/`, which is committed with `reports/`. To skip the rebuild, `make
 upload-data DATA_REPO=<org>/<name>` puts the whole `data/` (about 6 GB) in a private Hub dataset with a sha256 manifest,
