@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Iterator
+from collections.abc import Collection, Iterator
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
@@ -157,10 +157,11 @@ def parse(raw: Json, record_id: str, provenance: str | None = None) -> Record:
     return Record(record_id, state, tuple(_question(qid, q) for qid, q in questions.items()), provenance)
 
 
-def read(path: Path) -> Iterator[Record]:
+def read(path: Path, lines: Collection[int] | None = None) -> Iterator[Record]:
+    """Every record in a JSONL file, or only those on the given 1-based `lines` (the rest are never parsed)."""
     with path.open(encoding="utf-8") as f:
         for n, line in enumerate(f, 1):
-            if not line.strip():
+            if not line.strip() or (lines is not None and n not in lines):
                 continue
             try:
                 raw: Json = json.loads(line)

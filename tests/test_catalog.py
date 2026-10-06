@@ -4,8 +4,8 @@ from pathlib import PurePosixPath
 
 import pytest
 
-from systemone.catalog import USE_ROOTS, File, Hub, Item, SetName, Url, Use, hub_model, rev, sha256, validate
-from systemone.pins import DEFAULT_MODEL, ITEMS, MODELS, SUITES
+from den.catalog import USE_ROOTS, File, Hub, Item, SetName, Url, Use, hub_model, rev, sha256, validate
+from den.pins import DEFAULT_MODEL, ITEMS, MODELS, SUITES
 
 GOOD_REV = "0" * 40
 GOOD_SHA = "0" * 64

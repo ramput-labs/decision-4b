@@ -1,0 +1,657 @@
+"""LoRA + pointer-head training on data/clean, driven by a Hugging Face `Trainer` (which Unsloth patches).
+
+The Trainer owns the loop: bf16 autocast, gradient accumulation, clipping, the cosine schedule with warmup, and
+length-grouped batches, so a 150-token record is not padded to 7k beside a long document. This module supplies only
+what is ours: the data, the pointer-head loss (`model.SystemOne`), a learning rate for the head that differs from the
+adapters', dev evaluation each epoch, the temperature fit, and the saved run.
+
+`--dry-run` tokenizes the data and prints its shape without importing torch or unsloth, so it runs on any machine.
+Training uses Unsloth, so it needs Linux and an NVIDIA GPU; `--engine peft` runs the same LoRA on any device.
+`--lora 0` freezes the backbone and trains the head alone: the baseline that shows what LoRA adds. `--merge` also
+writes the LoRA folded into bf16 weights, which the serving backbones load like the base model.
+
+Choice options get Kev's augmentation on every visit (`--augment kev`: none-of-the-above and distractor options, a
+fresh order), so position carries no signal; `--p-none-pair` adds Kev's minimal pairs. `--eval-steps` validates on a
+dev sample while training; the curve goes into run.json with the exact data used (`data_used`).
+"""
+
+from __future__ import annotations
+
+import argparse
+import importlib
+import json
+import math
+import os
+import random
+import statistics
+import subprocess
+import sys
+import time
+from collections.abc import Sequence
+from importlib import metadata
+from pathlib import Path
+from typing import Any
+
+from tokenizers import Tokenizer
+
+from .api import Record, read
+from .device import hidden_size
+from .fetch import digest
+from .prompt import LETTERS, MAX_STATE_TOKENS, Example, Style, augment, encode, none_pair, shuffle_options, split
+
+CLEAN = Path("data/clean")
+KEV_TRAIN = ("core", "dates-unknowable", "documents", "skills", "devtools")  # Kev's stages 1-4
+
+
+def load(paths: Sequence[Path]) -> list[Record]:
+    return [record for path in paths for record in read(path)]
+
+
+def sample(path: Path, cap: int, seed: int, used: list[dict[str, object]] | None = None) -> list[Record]:
+    """Up to `cap` records of one file, the same ones for the same seed; only the chosen lines are parsed. The file
+    and its chosen line numbers are appended to `used`, the run's data manifest."""
+    with path.open(encoding="utf-8") as f:
+        numbered = [n for n, line in enumerate(f, 1) if line.strip()]
+    rng = random.Random(f"{seed}:{path.as_posix()}")
+    lines = sorted(rng.sample(numbered, min(cap, len(numbered))))
+    if used is not None:
+        used.append({"path": path.relative_to(CLEAN).as_posix(), "sha256": digest(path), "lines": lines})
+    return list(read(path, set(lines)))
+
+
+def sources(
+    cap: int, seed: int, known: Sequence[Record] = (), used: list[dict[str, object]] | None = None
+) -> list[Record]:
+    """A balanced slice of every normalized trainable source: at most `cap` records each, so yelp's 644k records do
+    not drown banking77's 9k. Records whose source text is already in `known` are left out: Kev's core holds 1,000
+    of each of its ten public datasets, and a text trained on twice would count double. Eval-only sources never
+    reach train/sources (catalog.py enforces it)."""
+    seen = {r.provenance for r in known if r.provenance} | {r.fingerprint for r in known}
+    return [
+        r
+        for path in sorted((CLEAN / "train" / "sources").rglob("*.jsonl"))
+        for r in sample(path, cap, seed, used)
+        if r.provenance not in seen and r.fingerprint not in seen
+    ]
+
+
+def examples(
+    records: Sequence[Record],
+    tokenizer: Tokenizer,
+    max_state: int,
+    rng: random.Random | None = None,
+    style: Style = "dash",
+) -> tuple[list[Example], int]:
+    """Encoded records, one per question, with choice options shuffled when `rng` is given, and the count of
+    questions skipped (state too long; or, for the letter scorer, more than 26 options)."""
+    out, skipped = [], 0
+    for record in (one for r in records for one in split(r)):
+        if (example := encode(shuffle_options(record, rng) if rng else record, tokenizer, max_state, style)) is None:
+            skipped += 1
+        else:
+            out.append(example)
+    return out, skipped
+
+
+def describe(name: str, lengths: Sequence[int], questions: int, skipped: int) -> str:
+    ordered = sorted(lengths)
+    p99 = ordered[int(0.99 * (len(ordered) - 1))] if ordered else 0
+    median = int(statistics.median(ordered)) if ordered else 0
+    longest = ordered[-1] if ordered else 0
+    return (
+        f"{name:<8}{len(ordered):>8} records{questions:>9} questions  "
+        f"tokens median {median} p99 {p99} max {longest} total {sum(ordered) / 1e6:.1f}M  skipped {skipped}"
+    )
+
+
+def pinned(model: str) -> dict[str, str | None]:
+    """The base model's pinned Hub repo and revision (None for a model outside pins.py)."""
+    from .pins import MODELS
+
+    found = MODELS.get(model)
+    return {
+        "key": model,
+        "repo": found.source.repo if found else None,
+        "revision": found.source.revision if found else None,
+    }
+
+
+def base_files(model: str) -> dict[str, str]:
+    """The base checkpoint's files and sha256, as `den model` placed and locked them (empty if it isn't locked)."""
+    lock = Path("locks/models.json")
+    entries = json.loads(lock.read_text(encoding="utf-8"))["entries"] if lock.is_file() else {}
+    files = entries.get(model, {}).get("files", {})
+    return {path: f["sha256"] for path, f in sorted(files.items())}
+
+
+def runtime() -> dict[str, Any]:
+    """Where the run ran: platform, CUDA build, cuDNN and driver (None off CUDA)."""
+    import platform
+
+    import torch
+
+    from .doctor import _driver
+
+    info: dict[str, Any] = {
+        "platform": f"{platform.system()} {platform.machine()}",
+        "python": platform.python_version(),
+        "cuda": torch.version.cuda,
+        "cudnn": None,
+        "driver": None,
+        "gpu_count": 0,
+    }
+    if torch.cuda.is_available():
+        info |= {"cudnn": torch.backends.cudnn.version(), "driver": _driver(), "gpu_count": torch.cuda.device_count()}  # type: ignore[no-untyped-call]
+    return info
+
+
+def dataset_hash(used: list[dict[str, object]]) -> str:
+    """One sha256 over every training file's sha256 and the lines taken from it: equal hashes, equal data."""
+    import hashlib
+
+    return hashlib.sha256(json.dumps(sorted(used, key=lambda u: str(u["path"])), sort_keys=True).encode()).hexdigest()
+
+
+def versions() -> dict[str, str]:
+    """The packages that decide the result, as installed."""
+    found = {}
+    names = ("torch", "transformers", "peft", "accelerate", "tokenizers", "unsloth", "unsloth_zoo",
+             "flash-linear-attention", "causal-conv1d", "den")  # fmt: skip
+    for name in names:
+        try:
+            found[name] = metadata.version(name)
+        except metadata.PackageNotFoundError:
+            continue
+    return found
+
+
+def commit() -> str:
+    """The git commit of this code, with `+dirty` when there are uncommitted changes."""
+    try:
+        sha = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=True).stdout.strip()
+        dirty = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True, check=True).stdout
+    except (OSError, subprocess.CalledProcessError):
+        return "unknown"
+    return sha + ("+dirty" if dirty.strip() else "")
+
+
+class Shuffled:
+    """Training items encoded on access, a fresh variant on every visit, so each epoch sees new option orders.
+
+    `augment`: "kev" (Kev's augmentation: none-of-the-above and distractor options, shuffled order), "shuffle" (order
+    only) or "none". With `p_none_pair`, that share of the records with an eligible choice question also yields Kev's
+    minimal pair: two more items, the question with the true option present and removed, sharing one "none" option
+    and one order per visit. Records whose state is too long are dropped; `lengths` feeds the length-grouped sampler.
+    """
+
+    def __init__(
+        self,
+        records: Sequence[Record],
+        tokenizer: Tokenizer,
+        max_state: int,
+        seed: int,
+        augment: str = "kev",
+        p_none_pair: float = 0.0,
+        style: Style = "dash",
+    ) -> None:
+        self.records: list[Record] = []
+        self.items: list[tuple[int, int]] = []  # (record, part): part 0 the record, 1 and 2 its pair's halves
+        self.lengths: list[int] = []
+        self.tokenizer, self.seed, self.augment, self.style = tokenizer, seed, augment, style
+        for record in records:
+            if (example := encode(record, tokenizer, max_state, style)) is None:
+                continue
+            i = len(self.records)
+            self.records.append(record)
+            self.items.append((i, 0))
+            self.lengths.append(len(example.ids))
+            draw = random.Random(f"{seed}:{i}:pair").random()
+            if draw < p_none_pair and (pair := none_pair(record, random.Random(0))) is not None:
+                for part, half in enumerate(pair, 1):
+                    self.items.append((i, part))
+                    self.lengths.append(len(encode(half, tokenizer, 1 << 30, style).ids))  # type: ignore[union-attr]
+        self.visits = [0] * len(self.items)
+
+    def __len__(self) -> int:
+        return len(self.items)
+
+    def __getitem__(self, n: int) -> Example:
+        i, part = self.items[n]
+        rng = random.Random(f"{self.seed}:{i}:{part and 'pair'}:{self.visits[n]}")  # both halves share one stream
+        self.visits[n] += 1
+        record = self.records[i]
+        if part:
+            pair = none_pair(record, rng)
+            assert pair is not None
+            record = pair[part - 1]
+        elif self.augment == "kev":
+            record = augment(record, rng)
+        elif self.augment == "shuffle":
+            record = shuffle_options(record, rng)
+        example = encode(record, self.tokenizer, 1 << 30, self.style)  # the state's length was checked up front
+        if example is None:  # letters: an added option took the question past 26; train it without the addition
+            example = encode(self.records[i], self.tokenizer, 1 << 30, self.style)
+        assert example is not None
+        return example
+
+
+def train(
+    args: argparse.Namespace,
+    model_dir: Path,
+    data: Shuffled,
+    dev: list[Example],
+    calibration: list[Example],
+    data_used: list[dict[str, object]],
+) -> None:
+    from .model import LORA_PRESETS, HeadConfig, LoraConfig, load_backbone, make_head
+
+    lora = LoraConfig(rank=args.lora, alpha=2 * args.lora, targets=LORA_PRESETS[args.lora_targets])
+    config = HeadConfig(
+        args.head_kind, args.head_dim, args.head_layers, args.head_heads, rep=args.option_rep, proj=args.head_proj
+    )
+    longest = max([*data.lengths, *(len(e.ids) for e in dev + calibration)])
+    backbone = load_backbone(model_dir, lora, longest, args.seed, args.engine)  # unsloth before transformers
+
+    import torch
+    from transformers import TrainerCallback, TrainerControl, TrainerState, TrainingArguments
+
+    from .calibrate import fit_temperature
+    from .metrics import Answer, summarize
+    from .model import SystemOne, adapted, collate, question_loss, save_head, save_merged
+    from .trainer import PointerTrainer
+
+    head = make_head(hidden_size(model_dir), config)
+    if config.kind == "letters":  # Qwen's own answer-letter logits: the tied embedding rows of " A" ... " Z"
+        vocab = Tokenizer.from_file(str(model_dir / "tokenizer.json"))
+        letter_ids = [vocab.encode(f" {c}", add_special_tokens=False).ids[0] for c in LETTERS]
+        head.set_letters(backbone.get_input_embeddings().weight[letter_ids])  # type: ignore[operator]
+    model = SystemOne(backbone, head, args.ordinal_weight)
+    device = next(backbone.parameters()).device
+    model.to(device)
+    if args.init_from:
+        from .model import warm_start
+
+        previous = warm_start(backbone, model.head, args.init_from, args.model, lora)
+        print(f"init   from {args.init_from} (its T {previous:.3f})", flush=True)
+    cuda = torch.cuda.is_available()
+    bf16 = importlib.import_module("unsloth").is_bfloat16_supported() if args.engine == "unsloth" else True
+    pad = 0  # right padding under an attention mask: the id is never read
+    per_step = args.batch * args.accum
+    planned = args.max_steps or math.ceil(len(data) / per_step) * args.epochs
+    trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    if args.epochs and not trainable:
+        raise SystemExit("nothing to train (--lora 0 with --head-kind letters): use --epochs 0 for zero-shot Qwen")
+    setup = {
+        "engine": args.engine,
+        "dtype": "bf16" if bf16 else "fp16",
+        "device": torch.cuda.get_device_name(0) if cuda else "cpu",
+        "lora_modules": len(adapted(backbone)),
+        "trainable_params": trainable,
+        "head_params": sum(p.numel() for p in model.head.parameters()),
+        # fp32: bf16 adapters would round 2e-5 updates away; Unsloth and PEFT both upcast LoRA for training
+        "trainable_dtype": ",".join(
+            sorted({str(p.dtype).removeprefix("torch.") for p in model.parameters() if p.requires_grad})
+        ),
+        "records_per_step": per_step,
+        "planned_steps": planned,
+    }
+    print("setup  " + "  ".join(f"{k} {v}" for k, v in setup.items()), flush=True)
+
+    def predict(rows: list[Example]) -> tuple[list[torch.Tensor], list[int], list[tuple[float, ...] | None]]:
+        """Option scores for every question, in `rows` order."""
+        model.eval()
+        scores: list[torch.Tensor] = []
+        labels: list[int] = []
+        targets: list[tuple[float, ...] | None] = []
+        dtype = torch.bfloat16 if bf16 else torch.float16
+        with torch.no_grad(), torch.autocast(device.type, dtype=dtype):
+            for i in range(0, len(rows), args.batch):
+                batch = collate(rows[i : i + args.batch], pad)
+                per = model.scores(batch["input_ids"].to(device), batch["attention_mask"].to(device), batch["examples"])
+                for example, s in zip(batch["examples"], per, strict=True):
+                    scores += [q.float().cpu() for q in s]
+                    labels += example.labels
+                    targets += example.targets
+        model.train()
+        return scores, labels, targets
+
+    def evaluate(rows: list[Example], temperature: float = 1.0) -> tuple[float, float]:
+        """NLL and accuracy over hard-labelled questions; soft-target (unknowable) questions have no right answer."""
+        nll = hits = n = 0.0
+        for s, label, target in zip(*predict(rows), strict=True):
+            if target is None:
+                nll += float(question_loss(s / temperature, label, None))
+                hits += int(s.argmax()) == label
+                n += 1
+        return nll / max(n, 1), hits / max(n, 1)
+
+    every = args.eval_steps
+    probe = random.Random(args.seed).sample(dev, min(args.eval_max, len(dev))) if every else []
+    history: list[dict[str, float]] = []  # the validation curve, saved in run.json
+
+    class Dev(TrainerCallback):
+        """Validation while training: a fixed dev sample every --eval-steps steps, all of dev at each epoch's end."""
+
+        def on_step_end(
+            self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs: object
+        ) -> None:
+            if probe and state.global_step % every == 0:
+                nll, acc = evaluate(probe)
+                history.append({"step": state.global_step, "nll": round(nll, 4), "accuracy": round(acc, 4)})
+                print(f"\nstep {state.global_step} dev({len(probe)})  nll {nll:.4f}  acc {acc:.4f}", flush=True)
+
+        def on_epoch_end(
+            self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs: object
+        ) -> None:
+            if dev:
+                nll, acc = evaluate(dev)
+                history.append({"step": state.global_step, "nll": round(nll, 4), "accuracy": round(acc, 4), "full": 1})
+                print(f"\nepoch dev  nll {nll:.4f}  acc {acc:.4f}", flush=True)
+
+    started, limit = time.time(), args.max_minutes
+    stopped: list[int] = []  # the step at which --max-minutes ended training, if it did
+
+    class Deadline(TrainerCallback):
+        """Ends training cleanly once --max-minutes have passed; calibration, saving and merging still run."""
+
+        def on_step_end(
+            self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs: object
+        ) -> None:
+            if limit and time.time() - started > 60 * limit:
+                stopped.append(state.global_step)
+                print(f"\nstopping at step {state.global_step}: --max-minutes {limit} reached", flush=True)
+                control.should_training_stop = True
+
+    trainer = (
+        None
+        if not args.epochs
+        else PointerTrainer(
+            lengths=data.lengths,
+            head_lr=args.head_lr or args.lr,
+            model=model,
+            args=TrainingArguments(
+                output_dir=args.out,
+                per_device_train_batch_size=args.batch,
+                gradient_accumulation_steps=args.accum,
+                num_train_epochs=args.epochs,
+                max_steps=args.max_steps or -1,
+                learning_rate=args.lr,
+                weight_decay=args.weight_decay,
+                lr_scheduler_type="cosine",
+                warmup_steps=args.warmup,  # a fraction of all steps
+                max_grad_norm=1.0,
+                bf16=bf16,
+                fp16=not bf16,
+                logging_steps=10,
+                # checkpoints (adapter + head + optimizer/scheduler/RNG state) only with --save-steps; the run itself
+                # is saved below
+                save_strategy="steps" if args.save_steps else "no",
+                save_steps=args.save_steps or 500,
+                save_total_limit=2,
+                report_to="none",
+                remove_unused_columns=False,  # the head needs every example's positions
+                dataloader_pin_memory=cuda,
+                tf32=cuda,  # the head and the softmaxes run in fp32: TF32 tensor cores on H100
+                use_cpu=not cuda,
+                seed=args.seed,
+                include_num_input_tokens_seen=True,  # padded tokens through the model, for tokens_per_second
+            ),
+            train_dataset=data,
+            data_collator=lambda rows: collate(rows, pad),
+            callbacks=[Dev(), Deadline()],
+        )
+    )
+    resume = None
+    if args.resume and trainer:
+        from transformers.trainer_utils import get_last_checkpoint
+
+        resume = get_last_checkpoint(args.out) if args.resume == "latest" else args.resume  # type: ignore[no-untyped-call]
+        if resume is None:
+            raise SystemExit(f"--resume latest: no checkpoint-* in {args.out}")
+        print(f"resume from {resume}", flush=True)
+    result = trainer.train(resume_from_checkpoint=resume) if trainer else None  # --epochs 0: zero-shot
+    minutes = (time.time() - started) / 60
+    seen = int(trainer.state.num_input_tokens_seen) if trainer else 0
+
+    def kinds(rows: list[Example]) -> list[str]:
+        return [k for e in rows for k in (e.kinds or ("choice",) * len(e.labels))]
+
+    temperature, temperatures = 1.0, {}
+    if calibration:
+        fitted = predict(calibration)
+        temperature = fit_temperature(*fitted)
+        if args.calibrate_by_type:  # one T per question type with enough calibration questions; the rest share T
+            for kind in sorted(set(kinds(calibration))):
+                pick = [i for i, k in enumerate(kinds(calibration)) if k == kind and fitted[2][i] is None]
+                if len(pick) >= 50:
+                    temperatures[kind] = fit_temperature(
+                        [fitted[0][i] for i in pick], [fitted[1][i] for i in pick], [fitted[2][i] for i in pick]
+                    )
+        print(
+            f"calibration  T {temperature:.3f}" + "".join(f"  {k} {t:.3f}" for k, t in temperatures.items()), flush=True
+        )
+    report: dict[str, Any] = {"temperature": temperature, "temperatures": temperatures}
+    dev_at_t: dict[str, float] = {}
+    if dev:
+        scores, labels, targets = predict(dev)
+        sources = [src for e in dev for src in (e.sources or ("",) * len(e.labels))]
+        rows = list(zip(scores, labels, targets, kinds(dev), sources, strict=True))
+        for name, after in (("before", False), ("after", True)):
+            got = summarize(
+                [
+                    Answer(
+                        (s / (temperatures.get(k, temperature) if after else 1.0)).softmax(-1).tolist(), y, k, src, t
+                    )
+                    for s, y, t, k, src in rows
+                ]
+            )
+            report[name] = {m: got[m] for m in ("accuracy", "nll", "brier", "ece", "ece_by_type", "accuracy_by_type")}
+        before, calibrated = report["before"], report["after"]
+        dev_at_t = {"nll": calibrated["nll"], "accuracy": calibrated["accuracy"]}
+        print(
+            f"dev at T  nll {calibrated['nll']:.4f}  acc {calibrated['accuracy']:.4f}  "
+            f"brier {calibrated['brier']:.4f}  ece {calibrated['ece']:.4f}   "
+            f"(T=1: nll {before['nll']:.4f}  ece {before['ece']:.4f})",
+            flush=True,
+        )
+
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
+    if lora.rank:
+        backbone.save_pretrained(out)
+    save_head(
+        out, model.head, base=args.model, lora=lora.rank, engine=args.engine, temperature=temperature,
+        temperatures=temperatures,
+    )  # fmt: skip
+    (out / "training_config.json").write_text(json.dumps(vars(args), indent=2, default=str) + "\n", encoding="utf-8")
+    run = {
+        **setup,
+        "base": args.model,
+        "lora_rank": lora.rank,
+        "data": args.data,
+        "calibration": args.calibration,
+        "train_minutes": round(minutes, 1),
+        "tokens_seen": seen,
+        "tokens_per_second": round(seen / max(60 * minutes, 1e-9)),
+        "sources_cap": args.sources_cap,
+        "init_from": str(args.init_from) if args.init_from else None,
+        "replay": args.replay,
+        "augment": args.augment,
+        "p_none_pair": args.p_none_pair,
+        "lr": args.lr,
+        "head_kind": args.head_kind,
+        "ordinal_weight": args.ordinal_weight,
+        "epochs": args.epochs,
+        "train_loss": result.training_loss if result else None,
+        "steps": result.global_step if result else 0,
+        "calibration_report": report,
+        "base_files": base_files(args.model),
+        "model": pinned(args.model),
+        "dataset_sha256": dataset_hash(data_used),
+        "runtime": runtime(),
+        "lora": {
+            "rank": lora.rank,
+            "alpha": lora.alpha,
+            "dropout": lora.dropout,
+            "targets": list(lora.targets),
+            "modules": len(adapted(backbone)),
+        },
+        "head": {
+            "kind": config.kind,
+            "dim": config.dim,
+            "layers": config.layers,
+            "heads": config.heads,
+            "rep": config.option_rep,
+            "proj": config.proj,
+            "dropout": config.dropout,
+        },
+        "hyperparameters": json.loads(json.dumps(vars(args), default=str)),
+        "lora_targets": args.lora_targets,
+        "option_rep": config.option_rep,
+        "head_proj": args.head_proj,
+        "overfit": args.overfit,
+        "seed": args.seed,
+        "stopped_by_max_minutes": bool(stopped),
+        "temperature": temperature,
+        "dev_at_temperature": dev_at_t,
+        "dev_history": history,
+        "dev_files": args.dev,
+        "data_used": data_used,
+        "versions": versions(),
+        "commit": commit(),
+    }
+    (out / "run.json").write_text(json.dumps(run, indent=2) + "\n", encoding="utf-8")
+    print(f"saved {out}", flush=True)
+    if lora.rank and args.merge:  # last: the adapter and head are already safe if this fails
+        replaced = save_merged(backbone, model_dir, out / "merged")
+        print(f"saved {out / 'merged'}  ({replaced} merged weights)")
+
+
+def main(argv: list[str] | None = None) -> int:
+    p = argparse.ArgumentParser(prog="den train")
+    p.add_argument("--model", default="qwen3.5-4b")
+    p.add_argument("--data", nargs="*", default=[f"train/{s}.jsonl" for s in KEV_TRAIN], help="files under data/clean")
+    p.add_argument(
+        "--sources-cap",
+        type=int,
+        default=0,
+        help="also train on up to this many records from each normalized source in data/clean/train/sources (0: none)",
+    )
+    p.add_argument("--dev", nargs="*", default=["dev/core.jsonl"], help="files under data/clean; never test")
+    p.add_argument(
+        "--calibration",
+        nargs="*",
+        default=["calibration/core.jsonl"],
+        help="files under data/clean to fit T on; heldout shares unknowable families with train/dates-unknowable",
+    )
+    p.add_argument("--out", default="runs/qwen3.5-4b-lora")
+    p.add_argument("--epochs", type=int, default=1)
+    p.add_argument("--batch", type=int, default=2)
+    p.add_argument("--accum", type=int, default=4)
+    p.add_argument("--lr", type=float, default=5e-5, help="peak learning rate (Kev-4B: 5e-5 from the base, 2e-5 after)")
+    p.add_argument("--head-lr", type=float, default=0, help="the pointer head's peak learning rate; 0: same as --lr")
+    p.add_argument("--warmup", type=float, default=0.1, help="share of steps spent warming up (Kev: 0.1)")
+    p.add_argument("--weight-decay", type=float, default=0.01)
+    p.add_argument("--lora", type=int, default=16, help="LoRA rank; alpha is twice this; 0 trains the head alone")
+    p.add_argument(
+        "--engine",
+        choices=("unsloth", "peft"),
+        default="unsloth",
+        help="unsloth (CUDA) trains; peft runs the same adapters anywhere, for checks",
+    )
+    p.add_argument(
+        "--head-kind",
+        choices=("set", "pointer", "letters"),
+        default="set",
+        help="set: ours; pointer: Kev's q.k head; letters: Qwen's own answer-letter logits (text-generation baseline)",
+    )
+    p.add_argument("--option-rep", choices=("end", "marker", "mean", "attn"), help="option key (default: kind's own)")
+    p.add_argument("--head-proj", choices=("linear", "mlp"), default="linear", help="question/option projections")
+    p.add_argument(
+        "--lora-targets", choices=("all", "attention-mlp", "attention"), default="all", help="LoRA module set"
+    )
+    p.add_argument("--calibrate-by-type", action="store_true", help="also fit one T per question type")
+    p.add_argument(
+        "--overfit", type=int, default=0, help="gate: train on N rows, score on the same N rows (no augmentation)"
+    )
+    p.add_argument("--head-dim", type=int, default=256)
+    p.add_argument(
+        "--ordinal-weight", type=float, default=0.0, help="ranked probability score weight on score questions (Kev: 0)"
+    )
+    p.add_argument("--head-layers", type=int, default=1, help="option-mixing blocks; 0 for no cross-option attention")
+    p.add_argument("--head-heads", type=int, default=4)
+    p.add_argument("--augment", choices=("kev", "shuffle", "none"), default="kev", help="choice-option augmentation")
+    p.add_argument(
+        "--p-none-pair", type=float, default=0.0, help="share of records that also train a none minimal pair"
+    )
+    p.add_argument(
+        "--replay", type=int, default=0, help="also train on this many records sampled from each --replay-from file"
+    )
+    p.add_argument(
+        "--replay-from", nargs="*", default=["train/core.jsonl"], help="files under data/clean to replay from"
+    )
+    p.add_argument(
+        "--eval-steps", type=int, default=0, help="validate on a dev sample every this many steps (0: epoch ends only)"
+    )
+    p.add_argument("--eval-max", type=int, default=600, help="questions in that dev sample")
+    p.add_argument("--init-from", type=Path, help="continue from a run: its adapter and head (same base, rank, head)")
+    p.add_argument("--max-steps", type=int, default=0, help="stop after this many optimizer steps (a timing run)")
+    p.add_argument(
+        "--max-minutes", type=float, default=0, help="end training after this many minutes, then calibrate and save"
+    )
+    p.add_argument("--save-steps", type=int, default=0, help="checkpoint every N steps (adapter, head, optimizer)")
+    p.add_argument("--resume", help="continue from a checkpoint directory, or `latest` in --out")
+    p.add_argument("--merge", action="store_true", help="also save the LoRA merged into bf16 weights (runs/.../merged)")
+    p.add_argument("--max-state", type=int, default=MAX_STATE_TOKENS)
+    p.add_argument("--seed", type=int, default=1)
+    p.add_argument("--dry-run", action="store_true", help="tokenize and report; no model, no GPU")
+    args = p.parse_args(argv)
+    if any(Path(d).parts[0] == "test" for d in [*args.data, *args.dev, *args.calibration]):
+        raise SystemExit("test partitions are read once per release candidate, never while training")
+    if any(Path(d).parts[0] != "calibration" for d in args.calibration):
+        raise SystemExit("T is fitted on calibration files only, never on train or dev")
+    if args.replay and (twice := set(args.replay_from) & set(args.data)):
+        raise SystemExit(f"--replay samples {sorted(twice)}, which --data already trains on in full")
+    if any(Path(f).parts[0] != "train" for f in args.replay_from):
+        raise SystemExit("--replay-from takes train/ files only")
+    if args.init_from and not args.dry_run and not (args.init_from / "head.json").is_file():
+        raise SystemExit(f"--init-from {args.init_from}: no head.json there")
+
+    model_dir = Path("models") / args.model
+    if not (model_dir / "tokenizer.json").is_file():
+        raise SystemExit(f"{model_dir} is not downloaded: make model MODEL={args.model}")
+    every = [*args.data, *args.dev, *args.calibration, *(args.replay_from if args.replay else [])]
+    if missing := [d for d in every if not (CLEAN / d).is_file()]:
+        raise SystemExit(f"missing under {CLEAN}: {missing} (make clean-data)")
+    tokenizer = Tokenizer.from_file(str(model_dir / "tokenizer.json"))
+    records = load([CLEAN / d for d in args.data])
+    data_used: list[dict[str, object]] = [{"path": d, "sha256": digest(CLEAN / d), "lines": "all"} for d in args.data]
+    if args.sources_cap:
+        if not (CLEAN / "train" / "sources").is_dir():
+            raise SystemExit(f"{CLEAN}/train/sources is missing: make data-raw-train data-raw-new normalize clean-data")
+        records += sources(args.sources_cap, args.seed, records, data_used)
+    for replayed in args.replay_from if args.replay else []:
+        records += sample(CLEAN / replayed, args.replay, args.seed, data_used)
+    records = [one for r in records for one in split(r)]  # one row per question, as served
+    style: Style = "letters" if args.head_kind == "letters" else "dash"
+    if args.overfit:  # a fixed slice, unaugmented, scored on itself: a model that can't fit it can't learn
+        records = random.Random(args.seed).sample(records, min(args.overfit, len(records)))
+        args.augment, args.p_none_pair = "none", 0.0
+    data = Shuffled(records, tokenizer, args.max_state, args.seed, args.augment, args.p_none_pair, style)
+    dev_records = data.records if args.overfit else load([CLEAN / d for d in args.dev])
+    dev, dev_skipped = examples(dev_records, tokenizer, args.max_state, style=style)
+    calibration, cal_skipped = examples(
+        load([CLEAN / d for d in args.calibration]), tokenizer, args.max_state, style=style
+    )
+    questions = sum(len(r.questions) for r in data.records)
+    print(describe("train", data.lengths, questions, len(records) - len(data.records)))
+    for name, rows, skipped in (("dev", dev, dev_skipped), ("calib", calibration, cal_skipped)):
+        print(describe(name, [len(e.ids) for e in rows], sum(len(e.labels) for e in rows), skipped))
+    if not args.dry_run:
+        train(args, model_dir, data, dev, calibration, data_used)
+        # Everything is saved. Skip interpreter teardown: native libraries (torch, tokenizers, triton) have crashed
+        # there with SIGSEGV after a finished run, and a nonzero exit would stop `make train-kev` between stages.
+        sys.stdout.flush()
+        sys.stderr.flush()
+        os._exit(0)
+    return 0

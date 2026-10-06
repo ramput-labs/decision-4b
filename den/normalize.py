@@ -15,8 +15,8 @@ from typing import Any, cast
 
 import pyarrow.parquet as pq
 
-from ..catalog import ROLES
-from ..records import Json, Record, RecordError, parse, question_key, read
+from .api import Json, Record, RecordError, parse, question_key, read
+from .catalog import ROLES
 from .sources import SPLITS, Spec, Split, class_names, specs
 from .text import provenance
 

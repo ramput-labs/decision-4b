@@ -6,21 +6,21 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from systemone.backends import check_fits, detect, is_apple_silicon, load, text_config
+from den.device import check_fits, detect, is_apple_silicon, load, text_config
 
 BASE = Path("models/qwen3.5-4b")
 
 
 def test_detect_honours_override(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("SYSTEM_ONE_BACKEND", "cpu")
+    monkeypatch.setenv("DEN_BACKEND", "cpu")
     assert detect() == "cpu"
-    monkeypatch.setenv("SYSTEM_ONE_BACKEND", "tpu")
+    monkeypatch.setenv("DEN_BACKEND", "tpu")
     with pytest.raises(ValueError):
         detect()
 
 
 def test_apple_silicon_uses_mlx(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("SYSTEM_ONE_BACKEND", raising=False)
+    monkeypatch.delenv("DEN_BACKEND", raising=False)
     if is_apple_silicon():
         assert detect() == "mlx"
 

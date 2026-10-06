@@ -1,0 +1,884 @@
+{
+  "train/core.jsonl": {
+    "records": 12576,
+    "rewritten": 1159,
+    "duplicates_dropped": 420,
+    "written": 12156,
+    "problems_before": {
+      "literal_escapes": 492,
+      "runs_of_space": 229,
+      "entities": 46,
+      "edge_space": 174,
+      "control_or_zero_width": 3
+    },
+    "problems_after": {}
+  },
+  "train/dates-unknowable.jsonl": {
+    "records": 1425,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 1425,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "train/devtools.jsonl": {
+    "records": 5320,
+    "rewritten": 319,
+    "duplicates_dropped": 0,
+    "written": 5320,
+    "problems_before": {
+      "edge_space": 1629,
+      "runs_of_space": 3753,
+      "literal_escapes": 132,
+      "blank_runs": 38,
+      "entities": 15,
+      "control_or_zero_width": 31
+    },
+    "problems_after": {
+      "edge_space": 1629,
+      "runs_of_space": 3586,
+      "literal_escapes": 132,
+      "blank_runs": 23,
+      "entities": 15
+    }
+  },
+  "train/documents.jsonl": {
+    "records": 5219,
+    "rewritten": 3542,
+    "duplicates_dropped": 0,
+    "written": 5219,
+    "problems_before": {
+      "runs_of_space": 1883,
+      "blank_runs": 329,
+      "entities": 1,
+      "literal_escapes": 1
+    },
+    "problems_after": {
+      "entities": 1,
+      "literal_escapes": 1
+    }
+  },
+  "train/skills.jsonl": {
+    "records": 6000,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 6000,
+    "problems_before": {
+      "runs_of_space": 214
+    },
+    "problems_after": {
+      "runs_of_space": 214
+    }
+  },
+  "train/sources/intent/banking77.jsonl": {
+    "records": 8937,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 8937,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "train/sources/intent/massive-en.jsonl": {
+    "records": 11430,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 11430,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "train/sources/knowledge/arc.jsonl": {
+    "records": 3348,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 3348,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "train/sources/knowledge/commonsenseqa.jsonl": {
+    "records": 8757,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 8757,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "train/sources/knowledge/openbookqa.jsonl": {
+    "records": 4906,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 4906,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "train/sources/knowledge/qasc.jsonl": {
+    "records": 7325,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 7325,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "train/sources/reading/boolq.jsonl": {
+    "records": 7600,
+    "rewritten": 17,
+    "duplicates_dropped": 0,
+    "written": 7600,
+    "problems_before": {
+      "control_or_zero_width": 15
+    },
+    "problems_after": {}
+  },
+  "train/sources/reading/multinli.jsonl": {
+    "records": 391938,
+    "rewritten": 438,
+    "duplicates_dropped": 0,
+    "written": 391938,
+    "problems_before": {
+      "entities": 360
+    },
+    "problems_after": {}
+  },
+  "train/sources/safety/aegis.jsonl": {
+    "records": 19627,
+    "rewritten": 9,
+    "duplicates_dropped": 0,
+    "written": 19627,
+    "problems_before": {
+      "control_or_zero_width": 9,
+      "literal_escapes": 28
+    },
+    "problems_after": {
+      "literal_escapes": 28
+    }
+  },
+  "train/sources/sentiment/amazon-reviews.jsonl": {
+    "records": 199034,
+    "rewritten": 5,
+    "duplicates_dropped": 0,
+    "written": 199034,
+    "problems_before": {
+      "control_or_zero_width": 5
+    },
+    "problems_after": {}
+  },
+  "train/sources/sentiment/imdb.jsonl": {
+    "records": 22255,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 22255,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "train/sources/sentiment/sst5.jsonl": {
+    "records": 8471,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 8471,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "train/sources/sentiment/yelp-full.jsonl": {
+    "records": 644591,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 644591,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "train/sources/tools/glaive-function-calling.jsonl": {
+    "records": 30024,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 30024,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "train/sources/topic/ag-news.jsonl": {
+    "records": 114752,
+    "rewritten": 233,
+    "duplicates_dropped": 0,
+    "written": 114752,
+    "problems_before": {
+      "entities": 179
+    },
+    "problems_after": {}
+  },
+  "train/sources/topic/dbpedia14.jsonl": {
+    "records": 554866,
+    "rewritten": 414,
+    "duplicates_dropped": 0,
+    "written": 554866,
+    "problems_before": {
+      "control_or_zero_width": 414,
+      "literal_escapes": 1
+    },
+    "problems_after": {
+      "literal_escapes": 1
+    }
+  },
+  "train/sources/topic/trec.jsonl": {
+    "records": 4764,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 4764,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "calibration/core.jsonl": {
+    "records": 968,
+    "rewritten": 73,
+    "duplicates_dropped": 0,
+    "written": 968,
+    "problems_before": {
+      "entities": 1,
+      "literal_escapes": 29,
+      "edge_space": 11,
+      "runs_of_space": 10
+    },
+    "problems_after": {
+      "entities": 1
+    }
+  },
+  "calibration/heldout.jsonl": {
+    "records": 580,
+    "rewritten": 25,
+    "duplicates_dropped": 0,
+    "written": 580,
+    "problems_before": {
+      "runs_of_space": 24,
+      "edge_space": 6
+    },
+    "problems_after": {
+      "edge_space": 6
+    }
+  },
+  "dev/core.jsonl": {
+    "records": 1204,
+    "rewritten": 143,
+    "duplicates_dropped": 0,
+    "written": 1204,
+    "problems_before": {
+      "runs_of_space": 23,
+      "edge_space": 36,
+      "entities": 2,
+      "literal_escapes": 46
+    },
+    "problems_after": {}
+  },
+  "dev/devtools.jsonl": {
+    "records": 900,
+    "rewritten": 38,
+    "duplicates_dropped": 0,
+    "written": 900,
+    "problems_before": {
+      "runs_of_space": 442,
+      "edge_space": 162,
+      "literal_escapes": 20,
+      "entities": 1,
+      "blank_runs": 7
+    },
+    "problems_after": {
+      "runs_of_space": 420,
+      "edge_space": 160,
+      "literal_escapes": 20,
+      "entities": 1,
+      "blank_runs": 6
+    }
+  },
+  "dev/documents.jsonl": {
+    "records": 568,
+    "rewritten": 386,
+    "duplicates_dropped": 0,
+    "written": 568,
+    "problems_before": {
+      "runs_of_space": 209,
+      "blank_runs": 40
+    },
+    "problems_after": {}
+  },
+  "dev/probes.jsonl": {
+    "records": 1264,
+    "rewritten": 28,
+    "duplicates_dropped": 0,
+    "written": 1264,
+    "problems_before": {
+      "edge_space": 14,
+      "runs_of_space": 46
+    },
+    "problems_after": {
+      "edge_space": 14,
+      "runs_of_space": 18
+    }
+  },
+  "dev/skills.jsonl": {
+    "records": 700,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 700,
+    "problems_before": {
+      "runs_of_space": 100
+    },
+    "problems_after": {
+      "runs_of_space": 100
+    }
+  },
+  "dev/sources/devtools/prompt-injection.jsonl": {
+    "records": 1302,
+    "rewritten": 2,
+    "duplicates_dropped": 0,
+    "written": 1302,
+    "problems_before": {
+      "literal_escapes": 5,
+      "control_or_zero_width": 2
+    },
+    "problems_after": {
+      "literal_escapes": 5
+    }
+  },
+  "dev/sources/devtools/when2call.jsonl": {
+    "records": 1821,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 1821,
+    "problems_before": {
+      "literal_escapes": 9
+    },
+    "problems_after": {
+      "literal_escapes": 9
+    }
+  },
+  "dev/sources/intent/banking77.jsonl": {
+    "records": 898,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 898,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "dev/sources/intent/massive-en.jsonl": {
+    "records": 2025,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 2025,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "dev/sources/knowledge/arc.jsonl": {
+    "records": 867,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 867,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "dev/sources/knowledge/commonsenseqa.jsonl": {
+    "records": 942,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 942,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "dev/sources/knowledge/openbookqa.jsonl": {
+    "records": 500,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 500,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "dev/sources/knowledge/qasc.jsonl": {
+    "records": 801,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 801,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "dev/sources/reading/boolq.jsonl": {
+    "records": 713,
+    "rewritten": 1,
+    "duplicates_dropped": 0,
+    "written": 713,
+    "problems_before": {
+      "control_or_zero_width": 1
+    },
+    "problems_after": {}
+  },
+  "dev/sources/reading/multinli.jsonl": {
+    "records": 4883,
+    "rewritten": 7,
+    "duplicates_dropped": 0,
+    "written": 4883,
+    "problems_before": {
+      "entities": 3
+    },
+    "problems_after": {}
+  },
+  "dev/sources/safety/aegis.jsonl": {
+    "records": 1026,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 1026,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "dev/sources/sentiment/amazon-reviews.jsonl": {
+    "records": 4988,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 4988,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "dev/sources/sentiment/imdb.jsonl": {
+    "records": 2376,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 2376,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "dev/sources/sentiment/sst5.jsonl": {
+    "records": 1100,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 1100,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "dev/sources/sentiment/yelp-full.jsonl": {
+    "records": 4988,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 4988,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "dev/sources/tools/glaive-function-calling.jsonl": {
+    "records": 3850,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 3850,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "dev/sources/topic/ag-news.jsonl": {
+    "records": 4958,
+    "rewritten": 6,
+    "duplicates_dropped": 0,
+    "written": 4958,
+    "problems_before": {
+      "entities": 4
+    },
+    "problems_after": {}
+  },
+  "dev/sources/topic/dbpedia14.jsonl": {
+    "records": 4924,
+    "rewritten": 2,
+    "duplicates_dropped": 0,
+    "written": 4924,
+    "problems_before": {
+      "control_or_zero_width": 2
+    },
+    "problems_after": {}
+  },
+  "dev/sources/topic/trec.jsonl": {
+    "records": 454,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 454,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "dev/sources/transfer/emotion.jsonl": {
+    "records": 1993,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 1993,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "dev/sources/transfer/mmlu-pro.jsonl": {
+    "records": 70,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 70,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "dev/sources/transfer/mmlu.jsonl": {
+    "records": 1505,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 1505,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "dev/sources/transfer/paws.jsonl": {
+    "records": 5000,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 5000,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "dev/sources/transfer/qnli.jsonl": {
+    "records": 4999,
+    "rewritten": 3,
+    "duplicates_dropped": 0,
+    "written": 4999,
+    "problems_before": {
+      "control_or_zero_width": 3
+    },
+    "problems_after": {}
+  },
+  "dev/sources/transfer/sciq.jsonl": {
+    "records": 1000,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 1000,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "dev/sources/transfer/tweeteval-offensive.jsonl": {
+    "records": 1319,
+    "rewritten": 52,
+    "duplicates_dropped": 0,
+    "written": 1319,
+    "problems_before": {
+      "entities": 52
+    },
+    "problems_after": {}
+  },
+  "dev/transfer.jsonl": {
+    "records": 764,
+    "rewritten": 28,
+    "duplicates_dropped": 0,
+    "written": 764,
+    "problems_before": {
+      "edge_space": 3,
+      "runs_of_space": 28
+    },
+    "problems_after": {
+      "edge_space": 3
+    }
+  },
+  "test/core.jsonl": {
+    "records": 1176,
+    "rewritten": 120,
+    "duplicates_dropped": 0,
+    "written": 1176,
+    "problems_before": {
+      "runs_of_space": 21,
+      "edge_space": 23,
+      "entities": 3,
+      "literal_escapes": 39
+    },
+    "problems_after": {}
+  },
+  "test/devtools.jsonl": {
+    "records": 900,
+    "rewritten": 26,
+    "duplicates_dropped": 0,
+    "written": 900,
+    "problems_before": {
+      "runs_of_space": 444,
+      "edge_space": 169,
+      "blank_runs": 12,
+      "literal_escapes": 14,
+      "entities": 3,
+      "control_or_zero_width": 3
+    },
+    "problems_after": {
+      "runs_of_space": 433,
+      "edge_space": 165,
+      "literal_escapes": 14,
+      "entities": 3,
+      "blank_runs": 10
+    }
+  },
+  "test/documents.jsonl": {
+    "records": 574,
+    "rewritten": 379,
+    "duplicates_dropped": 0,
+    "written": 574,
+    "problems_before": {
+      "runs_of_space": 183,
+      "blank_runs": 43
+    },
+    "problems_after": {}
+  },
+  "test/probes.jsonl": {
+    "records": 1264,
+    "rewritten": 23,
+    "duplicates_dropped": 0,
+    "written": 1264,
+    "problems_before": {
+      "edge_space": 17,
+      "runs_of_space": 42,
+      "blank_runs": 1
+    },
+    "problems_after": {
+      "edge_space": 17,
+      "runs_of_space": 19,
+      "blank_runs": 1
+    }
+  },
+  "test/skills.jsonl": {
+    "records": 700,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 700,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "test/sources/devtools/prompt-injection.jsonl": {
+    "records": 208,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 208,
+    "problems_before": {
+      "literal_escapes": 2
+    },
+    "problems_after": {
+      "literal_escapes": 2
+    }
+  },
+  "test/sources/devtools/when2call.jsonl": {
+    "records": 1789,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 1789,
+    "problems_before": {
+      "literal_escapes": 14
+    },
+    "problems_after": {
+      "literal_escapes": 14
+    }
+  },
+  "test/sources/intent/banking77.jsonl": {
+    "records": 2998,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 2998,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "test/sources/intent/massive-en.jsonl": {
+    "records": 2968,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 2968,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "test/sources/knowledge/arc.jsonl": {
+    "records": 3548,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 3548,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "test/sources/knowledge/commonsenseqa.jsonl": {
+    "records": 1215,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 1215,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "test/sources/knowledge/openbookqa.jsonl": {
+    "records": 500,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 500,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "test/sources/knowledge/qasc.jsonl": {
+    "records": 926,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 926,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "test/sources/reading/boolq.jsonl": {
+    "records": 2916,
+    "rewritten": 8,
+    "duplicates_dropped": 0,
+    "written": 2916,
+    "problems_before": {
+      "control_or_zero_width": 6
+    },
+    "problems_after": {}
+  },
+  "test/sources/reading/multinli.jsonl": {
+    "records": 4998,
+    "rewritten": 3,
+    "duplicates_dropped": 0,
+    "written": 4998,
+    "problems_before": {
+      "entities": 3
+    },
+    "problems_after": {}
+  },
+  "test/sources/safety/aegis.jsonl": {
+    "records": 1714,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 1714,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "test/sources/sentiment/amazon-reviews.jsonl": {
+    "records": 4910,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 4910,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "test/sources/sentiment/imdb.jsonl": {
+    "records": 4985,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 4985,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "test/sources/sentiment/sst5.jsonl": {
+    "records": 2130,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 2130,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "test/sources/sentiment/yelp-full.jsonl": {
+    "records": 4995,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 4995,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "test/sources/tools/glaive-function-calling.jsonl": {
+    "records": 3763,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 3763,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "test/sources/topic/ag-news.jsonl": {
+    "records": 4945,
+    "rewritten": 7,
+    "duplicates_dropped": 0,
+    "written": 4945,
+    "problems_before": {
+      "entities": 5
+    },
+    "problems_after": {}
+  },
+  "test/sources/topic/dbpedia14.jsonl": {
+    "records": 4992,
+    "rewritten": 4,
+    "duplicates_dropped": 0,
+    "written": 4992,
+    "problems_before": {
+      "control_or_zero_width": 4
+    },
+    "problems_after": {}
+  },
+  "test/sources/topic/trec.jsonl": {
+    "records": 419,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 419,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "test/sources/transfer/emotion.jsonl": {
+    "records": 1857,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 1857,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "test/sources/transfer/mmlu-pro.jsonl": {
+    "records": 4876,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 4876,
+    "problems_before": {
+      "literal_escapes": 11
+    },
+    "problems_after": {
+      "literal_escapes": 11
+    }
+  },
+  "test/sources/transfer/mmlu.jsonl": {
+    "records": 4910,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 4910,
+    "problems_before": {
+      "literal_escapes": 1
+    },
+    "problems_after": {
+      "literal_escapes": 1
+    }
+  },
+  "test/sources/transfer/paws.jsonl": {
+    "records": 4864,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 4864,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "test/sources/transfer/qnli.jsonl": {
+    "records": 4763,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 4763,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "test/sources/transfer/sciq.jsonl": {
+    "records": 859,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 859,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "test/sources/transfer/tweeteval-offensive.jsonl": {
+    "records": 707,
+    "rewritten": 4,
+    "duplicates_dropped": 0,
+    "written": 707,
+    "problems_before": {
+      "entities": 4
+    },
+    "problems_after": {}
+  },
+  "test/transfer.jsonl": {
+    "records": 764,
+    "rewritten": 23,
+    "duplicates_dropped": 0,
+    "written": 764,
+    "problems_before": {
+      "edge_space": 6,
+      "runs_of_space": 25
+    },
+    "problems_after": {
+      "edge_space": 6,
+      "runs_of_space": 2
+    }
+  }
+}

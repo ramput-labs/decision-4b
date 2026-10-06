@@ -14,10 +14,10 @@ from typing import Any, Literal
 import pyarrow.parquet as pq
 from tokenizers import Tokenizer
 
+from .api import Record, RecordError, question_key, read
 from .catalog import ROLES, Hub, Url, Use
 from .fetch import digest
 from .pins import SUITES
-from .records import Record, RecordError, question_key, read
 
 HELD_OUT = (
     "dev/transfer.jsonl",

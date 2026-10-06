@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import hashlib
 
-from systemone.normalize.pipeline import bucket
-from systemone.normalize.sources import _mcq, _slug, glaive, sciq
-from systemone.normalize.text import clean, provenance
-from systemone.records import parse
+from den.api import parse
+from den.normalize import bucket
+from den.sources import _mcq, _slug, glaive, sciq
+from den.text import clean, provenance
 
 
 def test_clean_undoes_source_artifacts() -> None:
@@ -77,3 +77,9 @@ def test_bucket_is_stable_and_uniform() -> None:
     values = [bucket(str(i)) for i in range(2000)]
     assert bucket("x") == bucket("x") and all(0 <= v < 1 for v in values)
     assert 0.45 < sum(v < 0.5 for v in values) / len(values) < 0.55
+
+
+def test_clean_drops_zero_width_but_keeps_emoji_joiners() -> None:
+    assert clean("French​ pronunciation﻿") == "French pronunciation"
+    assert clean("\U0001f937‍♀️") == "\U0001f937‍♀️"
+    assert clean("Tom &amp; Jerry &lt;br&gt; end", markup=True) == "Tom & Jerry\nend"

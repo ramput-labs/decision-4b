@@ -1,4 +1,4 @@
-# systemone
+# den
 
 **System One decision models** on any Qwen backbone, from 0.6B to 35B. A model reads a document (the *state*)
 and typed questions about it, and returns a calibrated probability over the options of each question. It does this in
@@ -18,7 +18,7 @@ TypeSafe's `POST /v1/systemone`. The goal is to match each Kev model at its size
 | Kev 1.0 (reference) | `kev-0.8b`, `kev-4b`, `kev-9b`, `kev-27b`, the baselines to beat at each size |
 
 Any other Hub model works too: `make model MODEL=hf:<org>/<name>@<40-hex commit>`. Its digests are frozen in the
-lock on first download. Choose the model with `MODEL=` on make targets, or set `SYSTEM_ONE_MODEL` for every command.
+lock on first download. Choose the model with `MODEL=` on make targets, or set `DEN_MODEL` for every command.
 The backends load any size the device can hold, and refuse a model that won't fit before loading it.
 
 ## System One rules
@@ -29,7 +29,7 @@ The backends load any size the device can hold, and refuse a model that won't fi
    is the API, and training records use the same bytes the server sends to the model.
 3. **Calibrated.** One temperature `T` is fitted on a held-out calibration split. It is never fitted on dev or test.
 4. **Honest evaluation.** Eval-only sources are never trained on. Locked test partitions are read once per release
-   candidate. The catalog enforces both (`src/systemone/catalog.py`, `tests/`).
+   candidate. The catalog enforces both (`den/catalog.py`, `tests/`).
 5. **Pinned.** Every download names a commit and a sha256. `locks/*.json` records every byte that was placed.
 
 ## Steps
@@ -45,9 +45,99 @@ make model          # the default backbone, qwen3.5-4b; or MODEL=qwen3-0.6b, MOD
 make data           # the suites: train / calibration / dev / test (~100 MB, sha256-verified)
 make verify         # re-hash everything against locks/
 make normalize      # raw sources -> canonical, leakage-free train / dev / test (needs data-raw-train, -new, -eval)
+make clean-data     # cleaned, deduplicated copies of every suite and source under data/clean/ (pinned files untouched)
 make audit          # check every record is fit to train and evaluate on
 make smoke          # run MODEL once on this machine's backend
 ```
+
+## Fine-tuning (Unsloth + LoRA)
+
+For a rented H100, follow [`instructions.md`](instructions.md): a phase-by-phase runbook with a gate after each phase,
+from an empty machine to an uploaded model checked over HTTP.
+
+Training runs in two rounds, each a chain of stages where every stage continues from the last (`--init-from`):
+
+- **Round 1, `make train-kev`:** Kev-4B's own recipe, from its model card and code. It has four stages: `core` ×2 at
+  5e-5 with 25% none-of-the-above minimal pairs, then dates, then documents, then skills+devtools, at 2e-5 with
+  2k/2k/4k `core` records replayed.
+- **Round 2, `make train-round2`:** continues from round 1 on 17 public sources Kev-4B never trained on (`CAP`
+  records each) with `CAP` records replayed from each of Kev's suites. `den compare` ships round 2 only if it beats
+  round 1 on dev without losing more than 1 point on any file.
+
+Every stage: one row per question (the state plus one question), Kev's option augmentation, LoRA rank 16 (alpha 32,
+dropout 0) on all 248 text-decoder projections (the attention, Gated DeltaNet and MLP projections, none in the
+vision tower), with fp32 adapters over a bf16 base. Validation on a dev sample runs every `--eval-steps` steps, and
+T is fitted on `calibration/core`. Unsloth needs Linux and an NVIDIA GPU; on a Mac, `--engine peft` runs the same
+adapters to check the wiring. This follows [Unsloth's Qwen3.5 guide](https://unsloth.ai/docs/models/qwen3.5/fine-tune),
+which advises against QLoRA on Qwen3.5.
+
+```bash
+make clean-data && make train-check          # data/clean/, then tokenize and report sizes (no GPU)
+make train-setup                             # on the GPU box: Unsloth, keeping the locked torch/transformers
+make train-kev                               # round 1 -> runs/kev-recipe/4-skills
+make train-round2 CAP=1500                   # round 2 -> runs/round2 (needs data-raw-* + normalize)
+uv run den evaluate --run runs/round2 dev/core.jsonl dev/documents.jsonl        # acc, NLL, ECE; test needs --final
+uv run den compare runs/kev-recipe/4-skills runs/round2                         # which one to ship, judged on dev
+uv run den publish --run runs/round2 --repo <org>/<name> --logs runs-train.log  # private Hub model, stages, data, logs
+make train ARGS="--lora 0 --head-lr 1e-3"    # baseline: frozen Qwen, pointer head only
+```
+
+### Experiments and gates
+
+| Mode | Command |
+|---|---|
+| A zero-shot Qwen (its own answer-letter probabilities) | `den train --head-kind letters --lora 0 --epochs 0` |
+| B Qwen + LoRA, answering with the letter | `den train --head-kind letters` |
+| C frozen Qwen + pointer head | `den train --lora 0 --head-lr 1e-3` |
+| D Qwen + LoRA + pointer head (the release recipe) | `make train-kev`, `make train-round2` |
+
+Ablations: `--lora-targets all|attention-mlp|attention`, `--option-rep end|marker|mean|attn`, `--head-proj
+linear|mlp`, `--head-kind set|pointer`, `--ordinal-weight`. Gates: `den overfit` (the head must fit 100 real
+examples; then determinism, option-permutation and option-replacement checks) and `den train --overfit 100` (the
+same through LoRA and the real training loop). `den probe` compares modes A and C quickly on frozen-backbone features (also on a Mac). `den evaluate --augment pairs|none-replace|none-add|distract` measures
+Kev's augmentations, with `pair_accuracy` for minimal pairs.
+
+## Use a trained model
+
+`den serve` puts a run behind Kev's (and TypeSafe's) `POST /v1/systemone`, with the same request and response, so
+existing clients and the TypeSafe SDK work unchanged. `den predict` prints the same responses for JSONL requests. A
+run is a local directory or `hf:<org>/<name>` (downloaded once into the Hub cache).
+
+```bash
+make serve RUN=hf:<org>/<name>               # http://127.0.0.1:8009; DEN_API_KEY=... requires a bearer key
+curl -s localhost:8009/v1/systemone -H 'content-type: application/json' -d '{
+  "state": "Shoes arrived two weeks late and in the wrong size. Also I see two charges on my card.",
+  "questions": {
+    "department":  {"type": "choice", "instructions": "Which team should handle this?",
+                    "criteria": {"returns": "Exchanges, refunds", "shipping": "Delivery, delays", "billing": "Charges"}},
+    "escalate":    {"type": "noul",  "instructions": "Does this need urgent human attention?"},
+    "frustration": {"type": "score", "instructions": "How frustrated is the customer?",
+                    "criteria": ["Calm", "Frustrated", "Very angry"]}}}'
+echo '{"state": ..., "questions": {...}}' | uv run den predict --run hf:<org>/<name>
+```
+
+From Python, the same response without a server:
+
+```python
+import den
+
+model = den.load("hf:<org>/<name>")      # or a local run directory
+model.predict({"state": "...", "questions": {"billing": {"type": "noul", "instructions": "Is this about billing?"}}})
+```
+
+The response holds, per question, `choice` (most likely option), `score` (expected level) or `noul` (probability of
+true), with `confidence` = (p_max − 1/K)/(1 − 1/K) and every option's probability, plus `usage` and `latency_ms`.
+Each question is read with the state alone.
+
+The prompt layout (`den/prompt.py`) is this repo's own, not Kev's serving template. The pointer head
+(`den/model.py`) starts as Kev's, q(question's final token) · k(option's closing token), and adds span pooling, one
+cross-option attention block and a per-option prior, all starting at zero (`--head-layers 0` drops the block;
+`--head-kind pointer` is Kev's head exactly). Backbone and head are independent: `MODEL=` picks any Qwen backbone,
+`--head-*` the head. A run exports Hugging Face-style files only: `merged/` (a standard checkpoint), the PEFT
+adapter, and the head as `head.safetensors` + `head.json` (its `hidden_size` must match the backbone's). For score
+questions, `--ordinal-weight` adds Kev's ranked probability score, so near-miss levels cost less than far ones.
+`den evaluate` reports accuracy, NLL, Brier, ECE, coverage at 5% error, accuracy per question type, and the
+expected level's error on score questions.
 
 Optional:
 
@@ -74,7 +164,7 @@ make test-model      # MLX vs PyTorch parity on the downloaded qwen3.5-4b
 | Linux + NVIDIA GPU | `cuda` | bf16 | PyTorch + transformers, flash-linear-attention kernels |
 | anything else | `cpu` | fp32 | PyTorch + transformers |
 
-`uv sync` installs only the runtime for the platform it runs on. Set `SYSTEM_ONE_BACKEND=mlx|cuda|cpu` to override the
+`uv sync` installs only the runtime for the platform it runs on. Set `DEN_BACKEND=mlx|cuda|cpu` to override the
 choice. Both runtimes load only the model's text tower, found on the loaded model, so dense, MoE and vision-language
 checkpoints all work. The hidden size is read from the config, and both return the same final hidden states.
 On Qwen3.5-4B, MLX in bf16 and PyTorch in fp32 agree to a per-token cosine similarity of at least 0.999
@@ -231,17 +321,32 @@ Its weak spots are knowledge, dates, held-out breadth (tools, retrieval) and lon
 ## Layout
 
 ```
-src/systemone/catalog.py      catalog types and rules (pins, roles, contamination)
-src/systemone/pins.py         every model and dataset, pinned
-src/systemone/fetch.py        verified downloads and lock files
-src/systemone/records.py      the typed record format (Kev's /v1/systemone request + labels)
-src/systemone/audit.py        dataset checks behind `make audit`
-src/systemone/normalize/      raw sources -> canonical records behind `make normalize`
-src/systemone/backends/       MLX and PyTorch backbones behind one interface
-src/systemone/cli.py          `systemone models | model | list | data | verify | normalize | audit | env | smoke`
-tests/                        catalog, record, normalize and backend tests
-locks/                        sha256 of every placed file
-reports/                      data audit and normalize results
+den/                  the package, one module per concern (flat, like kev/)
+├── api.py                    the record format: Kev's /v1/systemone request + labels, `render`
+├── pins.py                   every model and dataset, pinned to a commit and a sha256
+├── catalog.py                catalog types and rules (pins, roles, contamination)
+├── fetch.py                  verified downloads and lock files
+├── sources.py                per-source mappings from raw rows to records
+├── text.py                   text repair shared by normalize and clean (NFC, escapes, entities)
+├── normalize.py              raw sources -> canonical, leakage-free records (`make normalize`)
+├── clean.py                  cleaned, deduplicated training copies in data/clean/ (`make clean-data`)
+├── audit.py                  dataset checks (`make audit`)
+├── prompt.py                 records -> token ids and pointer positions, option shuffling
+├── model.py                  LoRA backbone (Unsloth, or PEFT for checks) and the pointer head
+├── calibrate.py              temperature fit on the calibration split
+├── train.py                  training: data, Trainer, run.json (`make train`)
+├── evaluate.py               load a run; `den evaluate` and `den predict`
+├── publish.py                `den publish`: model card, stages, data, logs -> private Hub upload
+├── serve.py                  `den serve`: POST /v1/systemone (Kev's API)
+├── device.py                 backend choice (mlx | cuda | cpu) and the backbone interface
+├── mlx_model.py              MLX backbone (Apple Silicon)
+├── torch_model.py            PyTorch backbone (CUDA, CPU)
+└── cli.py                    `den models | model | list | data | verify | normalize | clean | audit | train | env | smoke`
+tests/                      one test file per module it covers
+data/                       suites and normalized sources, by role (see Data layout)
+locks/                      sha256 of every placed file
+reports/                    audit, normalize and clean results
+runs/                       training outputs (gitignored)
 ```
 
 ## Next

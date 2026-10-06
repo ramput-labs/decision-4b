@@ -10,7 +10,7 @@ import torch
 from numpy.typing import NDArray
 from transformers import AutoModelForCausalLM
 
-from . import Backend, Device, DType, check_fits, hidden_size
+from .device import Backend, Device, DType, check_fits, hidden_size
 
 _DTYPES = {"bfloat16": torch.bfloat16, "float32": torch.float32}
 
@@ -26,7 +26,7 @@ def _device(backend: Backend, dtype: DType) -> Device:
 class TorchBackbone:
     def __init__(self, path: Path, backend: Backend, dtype: DType) -> None:
         if backend == "cuda" and not torch.cuda.is_available():
-            raise RuntimeError("SYSTEM_ONE_BACKEND=cuda but torch sees no CUDA device")
+            raise RuntimeError("DEN_BACKEND=cuda but torch sees no CUDA device")
         self._device = _device(backend, dtype)
         check_fits(path, self._device.memory_gb, dtype)
         self._torch_device = torch.device("cuda:0" if backend == "cuda" else "cpu")

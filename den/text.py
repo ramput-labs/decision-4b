@@ -6,9 +6,10 @@ import re
 import unicodedata
 from collections.abc import Mapping
 
-from ..records import fingerprint
+from .api import fingerprint
 
-_CONTROL = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
+# zero-width space, word joiner and BOM go; U+200C/D stay, since emoji sequences and Indic scripts need them
+_CONTROL = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f\u200b\u2060\ufeff]")
 _BREAK = re.compile(r"<br\s*/?>", re.IGNORECASE)
 _BARE_ENTITY = re.compile(r"(?<!&)(#\d+);|(?<![&\w])(quot|amp|lt|gt);")
 _SPACES = re.compile("[ \t\u00a0]+")
@@ -21,7 +22,7 @@ def clean(text: str, *, escapes: bool = False, markup: bool = False) -> str:
     if escapes:
         text = text.replace("\\n", "\n").replace('\\"', '"').replace("\\", " ")
     if markup:
-        text = html.unescape(_BARE_ENTITY.sub(lambda m: f"&{m[1] or m[2]};", _BREAK.sub("\n", text)))
+        text = _BREAK.sub("\n", html.unescape(_BARE_ENTITY.sub(lambda m: f"&{m[1] or m[2]};", text)))  # &lt;br&gt; too
     text = _CONTROL.sub("", unicodedata.normalize("NFC", text))
     lines = (_SPACES.sub(" ", line).strip() for line in text.replace("\r\n", "\n").split("\n"))
     return _BLANK_LINES.sub("\n\n", "\n".join(lines)).strip()

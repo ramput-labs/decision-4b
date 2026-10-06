@@ -13,3 +13,8 @@ data/sources/
 data/*/sources/
 data/.normalize/
 data/**/.cache/
+data/clean/
+
+# training outputs: adapters, head.pt, configs
+runs/
+.unsloth-pins.txt

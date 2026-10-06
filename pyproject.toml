@@ -1,5 +1,5 @@
 [project]
-name = "systemone"
+name = "den"
 version = "0.1.0"
 description = "A System One decision model: Qwen3.5-4B-Base + LoRA + pointer head, returning calibrated probabilities over typed options"
 readme = "README.md"
@@ -17,35 +17,47 @@ dependencies = [
 ]
 
 [project.scripts]
-systemone = "systemone.cli:main"
+den = "den.cli:main"
 
 [build-system]
 requires = ["uv_build>=0.9,<0.13"]
 build-backend = "uv_build"
 
+[tool.uv.build-backend]
+module-root = ""  # flat layout: the package lives at the repo root, like kev/
+
 [tool.mypy]
 strict = true
 python_version = "3.12"
-files = ["src", "tests"]
+files = ["den", "tests"]
 
 [tool.ruff]
 line-length = 120
 target-version = "py312"
 
 [tool.ruff.format]
-exclude = ["src/systemone/pins.py"]  # pin tables: one source per line
+exclude = ["den/pins.py"]  # pin tables: one source per line
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "SIM", "RUF", "ANN"]
 
+[[tool.mypy.overrides]]
+module = ["unsloth.*"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-markers = ["model: loads the 4B base model (slow; run with `make test-model`)"]
-addopts = "-m 'not model'"
+markers = [
+    "model: loads the 4B base model (slow; run with `make test-model`)",
+    "cuda: needs a CUDA GPU (run on the GPU box with `make test-cuda`)",
+]
+addopts = "-m 'not model and not cuda'"
+pythonpath = ["tests"]
 
 [dependency-groups]
 dev = [
     "mypy>=2.4.0",
+    "peft>=0.21.2",
     "pyarrow-stubs>=20.0.0.20260819",
     "pytest>=9.1.1",
     "ruff>=0.16.10",
@@ -53,4 +65,4 @@ dev = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"src/systemone/pins.py" = ["E501"]  # pin tables: one source per line
+"den/pins.py" = ["E501"]  # pin tables: one source per line

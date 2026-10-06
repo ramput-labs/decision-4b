@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from systemone.records import Json, RecordError, parse, render
+from den.api import Json, RecordError, parse, render
 
 STATE = "I was charged twice for order 1182."
 

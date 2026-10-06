@@ -1,17 +1,27 @@
-"""systemone: fetch, verify and check everything a systemone model trains on.
+"""den: fetch, verify and check everything a den model trains on.
 
-systemone models                  list the backbones (any size) and reference checkpoints
-systemone model [MODEL ...]       download models: a key from `systemone models`, or hf:<org>/<name>@<commit>
-systemone list [SET ...]          show the dataset catalog
-systemone data [SET ...]          download dataset sets (default: suites; all = every set except raw-bulk)
-systemone verify                  re-hash every downloaded file against locks/
-systemone normalize               raw sources -> canonical train / dev / test records under data/*/sources/
-systemone audit [--model M]       check every record and source is fit to train and evaluate on
-systemone env                     show the backend this machine uses
-systemone smoke [--model M] [--backend B]
+den models                  list the backbones (any size) and reference checkpoints
+den model [MODEL ...]       download models: a key from `den models`, or hf:<org>/<name>@<commit>
+den list [SET ...]          show the dataset catalog
+den data [SET ...]          download dataset sets (default: suites; all = every set except raw-bulk)
+den verify                  re-hash every downloaded file against locks/
+den normalize               raw sources -> canonical train / dev / test records under data/*/sources/
+den clean                   write cleaned, deduplicated training copies under data/clean/
+den train [--dry-run] ...   LoRA + pointer-head fine-tune of the model with Unsloth (CUDA)
+den evaluate --run R FILES  accuracy, NLL and calibration of a trained run
+den predict --run R [JSONL] /v1/systemone responses for request lines (R may be hf:<org>/<name>)
+den serve --run R [--port P]    POST /v1/systemone over HTTP (Kev's API)
+den compare RUN RUN ...         pick the run to ship from dev results
+den overfit [--n 100]           gate: the head must fit 100 real examples; behavioral checks after
+den probe --dev F [--train F]   modes A (zero-shot letters) and C (frozen backbone + head) on cached features
+den publish --run R --repo O/N  upload a run as a private Hub model with a generated card
+den audit [--model M]       check every record and source is fit to train and evaluate on
+den env                     show the backend this machine uses
+den doctor [--require cuda]       versions, GPU, BF16, driver, Unsloth, model revision; a readiness gate
+den smoke [--model M] [--backend B]
                                   run a downloaded model once on this machine
 
-MODEL defaults to $SYSTEM_ONE_MODEL, else qwen3.5-4b.
+MODEL defaults to $DEN_MODEL, else qwen3.5-4b.
 """
 
 from __future__ import annotations
@@ -48,14 +58,14 @@ REPORTS = Path("reports")
 
 
 def _default_model() -> str:
-    return os.environ.get("SYSTEM_ONE_MODEL", DEFAULT_MODEL)
+    return os.environ.get("DEN_MODEL", DEFAULT_MODEL)
 
 
 def _model(spec: str) -> Model:
     if spec.startswith("hf:"):
         return hub_model(spec)
     if spec not in MODELS:
-        raise SystemExit(f"unknown model {spec!r}; see `systemone models`, or pass hf:<org>/<name>@<commit>")
+        raise SystemExit(f"unknown model {spec!r}; see `den models`, or pass hf:<org>/<name>@<commit>")
     return MODELS[spec]
 
 
@@ -65,7 +75,7 @@ def _downloaded(key: str) -> bool:
 
 def _model_dir(key: str) -> Path:
     if not _downloaded(key):
-        raise SystemExit(f"model {key!r} is not downloaded: systemone model {key}")
+        raise SystemExit(f"model {key!r} is not downloaded: den model {key}")
     return MODELS_DIR / key
 
 
@@ -96,7 +106,7 @@ def cmd_models() -> int:
             here = "downloaded" if _downloaded(m.key) else ""
             mark = "*" if m.key == default else " "
             print(f" {mark}{m.key:<18}{_size(m.bytes):>10}  {m.note:<52}{here}")
-    print(f"\n* default (SYSTEM_ONE_MODEL={default})")
+    print(f"\n* default (DEN_MODEL={default})")
     return 0
 
 
@@ -150,7 +160,7 @@ def cmd_verify() -> int:
 
 
 def cmd_normalize() -> int:
-    from .normalize.pipeline import run
+    from .normalize import run
 
     report = run(DATA)
     _write_report("normalize.json", json.dumps(report, indent=2, ensure_ascii=False) + "\n")
@@ -159,6 +169,17 @@ def cmd_normalize() -> int:
         n = {split: s["splits"].get(split, {}).get("records", 0) for split in ("train", "dev", "test")}
         counts = f"{s['rows']:>9}{s['rejected']:>10}{s['conflicting']:>10}{s['duplicates']:>8}"
         print(f"{name:<32}{counts}{n['train']:>9}{n['dev']:>7}{n['test']:>7}")
+    return 0
+
+
+def cmd_clean() -> int:
+    from .clean import run
+
+    report = run(DATA)
+    _write_report("clean.json", json.dumps(report, indent=2) + "\n")
+    print(f"{'file':<48}{'records':>9}{'rewritten':>11}{'dupes':>7}{'written':>9}")
+    for path, r in report.items():
+        print(f"{path:<48}{r['records']:>9}{r['rewritten']:>11}{r['duplicates_dropped']:>7}{r['written']:>9}")
     return 0
 
 
@@ -172,7 +193,7 @@ def cmd_audit(model: str) -> int:
 
 
 def cmd_env() -> int:
-    from .backends import default_dtype, detect, is_apple_silicon
+    from .device import default_dtype, detect, is_apple_silicon
 
     backend = detect()
     print(f"backend  {backend}\ndtype    {default_dtype(backend)}\napple    {is_apple_silicon()}")
@@ -183,7 +204,7 @@ def cmd_env() -> int:
 def cmd_smoke(model: str, backend: str | None) -> int:
     from tokenizers import Tokenizer
 
-    from .backends import BACKENDS, load
+    from .device import BACKENDS, load
 
     if backend is not None and backend not in BACKENDS:
         raise SystemExit(f"unknown backend {backend!r}; choose from {BACKENDS}")
@@ -201,9 +222,7 @@ def cmd_smoke(model: str, backend: str | None) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(
-        prog="systemone", description=__doc__, formatter_class=argparse.RawTextHelpFormatter
-    )
+    parser = argparse.ArgumentParser(prog="den", description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
     sub = parser.add_subparsers(dest="cmd", required=True)
     sub.add_parser("models")
     sub.add_parser("model").add_argument("models", nargs="*")
@@ -211,12 +230,55 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("data").add_argument("sets", nargs="*")
     sub.add_parser("verify")
     sub.add_parser("normalize")
+    sub.add_parser("clean")
+    sub.add_parser("train")  # flags are parsed by den.train
+    sub.add_parser("evaluate")  # flags are parsed by den.evaluate
+    sub.add_parser("predict")
+    sub.add_parser("compare")
+    sub.add_parser("serve")  # flags are parsed by den.serve
+    sub.add_parser("overfit")  # flags are parsed by den.overfit
+    sub.add_parser("probe")  # flags are parsed by den.overfit
+    sub.add_parser("doctor")  # flags are parsed by den.doctor
+    sub.add_parser("publish")  # flags are parsed by den.publish
     sub.add_parser("audit").add_argument("--model", default=_default_model())
     sub.add_parser("env")
     smoke = sub.add_parser("smoke")
     smoke.add_argument("--model", default=_default_model())
     smoke.add_argument("--backend")
-    args = parser.parse_args(argv)
+    args, rest = parser.parse_known_args(argv)
+    if args.cmd == "train":
+        from .train import main as train_main
+
+        return train_main(rest)
+    if args.cmd == "doctor":
+        from .doctor import doctor_main
+
+        return doctor_main(rest)
+    if args.cmd in ("overfit", "probe"):
+        from .overfit import overfit_main, probe_main
+
+        code = (overfit_main if args.cmd == "overfit" else probe_main)(rest)
+        sys.stdout.flush()
+        os._exit(code)  # skip native-library teardown, as for evaluate
+    if args.cmd == "serve":
+        from .serve import serve_main
+
+        return serve_main(rest)
+    if args.cmd in ("evaluate", "predict", "compare"):
+        from .evaluate import compare_main, evaluate_main, predict_main
+
+        code = {"evaluate": evaluate_main, "predict": predict_main, "compare": compare_main}[args.cmd](rest)
+        # Results are written. Skip interpreter teardown, where native libraries have crashed (SIGSEGV) after a
+        # finished run; a nonzero exit would fail a scripted pipeline that had succeeded.
+        sys.stdout.flush()
+        sys.stderr.flush()
+        os._exit(code)
+    if args.cmd == "publish":
+        from .publish import publish_main
+
+        return publish_main(rest)
+    if rest:
+        parser.error(f"unrecognized arguments: {' '.join(rest)}")
     commands: dict[str, Callable[[], int]] = {
         "models": cmd_models,
         "model": lambda: cmd_model(args.models),
@@ -224,6 +286,7 @@ def main(argv: list[str] | None = None) -> int:
         "data": lambda: cmd_data(args.sets),
         "verify": cmd_verify,
         "normalize": cmd_normalize,
+        "clean": cmd_clean,
         "audit": lambda: cmd_audit(args.model),
         "env": cmd_env,
         "smoke": lambda: cmd_smoke(args.model, args.backend),

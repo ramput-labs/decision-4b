@@ -9,7 +9,7 @@ import numpy as np
 from mlx_lm.utils import load_model
 from numpy.typing import NDArray
 
-from . import Device, DType, check_fits, hidden_size
+from .device import Device, DType, check_fits, hidden_size
 
 _DTYPES = {"bfloat16": mx.bfloat16, "float32": mx.float32}
 

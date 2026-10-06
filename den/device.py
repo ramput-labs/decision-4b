@@ -44,9 +44,9 @@ def is_apple_silicon() -> bool:
 
 
 def detect() -> Backend:
-    if forced := os.environ.get("SYSTEM_ONE_BACKEND"):
+    if forced := os.environ.get("DEN_BACKEND"):
         if forced not in BACKENDS:
-            raise ValueError(f"SYSTEM_ONE_BACKEND={forced!r}; choose from {BACKENDS}")
+            raise ValueError(f"DEN_BACKEND={forced!r}; choose from {BACKENDS}")
         return forced
     if is_apple_silicon():
         return "mlx"
@@ -83,19 +83,19 @@ def check_fits(path: Path, available_gb: float, dtype: DType) -> None:
     if needed > available_gb:
         raise MemoryError(
             f"{path.name} needs about {needed:.0f} GB in {dtype}; this device has {available_gb:.0f} GB. "
-            "Choose a smaller model (systemone models) or a larger device."
+            "Choose a smaller model (den models) or a larger device."
         )
 
 
 def load(path: Path, backend: Backend | None = None, dtype: DType | None = None) -> Backbone:
     if not (path / "config.json").is_file():
-        raise FileNotFoundError(f"{path} is not a downloaded model (systemone model <key>)")
+        raise FileNotFoundError(f"{path} is not a downloaded model (den model <key>)")
     backend = backend or detect()
     dtype = dtype or default_dtype(backend)
     if backend == "mlx":
-        from .mlx import MlxBackbone
+        from .mlx_model import MlxBackbone
 
         return MlxBackbone(path, dtype)
-    from .torch import TorchBackbone
+    from .torch_model import TorchBackbone
 
     return TorchBackbone(path, backend, dtype)

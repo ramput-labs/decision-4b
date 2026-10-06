@@ -13,7 +13,7 @@ from typing import Literal
 
 import pyarrow.parquet as pq
 
-from ..records import Json, squash
+from .api import Json, squash
 from .text import clean
 
 type Split = Literal["train", "dev", "test"]
@@ -221,8 +221,8 @@ def multinli(row: Row, labels: Labels) -> Json | None:
     relation = _label(row, "label", labels["label"])
     if premise is None or hypothesis is None or relation is None:
         return None
-    instructions = f'Hypothesis: "{clean(hypothesis)}" How does it relate to the premise?'
-    return _request(clean(premise), relation=_choice(instructions, MNLI, relation))
+    instructions = f'Hypothesis: "{clean(hypothesis, markup=True)}" How does it relate to the premise?'
+    return _request(clean(premise, markup=True), relation=_choice(instructions, MNLI, relation))
 
 
 def _stars(levels: Sequence[str], instructions: str, *, escapes: bool = False) -> Converter:
@@ -404,7 +404,7 @@ def tweeteval_offensive(row: Row, labels: Labels) -> Json | None:
         "true": "Contains insults, threats, profanity directed at someone, or hateful content",
         "false": "Not offensive",
     }
-    return _request(clean(text), offensive=_noul("Is this post offensive?", label == 1, criteria))
+    return _request(clean(text, markup=True), offensive=_noul("Is this post offensive?", label == 1, criteria))
 
 
 def when2call(row: Row, labels: Labels) -> Json | None:
