@@ -79,6 +79,55 @@ def test_download_checks_every_file_against_the_manifest(tmp_path: Path, monkeyp
     assert mirror.download("org/den-data", target) == ["train/sources/yelp/train.jsonl differs from the uploaded file"]
 
 
+def test_download_rebuilds_what_the_licences_left_out(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from den import cli
+    from scripts import breadth
+
+    source = data_dir(tmp_path, monkeypatch)
+    excluded = {"train/core.jsonl": "restricted: Yelp Review Full"}
+    manifest = tmp_path / "MANIFEST.json"
+    manifest.write_text(json.dumps({"files": mirror.files(source, excluded), "excluded": excluded}))
+    target = tmp_path / "fresh"
+    ran: list[str] = []
+
+    def den(argv: list[str]) -> int:
+        ran.append(" ".join(argv))
+        if argv[0] == "data":  # the fetch puts the pinned original back
+            shutil.copy(source / "train" / "core.jsonl", target / "train" / "core.jsonl")
+        return 0
+
+    def build(argv: list[str]) -> int:
+        ran.append("breadth")
+        return 0
+
+    def snapshot(repo: str, **kwargs: Any) -> str:  # noqa: ANN401
+        shutil.copytree(
+            source / "train",
+            Path(kwargs["local_dir"]) / "train",
+            ignore=shutil.ignore_patterns("core*"),
+            dirs_exist_ok=True,
+        )
+        return str(kwargs["local_dir"])
+
+    monkeypatch.setattr(huggingface_hub, "hf_hub_download", lambda *a, **k: str(manifest))
+    monkeypatch.setattr(huggingface_hub, "snapshot_download", snapshot)
+    monkeypatch.setattr(cli, "main", den)
+    monkeypatch.setattr(breadth, "main", build)
+
+    assert mirror.download("org/den-data", target, rebuild_excluded=False) == []
+    assert ran == [] and not (target / "train" / "core.jsonl").exists()
+    assert mirror.download("org/den-data", target) == []
+    assert ran == ["data suites raw-train raw-new raw-eval", "breadth", "normalize", "clean"]
+    assert (target / "train" / "core.jsonl").read_bytes() == (source / "train" / "core.jsonl").read_bytes()
+
+    monkeypatch.setattr(cli, "main", lambda argv: 0)  # a rebuild that leaves the file out is a problem
+    (target / "train" / "core.jsonl").unlink()
+    assert mirror.download("org/den-data", target) == ["still missing after the rebuild: train/core.jsonl"]
+    monkeypatch.setattr(cli, "main", lambda argv: 2)
+    with pytest.raises(SystemExit, match="failed at fetch"):
+        mirror.download("org/den-data", target)
+
+
 def test_the_mirror_needs_a_direction() -> None:
     with pytest.raises(SystemExit, match="upload,download"):
         mirror.main(["sideways"])

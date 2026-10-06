@@ -1,0 +1,179 @@
+uv run den train --model qwen3.5-4b --data train/core.jsonl --epochs 2 --lr 5e-5 --batch 4 --accum 2 --p-none-pair 0.25 --eval-steps 400 --eval-max 600 \
+	--dev dev/core.jsonl --out runs/timing/1-base --max-steps 20
+train      17796 records    15156 questions  tokens median 117 p99 798 max 876 total 3.2M  skipped 0
+dev         1468 records     1468 questions  tokens median 111 p99 788 max 858 total 0.3M  skipped 0
+calib       1148 records     1148 questions  tokens median 120 p99 774 max 815 total 0.2M  skipped 0
+🦥 Unsloth: Will patch your computer to enable 2x faster free finetuning.
+W1006 19:40:20.754000 10756 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1006 19:40:20.785000 10756 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+🦥 Unsloth Zoo will now patch everything to make training faster!
+==((====))==  Unsloth 2026.10.1: Fast Qwen3_5 patching. Transformers: 5.17.0.
+   \\   /|    NVIDIA H100 80GB HBM3. Num GPUs = 1. Max memory: 79.179 GB. Platform: Linux.
+O^O/ \_/ \    Torch: 2.14.1+cu130. CUDA: 9.0. CUDA Toolkit: 13.0. Triton: 3.8.0
+\        /    Bfloat16 = TRUE. FA [Xformers = 0.0.35. FA2 = False]
+ "-____-"     Free license: http://github.com/unslothai/unsloth
+Unsloth: Fast downloading is enabled - ignore downloading bars which are red colored!
+Loading weights:   0%|          | 0/723 [00:00<?, ?it/s]Loading weights:   0%|          | 1/723 [00:00<02:07,  5.68it/s]Loading weights:   5%|▍         | 34/723 [00:00<00:04, 150.98it/s]Loading weights:   9%|▉         | 65/723 [00:00<00:03, 185.96it/s]Loading weights:  13%|█▎        | 94/723 [00:00<00:02, 217.26it/s]Loading weights:  16%|█▋        | 119/723 [00:00<00:02, 216.99it/s]Loading weights:  21%|██        | 151/723 [00:00<00:02, 245.24it/s]Loading weights:  26%|██▌       | 185/723 [00:00<00:01, 270.25it/s]Loading weights:  29%|██▉       | 213/723 [00:00<00:02, 237.94it/s]Loading weights:  34%|███▍      | 247/723 [00:01<00:01, 260.92it/s]Loading weights:  38%|███▊      | 275/723 [00:01<00:01, 257.34it/s]Loading weights:  42%|████▏     | 302/723 [00:01<00:01, 260.75it/s]Loading weights:  46%|████▌     | 329/723 [00:01<00:01, 249.46it/s]Loading weights:  49%|████▉     | 357/723 [00:01<00:01, 256.20it/s]Loading weights:  53%|█████▎    | 383/723 [00:01<00:01, 237.63it/s]Loading weights:  57%|█████▋    | 411/723 [00:01<00:01, 245.79it/s]Loading weights:  71%|███████▏  | 516/723 [00:01<00:00, 466.74it/s]Loading weights: 100%|██████████| 723/723 [00:01<00:00, 369.70it/s]
+Unsloth: models/qwen3.5-4b had a bad pad_token (<|endoftext|>). Using pad_token = <|vision_pad|>.
+Unsloth: Explicit target_modules are constrained by the finetune_(vision|language|attention|mlp) filters; adapters attach only where both select.
+setup  engine unsloth  dtype bf16  device NVIDIA H100 80GB HBM3  lora_modules 248  trainable_params 34964226  head_params 2499330  trainable_dtype float32  records_per_step 8  planned_steps 20
+==((====))==  Unsloth - 2x faster free finetuning | Num GPUs used = 1
+   \\   /|    Num examples = 17,796 | Num Epochs = 1 | Total steps = 20
+O^O/ \_/ \    Batch size per device = 4 | Gradient accumulation steps = 2
+\        /    Data Parallel GPUs = 1 | Total batch size (4 x 2 x 1) = 8
+ "-____-"     Trainable parameters = 34,964,226 of 4,574,229,762 (0.76% trained)
+  0%|          | 0/20 [00:00<?, ?it/s]Unsloth: Not an error, but SystemOne does not accept `num_items_in_batch`.
+Using gradient accumulation will be very slightly less accurate.
+Read more on gradient accumulation issues here: https://unsloth.ai/blog/gradient
+<frozen abc>:119: FutureWarning: `torch.distributed.reduce_op` is deprecated, please use `torch.distributed.ReduceOp` instead
+Unsloth: Will smartly offload gradients to save VRAM!
+`causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+<frozen abc>:119: FutureWarning: `torch.distributed.reduce_op` is deprecated, please use `torch.distributed.ReduceOp` instead
+Unsloth: Double buffering enabled (parallel H2D + compute) for backward pass.
+  5%|▌         | 1/20 [00:27<08:35, 27.15s/it]<frozen abc>:119: FutureWarning: `torch.distributed.reduce_op` is deprecated, please use `torch.distributed.ReduceOp` instead
+ 10%|█         | 2/20 [00:27<03:30, 11.68s/it] 15%|█▌        | 3/20 [00:28<01:55,  6.78s/it] 20%|██        | 4/20 [00:29<01:11,  4.45s/it] 25%|██▌       | 5/20 [00:30<00:47,  3.17s/it] 30%|███       | 6/20 [00:31<00:33,  2.40s/it] 35%|███▌      | 7/20 [00:32<00:24,  1.86s/it] 40%|████      | 8/20 [00:33<00:18,  1.52s/it] 45%|████▌     | 9/20 [00:33<00:14,  1.28s/it] 50%|█████     | 10/20 [00:36<00:15,  1.55s/it]                                               {'loss': '2.361', 'grad_norm': '9.466', 'learning_rate': '3.355e-05', 'epoch': '0.004495', 'num_input_tokens_seen': 38892, 'train_runtime': '36.08', 'train_tokens_per_second': '1078'}
+ 50%|█████     | 10/20 [00:36<00:15,  1.55s/it] 55%|█████▌    | 11/20 [00:36<00:11,  1.31s/it] 60%|██████    | 12/20 [00:37<00:09,  1.17s/it] 65%|██████▌   | 13/20 [00:38<00:07,  1.05s/it] 70%|███████   | 14/20 [00:39<00:05,  1.05it/s] 75%|███████▌  | 15/20 [00:39<00:04,  1.14it/s] 80%|████████  | 16/20 [00:40<00:03,  1.18it/s] 85%|████████▌ | 17/20 [00:41<00:02,  1.24it/s] 90%|█████████ | 18/20 [00:42<00:01,  1.22it/s] 95%|█████████▌| 19/20 [00:43<00:00,  1.23it/s]100%|██████████| 20/20 [00:43<00:00,  1.26it/s]                                               {'loss': '1.255', 'grad_norm': '14.64', 'learning_rate': '3.798e-07', 'epoch': '0.008991', 'num_input_tokens_seen': 51908, 'train_runtime': '43.79', 'train_tokens_per_second': '1185'}
+100%|██████████| 20/20 [00:43<00:00,  1.26it/s]<frozen abc>:119: FutureWarning: `torch.distributed.reduce_op` is deprecated, please use `torch.distributed.ReduceOp` instead
+
+epoch dev  nll 1.3642  acc 0.5014
+                                               {'train_runtime': '85.39', 'train_samples_per_second': '1.874', 'train_steps_per_second': '0.234', 'train_loss': '1.808', 'epoch': '0.008991', 'num_input_tokens_seen': 51908}
+100%|██████████| 20/20 [01:25<00:00,  1.26it/s]100%|██████████| 20/20 [01:25<00:00,  4.27s/it]
+calibration  T 1.795
+dev at T  nll 1.3582  acc 0.5014  brier 0.6524  ece 0.1265   (T=1: nll 1.3642  ece 0.1031)
+best   step 20 of 20  dev nll 1.3739  acc 0.4967
+saved runs/timing/1-base
+uv run den train --model qwen3.5-4b --data train/dates-unknowable.jsonl --replay 2000 --init-from runs/timing/1-base --lr 2e-5 --batch 4 --accum 2 \
+	--eval-steps 400 --eval-max 600 --dev dev/core.jsonl --out runs/timing/2-dates --max-steps 20
+train       3906 records     3906 questions  tokens median 118 p99 776 max 845 total 0.6M  skipped 0
+dev         1468 records     1468 questions  tokens median 111 p99 788 max 858 total 0.3M  skipped 0
+calib       1148 records     1148 questions  tokens median 120 p99 774 max 815 total 0.2M  skipped 0
+🦥 Unsloth: Will patch your computer to enable 2x faster free finetuning.
+W1006 19:43:51.551000 11550 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1006 19:43:51.583000 11550 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+🦥 Unsloth Zoo will now patch everything to make training faster!
+==((====))==  Unsloth 2026.10.1: Fast Qwen3_5 patching. Transformers: 5.17.0.
+   \\   /|    NVIDIA H100 80GB HBM3. Num GPUs = 1. Max memory: 79.179 GB. Platform: Linux.
+O^O/ \_/ \    Torch: 2.14.1+cu130. CUDA: 9.0. CUDA Toolkit: 13.0. Triton: 3.8.0
+\        /    Bfloat16 = TRUE. FA [Xformers = 0.0.35. FA2 = False]
+ "-____-"     Free license: http://github.com/unslothai/unsloth
+Unsloth: Fast downloading is enabled - ignore downloading bars which are red colored!
+Loading weights:   0%|          | 0/723 [00:00<?, ?it/s]Loading weights:   0%|          | 1/723 [00:00<01:38,  7.33it/s]Loading weights:   4%|▍         | 28/723 [00:00<00:04, 140.10it/s]Loading weights:   9%|▉         | 65/723 [00:00<00:02, 234.41it/s]Loading weights:  14%|█▍        | 100/723 [00:00<00:02, 270.10it/s]Loading weights:  18%|█▊        | 133/723 [00:00<00:02, 289.92it/s]Loading weights:  23%|██▎       | 163/723 [00:00<00:01, 286.03it/s]Loading weights:  27%|██▋       | 193/723 [00:00<00:01, 282.91it/s]Loading weights:  31%|███       | 222/723 [00:00<00:01, 275.23it/s]Loading weights:  35%|███▍      | 250/723 [00:00<00:01, 267.98it/s]Loading weights:  38%|███▊      | 277/723 [00:01<00:01, 266.04it/s]Loading weights:  43%|████▎     | 310/723 [00:01<00:01, 277.72it/s]Loading weights:  47%|████▋     | 338/723 [00:01<00:01, 267.04it/s]Loading weights:  51%|█████     | 366/723 [00:01<00:01, 270.58it/s]Loading weights:  55%|█████▌    | 398/723 [00:01<00:01, 280.87it/s]Loading weights:  59%|█████▉    | 427/723 [00:01<00:01, 267.75it/s]Loading weights:  84%|████████▎ | 604/723 [00:01<00:00, 688.34it/s]Loading weights: 100%|██████████| 723/723 [00:01<00:00, 398.09it/s]
+Unsloth: models/qwen3.5-4b had a bad pad_token (<|endoftext|>). Using pad_token = <|vision_pad|>.
+Unsloth: Explicit target_modules are constrained by the finetune_(vision|language|attention|mlp) filters; adapters attach only where both select.
+init   from runs/timing/1-base (its T 1.795)
+setup  engine unsloth  dtype bf16  device NVIDIA H100 80GB HBM3  lora_modules 248  trainable_params 34964226  head_params 2499330  trainable_dtype float32  records_per_step 8  planned_steps 20
+==((====))==  Unsloth - 2x faster free finetuning | Num GPUs used = 1
+   \\   /|    Num examples = 3,906 | Num Epochs = 1 | Total steps = 20
+O^O/ \_/ \    Batch size per device = 4 | Gradient accumulation steps = 2
+\        /    Data Parallel GPUs = 1 | Total batch size (4 x 2 x 1) = 8
+ "-____-"     Trainable parameters = 34,964,226 of 4,574,229,762 (0.76% trained)
+  0%|          | 0/20 [00:00<?, ?it/s]Unsloth: Not an error, but SystemOne does not accept `num_items_in_batch`.
+Using gradient accumulation will be very slightly less accurate.
+Read more on gradient accumulation issues here: https://unsloth.ai/blog/gradient
+<frozen abc>:119: FutureWarning: `torch.distributed.reduce_op` is deprecated, please use `torch.distributed.ReduceOp` instead
+Unsloth: Will smartly offload gradients to save VRAM!
+`causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+<frozen abc>:119: FutureWarning: `torch.distributed.reduce_op` is deprecated, please use `torch.distributed.ReduceOp` instead
+Unsloth: Double buffering enabled (parallel H2D + compute) for backward pass.
+  5%|▌         | 1/20 [00:27<08:34, 27.06s/it]<frozen abc>:119: FutureWarning: `torch.distributed.reduce_op` is deprecated, please use `torch.distributed.ReduceOp` instead
+ 10%|█         | 2/20 [00:27<03:29, 11.63s/it] 15%|█▌        | 3/20 [00:29<01:56,  6.87s/it] 20%|██        | 4/20 [00:29<01:12,  4.50s/it] 25%|██▌       | 5/20 [00:30<00:47,  3.15s/it] 30%|███       | 6/20 [00:31<00:32,  2.33s/it] 35%|███▌      | 7/20 [00:32<00:24,  1.90s/it] 40%|████      | 8/20 [00:33<00:18,  1.57s/it] 45%|████▌     | 9/20 [00:34<00:14,  1.31s/it] 50%|█████     | 10/20 [00:34<00:11,  1.15s/it]                                               {'loss': '1.401', 'grad_norm': '11.36', 'learning_rate': '1.342e-05', 'epoch': '0.02047', 'num_input_tokens_seen': 28724, 'train_runtime': '34.86', 'train_tokens_per_second': '824'}
+ 50%|█████     | 10/20 [00:34<00:11,  1.15s/it] 55%|█████▌    | 11/20 [00:35<00:09,  1.02s/it] 60%|██████    | 12/20 [00:36<00:07,  1.07it/s] 65%|██████▌   | 13/20 [00:37<00:06,  1.13it/s] 70%|███████   | 14/20 [00:37<00:05,  1.18it/s] 75%|███████▌  | 15/20 [00:38<00:04,  1.22it/s] 80%|████████  | 16/20 [00:39<00:03,  1.19it/s] 85%|████████▌ | 17/20 [00:42<00:04,  1.44s/it] 90%|█████████ | 18/20 [00:44<00:03,  1.58s/it] 95%|█████████▌| 19/20 [00:45<00:01,  1.37s/it]100%|██████████| 20/20 [00:45<00:00,  1.22s/it]                                               {'loss': '0.9896', 'grad_norm': '9.213', 'learning_rate': '1.519e-07', 'epoch': '0.04094', 'num_input_tokens_seen': 40424, 'train_runtime': '45.99', 'train_tokens_per_second': '878.9'}
+100%|██████████| 20/20 [00:45<00:00,  1.22s/it]
+epoch dev  nll 1.1934  acc 0.5593
+                                               {'train_runtime': '86.52', 'train_samples_per_second': '1.849', 'train_steps_per_second': '0.231', 'train_loss': '1.195', 'epoch': '0.04094', 'num_input_tokens_seen': 40424}
+100%|██████████| 20/20 [01:26<00:00,  1.22s/it]100%|██████████| 20/20 [01:26<00:00,  4.33s/it]
+calibration  T 1.320
+dev at T  nll 1.1807  acc 0.5593  brier 0.5889  ece 0.1162   (T=1: nll 1.1934  ece 0.1033)
+best   step 20 of 20  dev nll 1.1887  acc 0.5717
+saved runs/timing/2-dates
+uv run den train --model qwen3.5-4b --data train/documents.jsonl --replay 2000 --init-from runs/timing/2-dates --lr 2e-5 --batch 2 --accum 4 \
+	--eval-steps 400 --eval-max 600 --dev dev/documents.jsonl dev/core.jsonl --out runs/timing/3-documents --max-steps 20
+train       9969 records     9969 questions  tokens median 397 p99 2995 max 7390 total 6.3M  skipped 0
+dev         2388 records     2388 questions  tokens median 175 p99 2545 max 5103 total 1.0M  skipped 0
+calib       1148 records     1148 questions  tokens median 120 p99 774 max 815 total 0.2M  skipped 0
+🦥 Unsloth: Will patch your computer to enable 2x faster free finetuning.
+W1006 19:47:34.172000 12183 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1006 19:47:34.203000 12183 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+🦥 Unsloth Zoo will now patch everything to make training faster!
+==((====))==  Unsloth 2026.10.1: Fast Qwen3_5 patching. Transformers: 5.17.0.
+   \\   /|    NVIDIA H100 80GB HBM3. Num GPUs = 1. Max memory: 79.179 GB. Platform: Linux.
+O^O/ \_/ \    Torch: 2.14.1+cu130. CUDA: 9.0. CUDA Toolkit: 13.0. Triton: 3.8.0
+\        /    Bfloat16 = TRUE. FA [Xformers = 0.0.35. FA2 = False]
+ "-____-"     Free license: http://github.com/unslothai/unsloth
+Unsloth: Fast downloading is enabled - ignore downloading bars which are red colored!
+Loading weights:   0%|          | 0/723 [00:00<?, ?it/s]Loading weights:   0%|          | 1/723 [00:00<01:34,  7.62it/s]Loading weights:   4%|▍         | 28/723 [00:00<00:04, 144.04it/s]Loading weights:   7%|▋         | 53/723 [00:00<00:03, 185.71it/s]Loading weights:  11%|█         | 80/723 [00:00<00:02, 216.04it/s]Loading weights:  14%|█▍        | 103/723 [00:00<00:02, 212.80it/s]Loading weights:  18%|█▊        | 132/723 [00:00<00:02, 229.76it/s]Loading weights:  22%|██▏       | 156/723 [00:00<00:02, 216.80it/s]Loading weights:  25%|██▌       | 182/723 [00:00<00:02, 227.85it/s]Loading weights:  28%|██▊       | 206/723 [00:01<00:02, 212.56it/s]Loading weights:  33%|███▎      | 237/723 [00:01<00:02, 237.28it/s]Loading weights:  36%|███▌      | 262/723 [00:01<00:02, 217.29it/s]Loading weights:  40%|████      | 290/723 [00:01<00:01, 232.20it/s]Loading weights:  43%|████▎     | 314/723 [00:01<00:01, 210.48it/s]Loading weights:  47%|████▋     | 341/723 [00:01<00:01, 225.03it/s]Loading weights:  50%|█████     | 365/723 [00:01<00:01, 209.30it/s]Loading weights:  55%|█████▍    | 396/723 [00:01<00:01, 232.80it/s]Loading weights:  58%|█████▊    | 421/723 [00:01<00:01, 215.96it/s]Loading weights:  79%|███████▉  | 574/723 [00:02<00:00, 554.31it/s]Loading weights: 100%|██████████| 723/723 [00:02<00:00, 331.99it/s]
+Unsloth: models/qwen3.5-4b had a bad pad_token (<|endoftext|>). Using pad_token = <|vision_pad|>.
+Unsloth: Explicit target_modules are constrained by the finetune_(vision|language|attention|mlp) filters; adapters attach only where both select.
+init   from runs/timing/2-dates (its T 1.320)
+setup  engine unsloth  dtype bf16  device NVIDIA H100 80GB HBM3  lora_modules 248  trainable_params 34964226  head_params 2499330  trainable_dtype float32  records_per_step 8  planned_steps 20
+==((====))==  Unsloth - 2x faster free finetuning | Num GPUs used = 1
+   \\   /|    Num examples = 9,969 | Num Epochs = 1 | Total steps = 20
+O^O/ \_/ \    Batch size per device = 2 | Gradient accumulation steps = 4
+\        /    Data Parallel GPUs = 1 | Total batch size (2 x 4 x 1) = 8
+ "-____-"     Trainable parameters = 34,964,226 of 4,574,229,762 (0.76% trained)
+  0%|          | 0/20 [00:00<?, ?it/s]Unsloth: Not an error, but SystemOne does not accept `num_items_in_batch`.
+Using gradient accumulation will be very slightly less accurate.
+Read more on gradient accumulation issues here: https://unsloth.ai/blog/gradient
+<frozen abc>:119: FutureWarning: `torch.distributed.reduce_op` is deprecated, please use `torch.distributed.ReduceOp` instead
+Unsloth: Will smartly offload gradients to save VRAM!
+`causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+<frozen abc>:119: FutureWarning: `torch.distributed.reduce_op` is deprecated, please use `torch.distributed.ReduceOp` instead
+Unsloth: Double buffering enabled (parallel H2D + compute) for backward pass.
+<frozen abc>:119: FutureWarning: `torch.distributed.reduce_op` is deprecated, please use `torch.distributed.ReduceOp` instead
+  5%|▌         | 1/20 [01:03<20:04, 63.41s/it] 10%|█         | 2/20 [01:05<08:09, 27.19s/it] 15%|█▌        | 3/20 [01:06<04:23, 15.52s/it] 20%|██        | 4/20 [01:08<02:39,  9.94s/it] 25%|██▌       | 5/20 [01:09<01:42,  6.86s/it] 30%|███       | 6/20 [01:11<01:09,  4.99s/it] 35%|███▌      | 7/20 [01:12<00:50,  3.87s/it] 40%|████      | 8/20 [01:14<00:37,  3.10s/it] 45%|████▌     | 9/20 [01:15<00:27,  2.54s/it] 50%|█████     | 10/20 [01:16<00:21,  2.17s/it]                                               {'loss': '0.6844', 'grad_norm': '12.28', 'learning_rate': '1.342e-05', 'epoch': '0.008024', 'num_input_tokens_seen': 140508, 'train_runtime': '76.68', 'train_tokens_per_second': '1832'}
+ 50%|█████     | 10/20 [01:16<00:21,  2.17s/it] 55%|█████▌    | 11/20 [01:18<00:17,  1.91s/it] 60%|██████    | 12/20 [01:19<00:14,  1.81s/it] 65%|██████▌   | 13/20 [01:20<00:11,  1.69s/it] 70%|███████   | 14/20 [01:22<00:09,  1.61s/it] 75%|███████▌  | 15/20 [01:24<00:08,  1.66s/it] 80%|████████  | 16/20 [01:26<00:07,  1.77s/it] 85%|████████▌ | 17/20 [01:27<00:05,  1.72s/it] 90%|█████████ | 18/20 [01:29<00:03,  1.62s/it] 95%|█████████▌| 19/20 [01:30<00:01,  1.56s/it]100%|██████████| 20/20 [01:32<00:00,  1.52s/it]                                               {'loss': '0.6217', 'grad_norm': '34.15', 'learning_rate': '1.519e-07', 'epoch': '0.01605', 'num_input_tokens_seen': 206124, 'train_runtime': '92.05', 'train_tokens_per_second': '2239'}
+100%|██████████| 20/20 [01:32<00:00,  1.52s/it]<frozen abc>:119: FutureWarning: `torch.distributed.reduce_op` is deprecated, please use `torch.distributed.ReduceOp` instead
+<frozen abc>:119: FutureWarning: `torch.distributed.reduce_op` is deprecated, please use `torch.distributed.ReduceOp` instead
+<frozen abc>:119: FutureWarning: `torch.distributed.reduce_op` is deprecated, please use `torch.distributed.ReduceOp` instead
+
+epoch dev  nll 0.9735  acc 0.6621
+                                               {'train_runtime': '212.1', 'train_samples_per_second': '0.754', 'train_steps_per_second': '0.094', 'train_loss': '0.6531', 'epoch': '0.01605', 'num_input_tokens_seen': 206124}
+100%|██████████| 20/20 [03:32<00:00,  1.52s/it]100%|██████████| 20/20 [03:32<00:00, 10.60s/it]
+calibration  T 1.633
+dev at T  nll 0.9030  acc 0.6621  brier 0.4492  ece 0.0452   (T=1: nll 0.9735  ece 0.0804)
+best   step 20 of 20  dev nll 0.9282  acc 0.6550
+saved runs/timing/3-documents
+uv run den train --model qwen3.5-4b --data train/skills.jsonl train/devtools.jsonl --replay 4000 --init-from runs/timing/3-documents --lr 2e-5 \
+	--batch 2 --accum 4 --eval-steps 400 --eval-max 600 --dev dev/skills.jsonl dev/devtools.jsonl dev/core.jsonl --merge \
+	--out runs/timing/4-skills --max-steps 20
+train      21252 records    21252 questions  tokens median 178 p99 4629 max 5104 total 9.9M  skipped 0
+dev         3625 records     3625 questions  tokens median 147 p99 4318 max 5029 total 1.4M  skipped 0
+calib       1148 records     1148 questions  tokens median 120 p99 774 max 815 total 0.2M  skipped 0
+🦥 Unsloth: Will patch your computer to enable 2x faster free finetuning.
+W1006 19:55:26.250000 13016 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W1006 19:55:26.280000 13016 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+🦥 Unsloth Zoo will now patch everything to make training faster!
+==((====))==  Unsloth 2026.10.1: Fast Qwen3_5 patching. Transformers: 5.17.0.
+   \\   /|    NVIDIA H100 80GB HBM3. Num GPUs = 1. Max memory: 79.179 GB. Platform: Linux.
+O^O/ \_/ \    Torch: 2.14.1+cu130. CUDA: 9.0. CUDA Toolkit: 13.0. Triton: 3.8.0
+\        /    Bfloat16 = TRUE. FA [Xformers = 0.0.35. FA2 = False]
+ "-____-"     Free license: http://github.com/unslothai/unsloth
+Unsloth: Fast downloading is enabled - ignore downloading bars which are red colored!
+Loading weights:   0%|          | 0/723 [00:00<?, ?it/s]Loading weights:   0%|          | 1/723 [00:00<02:01,  5.94it/s]Loading weights:   4%|▍         | 28/723 [00:00<00:05, 123.56it/s]Loading weights:   6%|▋         | 46/723 [00:00<00:04, 136.16it/s]Loading weights:  11%|█         | 78/723 [00:00<00:03, 194.73it/s]Loading weights:  14%|█▍        | 100/723 [00:00<00:03, 182.35it/s]Loading weights:  18%|█▊        | 128/723 [00:00<00:02, 210.62it/s]Loading weights:  21%|██        | 151/723 [00:00<00:02, 198.63it/s]Loading weights:  24%|██▍       | 172/723 [00:00<00:02, 201.78it/s]Loading weights:  27%|██▋       | 198/723 [00:01<00:02, 197.86it/s]Loading weights:  31%|███       | 225/723 [00:01<00:02, 213.79it/s]Loading weights:  35%|███▍      | 253/723 [00:01<00:02, 227.57it/s]Loading weights:  38%|███▊      | 277/723 [00:01<00:01, 225.90it/s]Loading weights:  42%|████▏     | 301/723 [00:01<00:01, 227.75it/s]Loading weights:  46%|████▌     | 329/723 [00:01<00:01, 239.16it/s]Loading weights:  49%|████▉     | 354/723 [00:01<00:01, 224.23it/s]Loading weights:  52%|█████▏    | 377/723 [00:01<00:01, 213.58it/s]Loading weights:  56%|█████▌    | 403/723 [00:01<00:01, 225.44it/s]Loading weights:  59%|█████▉    | 426/723 [00:02<00:01, 216.01it/s]Loading weights:  81%|████████▏ | 589/723 [00:02<00:00, 597.43it/s]Loading weights: 100%|██████████| 723/723 [00:02<00:00, 319.03it/s]
+Unsloth: models/qwen3.5-4b had a bad pad_token (<|endoftext|>). Using pad_token = <|vision_pad|>.
+Unsloth: Explicit target_modules are constrained by the finetune_(vision|language|attention|mlp) filters; adapters attach only where both select.
+init   from runs/timing/3-documents (its T 1.633)
+setup  engine unsloth  dtype bf16  device NVIDIA H100 80GB HBM3  lora_modules 248  trainable_params 34964226  head_params 2499330  trainable_dtype float32  records_per_step 8  planned_steps 20
+==((====))==  Unsloth - 2x faster free finetuning | Num GPUs used = 1
+   \\   /|    Num examples = 21,252 | Num Epochs = 1 | Total steps = 20
+O^O/ \_/ \    Batch size per device = 2 | Gradient accumulation steps = 4
+\        /    Data Parallel GPUs = 1 | Total batch size (2 x 4 x 1) = 8
+ "-____-"     Trainable parameters = 34,964,226 of 4,574,229,762 (0.76% trained)
+  0%|          | 0/20 [00:00<?, ?it/s]Unsloth: Not an error, but SystemOne does not accept `num_items_in_batch`.
+Using gradient accumulation will be very slightly less accurate.
+Read more on gradient accumulation issues here: https://unsloth.ai/blog/gradient
+<frozen abc>:119: FutureWarning: `torch.distributed.reduce_op` is deprecated, please use `torch.distributed.ReduceOp` instead
+Unsloth: Will smartly offload gradients to save VRAM!
+`causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+<frozen abc>:119: FutureWarning: `torch.distributed.reduce_op` is deprecated, please use `torch.distributed.ReduceOp` instead
+Unsloth: Double buffering enabled (parallel H2D + compute) for backward pass.
+<frozen abc>:119: FutureWarning: `torch.distributed.reduce_op` is deprecated, please use `torch.distributed.ReduceOp` instead
+  5%|▌         | 1/20 [00:48<15:19, 48.38s/it] 10%|█         | 2/20 [00:51<06:33, 21.87s/it] 15%|█▌        | 3/20 [00:54<03:44, 13.21s/it] 20%|██        | 4/20 [00:56<02:19,  8.73s/it] 25%|██▌       | 5/20 [00:58<01:35,  6.36s/it] 30%|███       | 6/20 [01:00<01:06,  4.78s/it] 35%|███▌      | 7/20 [01:02<00:48,  3.77s/it] 40%|████      | 8/20 [01:03<00:37,  3.13s/it] 45%|████▌     | 9/20 [01:05<00:28,  2.61s/it] 50%|█████     | 10/20 [01:06<00:23,  2.33s/it]                                               {'loss': '1.401', 'grad_norm': '10.53', 'learning_rate': '1.342e-05', 'epoch': '0.003764', 'num_input_tokens_seen': 141284, 'train_runtime': '66.94', 'train_tokens_per_second': '2110'}
+ 50%|█████     | 10/20 [01:06<00:23,  2.33s/it] 55%|█████▌    | 11/20 [01:08<00:19,  2.13s/it] 60%|██████    | 12/20 [01:10<00:15,  1.98s/it] 65%|██████▌   | 13/20 [01:11<00:13,  1.87s/it] 70%|███████   | 14/20 [01:13<00:10,  1.81s/it] 75%|███████▌  | 15/20 [01:14<00:08,  1.70s/it] 80%|████████  | 16/20 [01:16<00:06,  1.62s/it] 85%|████████▌ | 17/20 [01:18<00:04,  1.66s/it] 90%|█████████ | 18/20 [01:19<00:03,  1.62s/it] 95%|█████████▌| 19/20 [01:21<00:01,  1.64s/it]100%|██████████| 20/20 [01:23<00:00,  1.67s/it]                                               {'loss': '0.909', 'grad_norm': '9.17', 'learning_rate': '1.519e-07', 'epoch': '0.007529', 'num_input_tokens_seen': 165182, 'train_runtime': '83.12', 'train_tokens_per_second': '1987'}
+100%|██████████| 20/20 [01:23<00:00,  1.67s/it]<frozen abc>:119: FutureWarning: `torch.distributed.reduce_op` is deprecated, please use `torch.distributed.ReduceOp` instead
+
+epoch dev  nll 1.0383  acc 0.5490
+                                               {'train_runtime': '277.4', 'train_samples_per_second': '0.577', 'train_steps_per_second': '0.072', 'train_loss': '1.155', 'epoch': '0.007529', 'num_input_tokens_seen': 165182}
+100%|██████████| 20/20 [04:37<00:00,  1.67s/it]100%|██████████| 20/20 [04:37<00:00, 13.87s/it]
+<frozen abc>:119: FutureWarning: `torch.distributed.reduce_op` is deprecated, please use `torch.distributed.ReduceOp` instead
+calibration  T 1.174

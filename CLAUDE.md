@@ -15,7 +15,7 @@ make train-check    # tokenize data/clean, print shape (no GPU; works on the Mac
 make clean-data     # rebuild data/clean/ (gitignored) from suites + normalized sources
 make audit          # full data audit -> reports/data-audit.json
 make upload-data DATA_REPO=<org>/<name>     # data/ (gitignored) -> private Hub dataset + sha256 manifest
-make download-data DATA_REPO=<org>/<name>   # and back, every file checked against the manifest and locks/
+make download-data DATA_REPO=<org>/<name>   # and back, checked against the manifest and locks/; rebuilds what licences left out
 uv run pytest -q tests/test_train.py   # one file
 ```
 
@@ -82,7 +82,8 @@ import `scripts` from `den`. ruff and mypy cover it like `den/`.
   raws. Writes `data/{dev,test}/breadth.jsonl` only if both match `pins.BREADTH_SHA256`; keep it byte-faithful
   (seeds, sorts, key order).
 - `mirror.py` (`make upload-data` / `make download-data`): `data/` as a private Hub dataset with a sha256 manifest;
-  pinned files are checked against `locks/` both ways.
+  pinned files are checked against `locks/` both ways. The download rebuilds the files the licences leave out
+  (`REBUILD`: fetch, breadth, normalize, clean), so it alone gives a complete `data/`.
 - `check_env.py`, `check_merged.py`, `estimate_time.py`: the runbook's phase 1 and phase 3 checks (instructions.md).
 
 ## Hard rules (do not break)

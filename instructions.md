@@ -135,8 +135,10 @@ uv run den train --dry-run --data --sources-cap 1500 --replay 1500 \
 ```
 
 If the person gave a `DATA_REPO` (a `make upload-data` copy), replace the `make data` through `make clean-data` lines
-with `make download-data DATA_REPO="$DATA_REPO"`: the same `data/`, every file checked against the copy's manifest
-and the pinned ones against `locks/`. It must end with `ok, every file matches`.
+with `make download-data DATA_REPO="$DATA_REPO"` (after `make model`: breadth needs its tokenizer): the same `data/`,
+every file checked against the copy's manifest and the pinned ones against `locks/`. The files the licences keep out
+of the copy (Kev's `core` suite, Yelp, Amazon, ...) are rebuilt from their pinned originals in the same command
+(~20 min). It must end with `ok, every file matches`.
 
 **Gate 2:** `make train-check` prints exactly:
 

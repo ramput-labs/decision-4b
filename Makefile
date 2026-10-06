@@ -71,9 +71,9 @@ upload-data: ## upload data/ to the Hub, licence notices included, restricted so
 	@test -n "$(DATA_REPO)" || (echo "set DATA_REPO=<org>/<name> (or DEN_DATA_REPO)" && exit 1)
 	$(UV) python -m scripts.mirror upload --repo $(DATA_REPO) $(if $(PUBLIC),--public) $(if $(TAG),--tag $(TAG))
 
-download-data: ## download that copy into data/ and check every file: DATA_REPO=<org>/<name>[@commit]
+download-data: ## download that copy into data/, rebuild what the licences left out, check every file: DATA_REPO=<org>/<name>[@commit] [NO_REBUILD=1]
 	@test -n "$(DATA_REPO)" || (echo "set DATA_REPO=<org>/<name>[@commit] (or DEN_DATA_REPO)" && exit 1)
-	$(UV) python -m scripts.mirror download --repo $(DATA_REPO)
+	$(UV) python -m scripts.mirror download --repo $(DATA_REPO) $(if $(NO_REBUILD),--no-rebuild)
 
 verify: ## re-hash every downloaded file against locks/
 	$(UV) den verify

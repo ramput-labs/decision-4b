@@ -178,8 +178,8 @@ Every source's licence is recorded with its evidence in `den/licences.py`. `make
 texts and the licence files shipped with the data), and a `SOURCE-LICENSE.md` beside every dataset saying what each
 of its files holds, under which licence, and whether the uploaded copy has it. `make upload-data` never uploads sources whose terms forbid
 redistribution (Yelp, Amazon reviews, the raw HellaSwag and RouterBench files), and keeps unlicensed ones out of
-public copies; Kev's `core` suite holds Yelp and Amazon reviews, so it is rebuilt from its pinned original with
-`make data` after `make download-data`.
+public copies; Kev's `core` suite holds Yelp and Amazon reviews, so `make download-data` rebuilds it, and every
+other left-out file, from its pinned original (`NO_REBUILD=1` skips that).
 
 `data/` and `models/` are gitignored. `make data` (Kev's suites and manifests), `make data-raw-*`, `make normalize` and
 `make clean-data` rebuild `data/` from `locks/`, which is committed with `reports/`. To skip the rebuild, `make
