@@ -256,3 +256,68 @@ def test_train_history_is_plain_json() -> None:
     assert train_history(log) == [{"loss": 1.234568, "grad_norm": 0.5, "learning_rate": 5e-05, "epoch": 0.1,
                                    "step": 10}, {"train_runtime": 12.0, "step": 20}]  # fmt: skip
     json.dumps(train_history(log))
+
+
+def _row(p: list[float], label: int, record: str, keys: tuple[str, ...] = ("a", "b"), **kw: Any) -> Any:  # noqa: ANN401
+    from den.metrics import Answer, Row
+
+    return Row(Answer(p, label), record, "q", keys, **kw)
+
+
+def test_robustness_matches_kevs_checks_by_hand() -> None:
+    from den.metrics import robustness
+
+    rows = [
+        _row([0.8, 0.2], 0, "r1"),
+        _row(
+            [0.4, 0.6], 0, "r1/permuted", ("b", "a"), variant="permuted", parent="r1"
+        ),  # aligned [0.6, 0.4]: 0.2, kept
+        _row([0.3, 0.7], 1, "r2"),
+        _row(
+            [0.1, 0.9], 1, "r2/permuted", ("b", "a"), variant="permuted", parent="r2"
+        ),  # aligned [0.9, 0.1]: 0.6, flip
+        _row([0.9, 0.1], 0, "p/a", pair="p", sibling="a"),  # answers differ, prediction flips: right
+        _row([0.2, 0.8], 1, "p/b", pair="p", sibling="b"),
+        _row([0.6, 0.4], 0, "s/a", pair="s", sibling="a"),  # answers agree, prediction holds: invariant
+        _row([0.7, 0.3], 0, "s/b", pair="s", sibling="b"),
+        _row([0.6, 0.4], 0, "lonely/a", pair="lonely", sibling="a"),  # its sibling was not sampled
+        _row([0.95, 0.05], 0, "u1", origin="unknowable", control="c1"),
+        _row([0.55, 0.45], 0, "u2", origin="unknowable", control="c2"),
+        _row([0.99, 0.01], 0, "c1", origin="unknowable_control"),
+        _row([0.40, 0.60], 0, "c2", origin="unknowable_control"),
+    ]
+    out = robustness(rows)
+    assert out["permutation"] == {"n": 2, "mean_max_delta": pytest.approx(0.4), "flip_rate": 0.5}
+    assert out["paired_flip"] == {
+        "pairs": 1,
+        "flip_rate": 1.0,
+        "both_correct_rate": 1.0,
+        "incomplete_pairs": 1,
+        "invariant_pairs": 1,
+        "invariant_both_correct_rate": 1.0,
+        "invariance_rate": 1.0,
+    }
+    u = out["unknowable"]
+    assert u["n"] == 2 and u["mean_max_p"] == pytest.approx(0.75) and u["share_at_0_9"] == 0.5
+    assert u["control_acc"] == 0.5 and u["paired_confidence_drop"] == pytest.approx((0.04 + 0.05) / 2)
+    assert u["share_less_confident_than_control"] == 1.0  # 0.95 < 0.99 and 0.55 < 0.60
+    assert out["variants"]["permuted"] == {"n": 2, "accuracy": 0.5}
+    assert out["clean"]["questions"] == 9  # clean rows, the unknowable records left out
+    assert robustness([_row([0.8, 0.2], 0, "r1")]) == {}  # no structure, nothing to add
+
+
+def test_rotate_options_moves_every_option_and_keeps_the_answer() -> None:
+    import random
+
+    from den.api import Json, parse
+    from den.prompt import rotate_options
+
+    raw: Json = {"state": "s", "questions": {"q": {"type": "choice", "instructions": "?", "label": "c",
+           "criteria": {"a": "first", "b": "second", "c": "third", "d": "fourth"}},
+           "n": {"type": "noul", "instructions": "?", "label": True}}}  # fmt: skip
+    record = parse(raw, "r")
+    for seed in range(20):
+        q, n = rotate_options(record, random.Random(seed)).questions
+        assert all(a != b for a, b in zip(q.keys, record.questions[0].keys, strict=True))  # nothing stays put
+        assert q.keys[q.label] == "c" and q.options[q.label] == "c: third"
+        assert n == record.questions[1]  # noul is never reordered

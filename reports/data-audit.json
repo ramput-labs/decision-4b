@@ -111,10 +111,10 @@
     },
     {
       "path": "train/sources/intent/massive-en.jsonl",
-      "records": 11430,
-      "questions": 22860,
+      "records": 11429,
+      "questions": 22858,
       "types": {
-        "choice": 22860
+        "choice": 22858
       },
       "noul_true_rate": null,
       "first_option_rate": 0.032,
@@ -230,10 +230,10 @@
     },
     {
       "path": "train/sources/safety/aegis.jsonl",
-      "records": 19627,
-      "questions": 21827,
+      "records": 19626,
+      "questions": 21826,
       "types": {
-        "noul": 19627,
+        "noul": 19626,
         "choice": 2200
       },
       "noul_true_rate": 0.448,
@@ -334,10 +334,10 @@
     },
     {
       "path": "train/sources/topic/ag-news.jsonl",
-      "records": 114752,
-      "questions": 114752,
+      "records": 114748,
+      "questions": 114748,
       "types": {
-        "choice": 114752
+        "choice": 114748
       },
       "noul_true_rate": null,
       "first_option_rate": 0.25,
@@ -422,6 +422,41 @@
       }
     },
     {
+      "path": "dev/binding.jsonl",
+      "records": 560,
+      "questions": 560,
+      "types": {
+        "choice": 560
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.489,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 97,
+        "p99": 127,
+        "max": 128
+      }
+    },
+    {
+      "path": "dev/breadth.jsonl",
+      "records": 1990,
+      "questions": 3075,
+      "types": {
+        "noul": 1265,
+        "choice": 1810
+      },
+      "noul_true_rate": 0.438,
+      "first_option_rate": 0.278,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 139,
+        "p99": 2288,
+        "max": 6014
+      }
+    },
+    {
       "path": "dev/core.jsonl",
       "records": 1204,
       "questions": 1468,
@@ -492,6 +527,23 @@
         "median": 58,
         "p99": 258,
         "max": 335
+      }
+    },
+    {
+      "path": "dev/semif.jsonl",
+      "records": 252,
+      "questions": 252,
+      "types": {
+        "choice": 252
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.369,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 28,
+        "p99": 74,
+        "max": 82
       }
     },
     {
@@ -977,6 +1029,24 @@
       }
     },
     {
+      "path": "test/breadth.jsonl",
+      "records": 1990,
+      "questions": 3089,
+      "types": {
+        "choice": 1810,
+        "noul": 1279
+      },
+      "noul_true_rate": 0.439,
+      "first_option_rate": 0.28,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 138,
+        "p99": 2190,
+        "max": 5594
+      }
+    },
+    {
       "path": "test/core.jsonl",
       "records": 1176,
       "questions": 1440,
@@ -1356,7 +1426,7 @@
       "state_tokens": {
         "median": 49,
         "p99": 103,
-        "max": 218
+        "max": 217
       }
     },
     {
@@ -1373,7 +1443,7 @@
       "state_tokens": {
         "median": 68,
         "p99": 138,
-        "max": 274
+        "max": 271
       }
     },
     {

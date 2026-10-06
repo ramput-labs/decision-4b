@@ -29,7 +29,7 @@ module-root = ""  # flat layout: the package lives at the repo root, like kev/
 [tool.mypy]
 strict = true
 python_version = "3.12"
-files = ["den", "tests"]
+files = ["den", "scripts", "tests"]
 
 [tool.ruff]
 line-length = 120
@@ -52,9 +52,17 @@ markers = [
     "cuda: needs a CUDA GPU (run on the GPU box with `make test-cuda`)",
 ]
 addopts = "-m 'not model and not cuda'"
-pythonpath = ["tests"]
+pythonpath = [".", "tests"]  # ".": the scripts package
+
+[tool.uv]
+default-groups = ["dev", "breadth"]  # breadth: the libraries scripts/breadth.py needs, at the versions Kev built breadth-v1 with
 
 [dependency-groups]
+breadth = [
+    "pandas==3.0.5",
+    "scikit-learn==1.9.1",
+    "scipy==1.18.1",
+]
 dev = [
     "mypy>=2.4.0",
     "peft>=0.21.2",

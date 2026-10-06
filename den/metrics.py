@@ -87,3 +87,124 @@ def summarize(answers: Sequence[Answer]) -> dict[str, Any]:
         result["score_level_mae"] = level_error / scored
         result["score_rps"] = rps / scored
     return result
+
+
+@dataclass(frozen=True, slots=True)
+class Row:
+    """One scored question with its suite metadata (`_meta`): what Kev's robustness checks pair rows by."""
+
+    answer: Answer
+    record: str  # _meta.id
+    question: str
+    keys: Sequence[str]
+    variant: str = "clean"  # clean | permuted | none_present | none_absent | ...
+    parent: str | None = None  # the clean record a variant was made from
+    pair: str | None = None  # contrastive pair id; `sibling` is "a" or "b"
+    sibling: str | None = None
+    control: str | None = None  # an unknowable record's intact control
+    origin: str = ""  # _meta.source: "unknowable" and "unknowable_control" are scored on confidence
+
+
+def _top(p: Sequence[float]) -> int:
+    return max(range(len(p)), key=p.__getitem__)
+
+
+def robustness(rows: Sequence[Row]) -> dict[str, Any]:
+    """Kev's benchmark checks (`kev.benchmark.summarize`), over whatever structure the file carries:
+    - `clean`: the headline numbers on clean, knowable rows only (Kev's `clean`; ours above also count the variants);
+    - `permutation`: each permuted variant against its clean parent, options aligned by key: the mean largest
+      probability change and how often the answer changes (Kev's option-order changes);
+    - `paired_flip`: contrastive pairs whose answers differ must flip, pairs whose answers agree must not;
+    - `unknowable`: confidence where the deciding evidence was removed, against the intact controls;
+    - `variants`: accuracy per variant."""
+    clean = [r for r in rows if r.variant == "clean"]
+    out: dict[str, Any] = {}
+    if len(clean) != len(rows):
+        out["clean"] = summarize([r.answer for r in clean if r.origin != "unknowable"])
+        by_variant: dict[str, list[bool]] = {}
+        for r in rows:
+            if r.answer.target is None:
+                by_variant.setdefault(r.variant, []).append(_top(r.answer.probs) == r.answer.label)
+        out["variants"] = {k: {"n": len(v), "accuracy": sum(v) / len(v)} for k, v in sorted(by_variant.items())}
+    lookup = {(r.record, r.question): r for r in clean}
+    deltas, flips = [], []
+    for r in rows:
+        if r.variant == "permuted" and r.answer.kind == "choice" and (o := lookup.get((r.parent or "", r.question))):
+            aligned = [r.answer.probs[list(r.keys).index(k)] for k in o.keys]
+            deltas.append(max(abs(a - b) for a, b in zip(aligned, o.answer.probs, strict=True)))
+            flips.append(_top(aligned) != _top(o.answer.probs))
+    if deltas:
+        out["permutation"] = {
+            "n": len(deltas),
+            "mean_max_delta": sum(deltas) / len(deltas),
+            "flip_rate": sum(flips) / len(flips),
+        }
+    if (pairs := paired_flip(clean)) is not None:
+        out["paired_flip"] = pairs
+    if (unknown := unknowable(clean)) is not None:
+        out["unknowable"] = unknown
+    return out
+
+
+def paired_flip(rows: Sequence[Row]) -> dict[str, Any] | None:
+    """Kev's `paired_flip`: among contrastive pairs (two states differing in what decides), those whose true answers
+    differ should get different answers (`flip_rate`), those whose answers agree the same one (`invariance_rate`). A
+    model that ignores the state can't flip. Pairs missing a sibling (a sampled file) are counted, not scored."""
+    by_pair: dict[tuple[str, str], dict[str, Row]] = {}
+    for r in rows:
+        if r.pair and r.sibling:
+            by_pair.setdefault((r.pair, r.question), {})[r.sibling] = r
+    if not by_pair:
+        return None
+    whole = [p for p in by_pair.values() if set(p) == {"a", "b"}]
+    truth = [(p, p["a"].keys[p["a"].answer.label], p["b"].keys[p["b"].answer.label]) for p in whole]
+
+    def said(r: Row) -> str:
+        return r.keys[_top(r.answer.probs)]
+
+    def both(ps: list[dict[str, Row]]) -> float | None:
+        return sum(all(said(r) == r.keys[r.answer.label] for r in p.values()) for p in ps) / len(ps) if ps else None
+
+    relevant = [p for p, a, b in truth if a != b]
+    invariant = [p for p, a, b in truth if a == b]
+    result: dict[str, Any] = {
+        "pairs": len(relevant),
+        "flip_rate": sum(said(p["a"]) != said(p["b"]) for p in relevant) / len(relevant) if relevant else None,
+        "both_correct_rate": both(relevant),
+        "incomplete_pairs": len(by_pair) - len(whole),
+    }
+    if invariant:
+        result |= {
+            "invariant_pairs": len(invariant),
+            "invariant_both_correct_rate": both(invariant),
+            "invariance_rate": sum(said(p["a"]) == said(p["b"]) for p in invariant) / len(invariant),
+        }
+    return result
+
+
+def unknowable(rows: Sequence[Row]) -> dict[str, Any] | None:
+    """Kev's `unknowable_report`: on records whose deciding evidence was removed, accuracy means nothing; what counts is
+    whether the model knows it can't know (mean top probability, share answered at >= 0.9), against intact controls."""
+    unk = [r for r in rows if r.origin == "unknowable"]
+    if not unk:
+        return None
+    ctl = [r for r in rows if r.origin == "unknowable_control"]
+
+    def conf(rs: Sequence[Row]) -> list[float]:
+        return [max(r.answer.probs) for r in rs]
+
+    def mean(xs: Sequence[float]) -> float | None:
+        return sum(xs) / len(xs) if xs else None
+
+    by_id = {r.record: r for r in ctl}
+    paired = [(max(r.answer.probs), max(by_id[r.control].answer.probs)) for r in unk if r.control in by_id]
+    return {
+        "n": len(unk),
+        "mean_max_p": mean(conf(unk)),
+        "share_at_0_9": mean([c >= 0.9 for c in conf(unk)]),
+        "control_mean_max_p": mean(conf(ctl)),
+        "control_share_at_0_9": mean([c >= 0.9 for c in conf(ctl)]),
+        "control_acc": mean([_top(r.answer.probs) == r.answer.label for r in ctl]),
+        "paired_confidence_drop": mean([c - u for u, c in paired]),
+        "share_less_confident_than_control": mean([u < c for u, c in paired]),
+    }

@@ -17,7 +17,7 @@ from tokenizers import Tokenizer
 from .api import Record, RecordError, question_key, read
 from .catalog import ROLES, Hub, Url, Use
 from .fetch import digest
-from .pins import SUITES
+from .pins import BREADTH, SUITES
 
 HELD_OUT = (
     "dev/transfer.jsonl",
@@ -154,6 +154,10 @@ def _check_counts(report: Report, root: Path, stats: FileStats, built: dict[str,
         expected, by = built[stats.path], "the normalize report"
         if digest(root / stats.path) != expected["sha256"]:
             report.flag("error", stats.path, "sha256 differs from the normalize report (rerun make normalize)")
+    elif stats.path in BREADTH:
+        expected, by = BREADTH[stats.path], "Kev's breadth-v1 manifest"
+        if digest(root / stats.path) != expected["sha256"]:
+            report.flag("error", stats.path, "sha256 differs from Kev's breadth-v1 (rerun make breadth)")
     elif stats.path in (kev := _kev_names()):
         manifest, origin = kev[stats.path]
         expected = json.loads((root / manifest).read_text(encoding="utf-8")).get("files", {}).get(origin, {})

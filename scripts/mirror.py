@@ -5,20 +5,21 @@ copy, a fresh machine (the GPU box) gets the same bytes in one resumable downloa
 The upload refuses pinned files that don't match `locks/`, and sends a sha256 manifest of every file. The download
 checks every file against that manifest, then the pinned ones against `locks/` again.
 
-    den data-upload   --repo <org>/den-data          # make upload-data DATA_REPO=<org>/den-data
-    den data-download --repo <org>/den-data[@rev]    # make download-data DATA_REPO=<org>/den-data
+    uv run python -m scripts.mirror upload   --repo <org>/den-data         # make upload-data DATA_REPO=<org>/den-data
+    uv run python -m scripts.mirror download --repo <org>/den-data[@rev]   # make download-data DATA_REPO=...
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import sys
 import time
 from fnmatch import fnmatch
 from pathlib import Path
 from typing import Any
 
-from .fetch import digest, read_lock
+from den.fetch import digest, read_lock
 
 DATA = Path("data")
 LOCKS = Path("locks")
@@ -107,7 +108,7 @@ def download(spec: str, root: Path = DATA) -> list[str]:
 
 
 def upload_main(argv: list[str] | None = None) -> int:
-    p = argparse.ArgumentParser(prog="den data-upload")
+    p = argparse.ArgumentParser(prog="scripts.mirror upload")
     p.add_argument("--repo", required=True, help="<org>/<name>: a Hugging Face dataset repo, created private")
     p.add_argument("--public", action="store_true", help="publish publicly; private by default")
     args = p.parse_args(argv)
@@ -118,11 +119,23 @@ def upload_main(argv: list[str] | None = None) -> int:
 
 
 def download_main(argv: list[str] | None = None) -> int:
-    p = argparse.ArgumentParser(prog="den data-download")
-    p.add_argument("--repo", required=True, help="<org>/<name>[@revision] of a `den data-upload` copy")
+    p = argparse.ArgumentParser(prog="scripts.mirror download")
+    p.add_argument("--repo", required=True, help="<org>/<name>[@revision] of a `make upload-data` copy")
     args = p.parse_args(argv)
     problems = download(args.repo)
     for problem in problems:
         print(f"  BAD {problem}")
     print(f"data/ from datasets/{args.repo}: " + ("ok, every file matches" if not problems else "FAILED"))
     return 1 if problems else 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = sys.argv[1:] if argv is None else argv
+    commands = {"upload": upload_main, "download": download_main}
+    if not args or args[0] not in commands:
+        raise SystemExit("usage: python -m scripts.mirror {upload,download} --repo <org>/<name>[@revision]")
+    return commands[args[0]](args[1:])
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -165,6 +165,17 @@ MODELS: dict[str, Model] = {m.key: m for m in BASES + REFERENCES}
 validate_models(BASES + REFERENCES)
 
 
+# breadth-v1 has no download: `scripts/breadth.py` rebuilds it from the raws below and must match Kev's manifest
+BREADTH_SHA256 = {
+    "development": "9aad8f4a7374988b2768d31135d5690137df3a3d6cbc1e771db4ee95ca515a94",
+    "test": "91a64f0a9448dcaece421c051a4b3fd079c15b84ea6cb9cfa8155237d8d1fa18",
+}
+BREADTH = {  # what `den audit` checks the built files against
+    "dev/breadth.jsonl": {"sha256": BREADTH_SHA256["development"], "records": 1990, "questions": 3075},
+    "test/breadth.jsonl": {"sha256": BREADTH_SHA256["test"], "records": 1990, "questions": 3089},
+}
+
+
 _SUITE_FILE: dict[Use, tuple[str, str]] = {T: ("train", ".jsonl"), C: ("calibration", ".jsonl"), D: ("dev", ".jsonl"), X: ("test", ".jsonl"), M: ("manifests", ".json")}
 
 
@@ -214,6 +225,11 @@ SUITES: tuple[Item, ...] = (
     _suite("probes", M, "hub:v9/transfer-v9/manifest.json", None),
     _suite("heldout", C, "hub:round3/transfer-r3/calibration.jsonl", None, "held-out sources: the honest place to fit T"),
     _suite("heldout", M, "hub:round3/transfer-r3/manifest.json", None),
+    # diagnostics, dev only and never trained on (Kev-4B: binding 0.943, semif 0.847 on its 144 clean rows)
+    _suite("binding", D, "git:diagnostics/binding-v1.jsonl", "0b00da23a732db87bddb3c582a02c8d0de9f76cb26d20f8453f73141bbfdacc8", "role binding and date arithmetic in policy cases (560)"),
+    _suite("binding", M, "git:diagnostics/binding-v1.manifest.json", None),
+    _suite("semif", D, "git:external/semif-v1/development.jsonl", "b9e0c7939a25a04a7ef7bc12334b5fa45b2027d04904d32021295b5539a97303", "SemIf: 144 authored decisions + 108 perturbations (MIT)"),
+    _suite("semif", M, "git:external/semif-v1/manifest.json", None),
 )
 
 

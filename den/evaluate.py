@@ -25,11 +25,11 @@ from typing import Any
 import torch
 from tokenizers import Tokenizer
 
-from .api import Json, Record, RecordError, parse, read
+from .api import Json, Question, Record, RecordError, parse, read
 from .device import load
-from .metrics import Answer, summarize
+from .metrics import Answer, Row, robustness, summarize
 from .model import load_head
-from .prompt import LETTERS, Style, encode, none_pair, perturb, split
+from .prompt import LETTERS, Style, encode, none_pair, perturb, rotate_options, split
 from .train import sample
 
 CLEAN = Path("data/clean")
@@ -138,24 +138,73 @@ def request(raw: dict[str, Json]) -> Record:
     return parse({**raw, "questions": filled}, "request")
 
 
-def answers(model: Model, records: Sequence[Record]) -> tuple[list[Answer], list[Answer]]:
-    """Every question's probabilities, calibrated and uncalibrated (T = 1), for `metrics.summarize`. A question the
-    run can't score (the letter scorer past 26 options) is left out; `metrics` reports how many."""
-    calibrated, raw = [], []
+type Scored = tuple[str, Question, Answer, Answer]  # record id, question, calibrated, uncalibrated (T = 1)
+
+
+def scored(model: Model, records: Sequence[Record]) -> list[Scored]:
+    """Every question's probabilities, calibrated and uncalibrated. A question the run can't score (the letter scorer
+    past 26 options) is left out; `metrics` reports how many."""
+    out = []
     for record in (one for r in records for one in split(r)):
         if model.style == "letters" and len(record.questions[0].options) > len(LETTERS):
             continue
         logits, _ = model.logits(record)
         for q, s, c in zip(record.questions, logits, model.calibrate(record, logits), strict=True):
-            calibrated.append(Answer(c.softmax(-1).tolist(), q.label, q.type, q.source, q.target))
-            raw.append(Answer(s.softmax(-1).tolist(), q.label, q.type, q.source, q.target))
-    return calibrated, raw
+            calibrated = Answer(c.softmax(-1).tolist(), q.label, q.type, q.source, q.target)
+            out.append((record.id, q, calibrated, Answer(s.softmax(-1).tolist(), q.label, q.type, q.source, q.target)))
+    return out
 
 
-def metrics(model: Model, records: Sequence[Record]) -> dict[str, Any]:
-    """`metrics.summarize` at the run's temperature, with the same headline numbers uncalibrated beside it."""
-    result = report(*answers(model, records))
+def answers(model: Model, records: Sequence[Record]) -> tuple[list[Answer], list[Answer]]:
+    """Calibrated and uncalibrated answers, for `metrics.summarize`."""
+    rows = scored(model, records)
+    return [c for _, _, c, _ in rows], [r for _, _, _, r in rows]
+
+
+def metas(path: Path) -> dict[str, dict[str, Json]]:
+    """Each record's `_meta`, by record id: the variant, parent, pair and control links Kev's checks pair rows by."""
+    out: dict[str, dict[str, Json]] = {}
+    with path.open(encoding="utf-8") as f:
+        for n, line in enumerate(f, 1):
+            if line.strip() and isinstance(meta := json.loads(line).get("_meta"), dict):
+                out[str(meta.get("id") or f"{path.stem}:{n}")] = meta
+    return out
+
+
+def row(item: Scored, meta: dict[str, Json] | None = None) -> Row:
+    rid, q, calibrated, _ = item
+    m = meta or {}
+
+    def text(key: str) -> str | None:
+        value = m.get(key)
+        return str(value) if value else None
+
+    return Row(calibrated, rid, q.id, q.keys, text("variant") or "clean", text("parent_id"), text("pair_id"),
+               text("sibling"), text("control_id"), text("source") or "")  # fmt: skip
+
+
+def metrics(model: Model, records: Sequence[Record], meta: dict[str, dict[str, Json]] | None = None) -> dict[str, Any]:
+    """`metrics.summarize` at the run's temperature, with the same headline numbers uncalibrated beside it, and, given
+    the file's `_meta`, Kev's robustness checks (`metrics.robustness`) on whatever structure it has."""
+    items = scored(model, records)
+    result = report([c for _, _, c, _ in items], [r for _, _, _, r in items])
     result["unscored_questions"] = sum(len(r.questions) for r in records) - result["questions"] - result["soft_skipped"]
+    if meta is not None and (checks := robustness([row(i, meta.get(i[0])) for i in items])):
+        result["robustness"] = checks
+    return result
+
+
+def permutation_metrics(model: Model, records: Sequence[Record]) -> dict[str, Any]:
+    """Option order: every choice question read again with its options rotated (`prompt.rotate_options`), scored as
+    usual, plus `robustness.permutation` against the original order: how much the probabilities move and how often the
+    answer changes. Isolation needs no such check: each question is always read with the state alone (`split`)."""
+    rows = [one for r in records for one in split(r) if one.questions[0].type == "choice"]
+    rotated = [rotate_options(r, random.Random(f"rotate:{i}")) for i, r in enumerate(rows)]
+    original, moved = scored(model, rows), scored(model, rotated)
+    result = report([c for _, _, c, _ in moved], [r for _, _, _, r in moved])
+    clean = [row(i) for i in original]
+    shifted = [row(i, {"variant": "permuted", "parent_id": i[0]}) for i in moved]
+    result["robustness"] = {"permutation": robustness(clean + shifted)["permutation"]} if moved else {}
     return result
 
 
@@ -207,8 +256,9 @@ def evaluate_main(argv: list[str] | None = None) -> int:
     )
     p.add_argument(
         "--augment",
-        choices=("none-replace", "none-add", "distract", "pairs"),
-        help="score the files with one of Kev's augmentations applied; `pairs` scores minimal pairs",
+        choices=("none-replace", "none-add", "distract", "pairs", "permute"),
+        help="score the files with one of Kev's augmentations applied; `pairs` scores minimal pairs, `permute` the "
+        "change when every choice question's options are rotated",
     )
     p.add_argument("--backend")
     args = p.parse_args(argv)
@@ -226,11 +276,12 @@ def evaluate_main(argv: list[str] | None = None) -> int:
             rows = [one for r in records for one in split(r)]
             records = [r for r in rows if len(r.questions[0].options) <= args.max_options]
         started = time.perf_counter()
-        result = (
-            pair_metrics(model, records)
-            if args.augment == "pairs"
-            else metrics(model, perturbed(records, args.augment))
-        )
+        if args.augment == "pairs":
+            result = pair_metrics(model, records)
+        elif args.augment == "permute":
+            result = permutation_metrics(model, records)
+        else:  # the file's own variants, pairs and controls are only meaningful unperturbed
+            result = metrics(model, perturbed(records, args.augment), None if args.augment else metas(CLEAN / f))
         result["ms_per_question"] = round(
             1000 * (time.perf_counter() - started) / max(result["questions"] + result["soft_skipped"], 1), 1
         )
@@ -243,8 +294,21 @@ def evaluate_main(argv: list[str] | None = None) -> int:
             report_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
         coverage = result["coverage_at_5%_error"]
         print(f"{f + suffix:<40} n {result['questions']:>6.0f}  acc {result['accuracy']:.4f}  nll {result['nll']:.4f}  "
-              f"brier {result['brier']:.4f}  ece {result['ece']:.4f}  cov@5% {coverage:.3f}", flush=True)  # fmt: skip
+              f"brier {result['brier']:.4f}  ece {result['ece']:.4f}  cov@5% {coverage:.3f}"
+              + robust_line(result.get("robustness", {})), flush=True)  # fmt: skip
     return 0
+
+
+def robust_line(checks: dict[str, Any]) -> str:
+    """The robustness numbers worth a glance, for the evaluate log line."""
+    parts = []
+    if p := checks.get("permutation"):
+        parts.append(f"order-flip {p['flip_rate']:.3f}")
+    if (f := checks.get("paired_flip")) and f.get("flip_rate") is not None:
+        parts.append(f"pair-flip {f['flip_rate']:.3f}")
+    if (u := checks.get("unknowable")) and u.get("share_at_0_9") is not None:
+        parts.append(f"unknowable@0.9 {u['share_at_0_9']:.3f}")
+    return "  " + "  ".join(parts) if parts else ""
 
 
 def predict_main(argv: list[str] | None = None) -> int:

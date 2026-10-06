@@ -31,7 +31,7 @@ uv run pytest -q tests/test_train.py   # one file
 
 ## Layout
 
-One flat package, `den/`, at the repo root, like kev's `kev/`. One module per concern, no subpackages, and
+One flat package, `den/`, at the repo root (plus `scripts/` for tools, below), like kev's `kev/`. One module per concern, no subpackages, and
 `tests/test_<module>.py` beside it. Keep it flat: add a module rather than a subpackage.
 
 - `api.py`: the record schema (`/v1/systemone` request plus labels). `render` must match Kev's `api.render` byte for
@@ -57,6 +57,17 @@ One flat package, `den/`, at the repo root, like kev's `kev/`. One module per co
   manifest) and `logs/` into the run, writes the card, uploads it as a private Hub model (resumable), checks the listing. `predict`/`evaluate` accept `--run hf:<org>/<name>`.
 - `device.py`, `mlx_model.py`, `torch_model.py`: MLX (Apple Silicon) and PyTorch (CUDA/CPU) inference backbones,
   which must return the same hidden states.
+
+`scripts/` (top level, beside `den/`) holds one-off and operational tools that use `den` but aren't the library.
+Run them as `uv run python -m scripts.<name>`, test them in `tests/test_<name>.py` (or `test_scripts.py`), and never
+import `scripts` from `den`. ruff and mypy cover it like `den/`.
+
+- `breadth.py` (`make breadth`): Kev's breadth-v1 builder (his scripts/build_breadth_v1.py) ported to read our pinned
+  raws. Writes `data/{dev,test}/breadth.jsonl` only if both match `pins.BREADTH_SHA256`; keep it byte-faithful
+  (seeds, sorts, key order).
+- `mirror.py` (`make upload-data` / `make download-data`): `data/` as a private Hub dataset with a sha256 manifest;
+  pinned files are checked against `locks/` both ways.
+- `check_env.py`, `check_merged.py`, `estimate_time.py`: the runbook's phase 1 and phase 3 checks (instructions.md).
 
 ## Hard rules (do not break)
 
@@ -142,6 +153,10 @@ One flat package, `den/`, at the repo root, like kev's `kev/`. One module per co
   `data_used` (every file, sha256, sampled lines), which `den publish` uses to upload the exact training data.
 - The lowest-dev-NLL checkpoint goes to `best/` (adapter + head with its own T; `run.json` `best`). It is mirrored to
   disk while training so `--resume` keeps it. The final weights still ship and merge: `best/` is for `--init-from`.
+- `den evaluate` adds `robustness` (`metrics.robustness`, Kev's benchmark checks) from each file's `_meta`: clean-only
+  numbers, permuted-variant flips, contrastive `paired_flip`, `unknowable` confidence; `--augment permute` rotates
+  options on any file. Eval-only suites: `breadth` (dev+test, built by `make breadth` before `make normalize`, so
+  normalize keeps its texts out of training), `binding` and `semif` (dev only, pinned from Kev's repo).
 - `den evaluate --final` refuses to re-read a test file a run already has in `eval.json`. `den baselines D=.. A=..`
   writes the A/B/C/D table to the shipped run's `baselines.json`; the card shows it. `make post-train RUN=..` and
   `make final-test RUN=..` run the after-training steps.

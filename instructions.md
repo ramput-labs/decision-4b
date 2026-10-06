@@ -77,7 +77,7 @@ tmux new -s s1          # reattach later with: tmux attach -t s1
 curl -LsSf https://astral.sh/uv/install.sh | sh && source ~/.local/bin/env
 git clone --branch "$BRANCH" "$REPO_URL" den && cd den   # private repo: https://$GITHUB_TOKEN@github.com/...
 make setup                      # uv sync: Python 3.12, torch 2.14.1 (CUDA 13), transformers 5.x, flash-linear-attention
-uv run python -c "import torch; print(torch.__version__, torch.version.cuda, torch.cuda.is_available(), torch.cuda.get_device_name(0))"
+uv run python -m scripts.check_env      # torch, CUDA and the GPU; exits 1 without CUDA
 make check                      # ruff, mypy, unit tests: must pass before any GPU time is spent
 ```
 
@@ -102,12 +102,7 @@ echo 'export UV_NO_SYNC=1' >> ~/.bashrc
 ```
 
 ```bash
-uv run python - <<'EOF'
-import unsloth, torch, transformers, peft
-from unsloth import FastLanguageModel, is_bfloat16_supported
-print("unsloth", unsloth.__version__, "torch", torch.__version__, "cuda", torch.version.cuda,
-      "transformers", transformers.__version__, "peft", peft.__version__, "bf16", is_bfloat16_supported())
-EOF
+uv run python -m scripts.check_env --unsloth   # + unsloth, transformers (>= 5.17), peft, BF16; exits 1 on a problem
 ```
 
 ```bash
@@ -131,6 +126,7 @@ uvx hf auth login --token "$HF_TOKEN"     # faster, rate-limit-free downloads; a
 make model MODEL=qwen3.5-4b               # 9.3 GB, every shard sha256-checked against locks/
 make data                                 # Kev's suites (data/ is not in git; ~100 MB, sha256-checked)
 make data-raw-train data-raw-new data-raw-eval   # public sources for round 2 (~1.7 GB, sha256-checked)
+make breadth                              # Kev's breadth-v1 eval panel, rebuilt byte for byte (~10 min); before normalize
 make normalize                            # raw sources -> leakage-free train/dev/test records (~2 min, deterministic)
 make clean-data                           # data/clean/: Kev's suites and the normalized sources
 make train-check                          # tokenizes round 1's data; no GPU
@@ -151,7 +147,7 @@ calib       1148 records     1148 questions  tokens median 120 p99 774 max 815 t
 ```
 
 and the round-2 dry run's first line is
-`train      37476 records    37476 questions  tokens median 118 p99 2480 max 6058 total 8.8M  skipped 0`.
+`train      37459 records    37459 questions  tokens median 118 p99 2481 max 6058 total 8.8M  skipped 0`.
 Any other count means the code or data differs from what was validated. Stop and report the difference.
 
 ## The recipe
@@ -243,20 +239,15 @@ nvidia-smi --query-gpu=memory.used,memory.total --format=csv    # from a second 
   stage's line in the `Makefile` (the effective batch stays 8), rerun, and keep the edit for the real run. Report it.
 - The logged `loss` is finite (not `nan`) in every stage.
 - Both rounds end with `saved .../merged  (248 merged weights)`, and
-  `python3 -c "import json; print(json.load(open('runs/timing/round2/merged/config.json'))['model_type'])"` prints
-  `qwen3_5`.
+  `uv run python -m scripts.check_merged runs/timing/4-skills runs/timing/round2` prints `ok` for both (`qwen3_5`).
 - `uv run den predict --run runs/timing/round2 < /dev/null` exits without error.
 - Estimate both rounds from the measured `tokens_per_second` in each stage's `run.json`:
 
 ```bash
-python3 - <<'PY'
-import json
-stages = {"1-base": 6.4e6, "2-dates": 0.6e6, "3-documents": 6.3e6, "4-skills": 9.9e6}
-round1 = sum(n / json.load(open(f"runs/timing/{s}/run.json"))["tokens_per_second"] / 60 for s, n in stages.items())
-round2 = 8.8e6 / json.load(open("runs/timing/round2/run.json"))["tokens_per_second"] / 60
-print(f"round 1 {round1:.0f} min, round 2 {round2:.0f} min (+ about 2 min per stage to load, validate and save)")
-PY
+uv run python -m scripts.estimate_time --budget-hours "$BUDGET_HOURS" --spent-minutes <minutes spent so far>
 ```
+
+  It prints both rounds' minutes (2 per stage for loading, validation and saving included) and the decision below.
 
   The estimate runs high, because 20 steps include kernel compilation and the longest batch. Then decide:
   - round 1 + round 2 + about 80 min (phases 0–3 already spent, 5, 7, 8, 9) **within** `BUDGET_HOURS`: run both.
@@ -324,7 +315,7 @@ make train-round2 ARGS="--max-minutes 90 --save-steps 500" 2>&1 | tee runs-round
 This loads each run's `merged/` through the same backbone code that serving uses, question by question:
 
 ```bash
-DEV="dev/core.jsonl dev/documents.jsonl dev/skills.jsonl dev/devtools.jsonl dev/transfer.jsonl dev/probes.jsonl"
+DEV="dev/core.jsonl dev/documents.jsonl dev/skills.jsonl dev/devtools.jsonl dev/transfer.jsonl dev/probes.jsonl dev/breadth.jsonl dev/binding.jsonl dev/semif.jsonl"
 SRC_DEV=$(cd data/clean && ls dev/sources/*/*.jsonl | tr '\n' ' ')
 for RUN in runs/kev-recipe/4-skills runs/round2; do          # drop runs/round2 if round 2 was skipped
   uv run den evaluate --run $RUN $DEV
@@ -339,7 +330,7 @@ option content (minimal pairs) and handle "none of the above", not just whether 
 
 ```bash
 for RUN in runs/kev-recipe/4-skills runs/round2; do
-  for AUG in pairs none-replace none-add distract; do
+  for AUG in pairs permute none-replace none-add distract; do
     uv run den evaluate --run $RUN --augment $AUG dev/core.jsonl dev/documents.jsonl dev/skills.jsonl
   done
 done
@@ -347,7 +338,18 @@ done
 
 `eval.json` then holds, per file, `accuracy_by_source` (per skill family: `hard_*` for the skills suite, per dataset
 elsewhere), `accuracy_by_type`, `ece_by_type`, the `uncalibrated` numbers, and for `+pairs` the `pair_accuracy`
-(both halves of a minimal pair right).
+(both halves of a minimal pair right). Files that carry Kev's structure also get `robustness`, Kev's benchmark checks:
+`clean` (headline numbers without the variants, Kev's `clean`), `permutation` (`flip_rate`: how often a permuted copy
+changes the answer), `paired_flip` (contrastive pairs: `flip_rate` where the answer should change, `invariance_rate`
+where it shouldn't) and `unknowable` (`share_at_0_9`: answered at >= 0.9 with the deciding evidence removed; lower is
+better). `+permute` does the option-order check on any file by rotating every choice question's options. Question
+isolation needs no check: every question is read with the state alone.
+
+`breadth` (14 public datasets, Kev's breadth-v1, rebuilt byte for byte), `binding` (role binding and date arithmetic)
+and `semif` (SemIf's 144 authored decisions + 108 perturbations) are eval-only and not part of the ship decision.
+Kev-4B's published numbers: binding 0.943; semif 0.847 on the 144 clean rows (`robustness.clean`); breadth per dataset
+in Kev's `runs/breadth-v1-report/report.md` (compare `accuracy_by_source` on single-question datasets; Kev scores
+`sata_bench` and `bfcl` record by record).
 
 `compare` prints accuracy per file for both runs and ends with `ship: <run>`. It picks round 2 only if its mean
 accuracy is higher **and** it doesn't lose more than 1 point on any single file, so a breadth gain can't hide a
@@ -365,7 +367,7 @@ unknowable items. Call the shipped run `$SHIP`.
 Read the locked test set **once**, for the shipped run only. Never repeat it, and never test the other run:
 
 ```bash
-TEST="test/core.jsonl test/documents.jsonl test/skills.jsonl test/devtools.jsonl test/transfer.jsonl test/probes.jsonl"
+TEST="test/core.jsonl test/documents.jsonl test/skills.jsonl test/devtools.jsonl test/transfer.jsonl test/probes.jsonl test/breadth.jsonl"
 SRC_TEST=$(cd data/clean && ls test/sources/*/*.jsonl | tr '\n' ' ')
 uv run den evaluate --final --run "$SHIP" $TEST                       # or: make final-test RUN=$SHIP
 uv run den evaluate --final --run "$SHIP" --limit 1000 $SRC_TEST     # 1,000 sampled records per source file
@@ -467,7 +469,8 @@ temperature). Like-for-like rows have the same question counts as Kev's:
 | `test/core` (1,440) | 0.865 | roughly: Kev reports 1,200 decision-v7 locked-test questions |
 | `test/transfer` (764) | 0.838 | roughly: Kev's transfer-v4 locked test has 656 |
 
-Report each difference in percentage points, with the `ece` next to it. Don't claim parity from one number: say which
+Add `test/breadth` (1,990 records; Kev-4B's breadth-v1 report has its per-dataset numbers) and the dev-only
+`binding` and `semif` rows. Report each difference in percentage points, with the `ece` next to it. Don't claim parity from one number: say which
 rows are within about 2 pp, and which are not. Add the `test/sources/*` rows as our breadth results (Kev publishes no
 numbers on those files).
 

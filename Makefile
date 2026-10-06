@@ -6,13 +6,14 @@ RUNS ?= runs/kev-recipe
 ROUND2 ?= runs/round2
 CAP ?= 1500
 EVAL := --eval-steps 400 --eval-max 600
-DEV := dev/core.jsonl dev/documents.jsonl dev/skills.jsonl dev/devtools.jsonl dev/transfer.jsonl dev/probes.jsonl
-TEST := $(subst dev/,test/,$(DEV))
+SUITES_SCORED := core documents skills devtools transfer probes breadth
+DEV := $(SUITES_SCORED:%=dev/%.jsonl) dev/binding.jsonl dev/semif.jsonl
+TEST := $(SUITES_SCORED:%=test/%.jsonl)
 KEV_SUITES := train/core.jsonl train/dates-unknowable.jsonl train/documents.jsonl train/skills.jsonl train/devtools.jsonl
 TRAIN := $(UV) den train --model $(MODEL)
 DATA_REPO ?= $(DEN_DATA_REPO)
 
-.PHONY: upload-data download-data post-train final-test test-cuda doctor train-kev train-round2 serve help setup check test-model list models model data data-raw-train data-raw-new data-raw-eval data-raw-bulk data-all verify normalize clean-data audit train-setup train-check train env smoke
+.PHONY: breadth upload-data download-data post-train final-test test-cuda doctor train-kev train-round2 serve help setup check test-model list models model data data-raw-train data-raw-new data-raw-eval data-raw-bulk data-all verify normalize clean-data audit train-setup train-check train env smoke
 
 help: ## show targets
 	@grep -E '^[a-z0-9-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-15s %s\n", $$1, $$2}'
@@ -21,8 +22,8 @@ setup: ## install Python 3.12 + locked dependencies
 	uv sync
 
 check: ## lint, strict type-check, unit tests
-	$(UV) ruff check den tests
-	$(UV) ruff format --check den tests
+	$(UV) ruff check den scripts tests
+	$(UV) ruff format --check den scripts tests
 	$(UV) mypy
 	$(UV) pytest -q
 
@@ -64,14 +65,17 @@ data-all: ## every set except raw-bulk
 
 upload-data: ## upload data/ (suites, sources, clean) as a private Hub dataset: DATA_REPO=<org>/<name>
 	@test -n "$(DATA_REPO)" || (echo "set DATA_REPO=<org>/<name> (or DEN_DATA_REPO)" && exit 1)
-	$(UV) den data-upload --repo $(DATA_REPO)
+	$(UV) python -m scripts.mirror upload --repo $(DATA_REPO)
 
 download-data: ## download that copy into data/ and check every file: DATA_REPO=<org>/<name>[@commit]
 	@test -n "$(DATA_REPO)" || (echo "set DATA_REPO=<org>/<name>[@commit] (or DEN_DATA_REPO)" && exit 1)
-	$(UV) den data-download --repo $(DATA_REPO)
+	$(UV) python -m scripts.mirror download --repo $(DATA_REPO)
 
 verify: ## re-hash every downloaded file against locks/
 	$(UV) den verify
+
+breadth: ## Kev's breadth-v1 (14 eval-only datasets) -> data/{dev,test}/breadth.jsonl, sha256-checked; before normalize
+	$(UV) python -m scripts.breadth
 
 normalize: ## raw sources -> canonical, leakage-free train / dev / test under data/*/sources/
 	$(UV) den normalize
@@ -108,10 +112,10 @@ train-round2: ## round 2 from round 1: the 17 public sources (CAP each) + CAP re
 		--lr 2e-5 --batch 4 --accum 2 $(EVAL) --dev dev/core.jsonl dev/documents.jsonl dev/skills.jsonl dev/devtools.jsonl \
 		--merge --out $(ROUND2) $(ARGS)
 
-post-train: ## after training RUN: integrity checks, dev metrics, Kev's augmentations (dev only, never test)
+post-train: ## after training RUN: integrity checks, dev metrics + Kev's robustness checks, augmentations (dev only)
 	$(UV) den check-run --run $(RUN)
 	$(UV) den evaluate --run $(RUN) $(DEV)
-	for AUG in pairs none-replace none-add distract; do \
+	for AUG in pairs permute none-replace none-add distract; do \
 		$(UV) den evaluate --run $(RUN) --augment $$AUG dev/core.jsonl dev/documents.jsonl dev/skills.jsonl || exit 1; \
 	done
 

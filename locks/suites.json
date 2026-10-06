@@ -1,5 +1,25 @@
 {
   "entries": {
+    "suites/binding/dev": {
+      "files": {
+        "dev/binding.jsonl": {
+          "bytes": 686856,
+          "sha256": "0b00da23a732db87bddb3c582a02c8d0de9f76cb26d20f8453f73141bbfdacc8"
+        }
+      },
+      "source": "https://raw.githubusercontent.com/jaredpalmer/kev/fe64b1274ea7f80d4095866df90666abb03e9cf6/evals/diagnostics/binding-v1.jsonl",
+      "use": "development"
+    },
+    "suites/binding/manifests": {
+      "files": {
+        "manifests/binding.json": {
+          "bytes": 903,
+          "sha256": "248f4a354a614ec842be70e0bd2b65df58b6bbc50057d279ab2c6fc067ba59dc"
+        }
+      },
+      "source": "https://raw.githubusercontent.com/jaredpalmer/kev/fe64b1274ea7f80d4095866df90666abb03e9cf6/evals/diagnostics/binding-v1.manifest.json",
+      "use": "metadata"
+    },
     "suites/core/calibration": {
       "files": {
         "calibration/core.jsonl": {
@@ -199,6 +219,26 @@
       },
       "source": "hf://datasets/jaredpalmer/kev-suites@cc4bac803e73112689ec327ffa481c519cbc7a05",
       "use": "test"
+    },
+    "suites/semif/dev": {
+      "files": {
+        "dev/semif.jsonl": {
+          "bytes": 259562,
+          "sha256": "b9e0c7939a25a04a7ef7bc12334b5fa45b2027d04904d32021295b5539a97303"
+        }
+      },
+      "source": "https://raw.githubusercontent.com/jaredpalmer/kev/fe64b1274ea7f80d4095866df90666abb03e9cf6/evals/external/semif-v1/development.jsonl",
+      "use": "development"
+    },
+    "suites/semif/manifests": {
+      "files": {
+        "manifests/semif.json": {
+          "bytes": 1502,
+          "sha256": "0de05eac16b0ddeeb2719c50a94a9148d6ae195f66303aec74aa103a3845ad11"
+        }
+      },
+      "source": "https://raw.githubusercontent.com/jaredpalmer/kev/fe64b1274ea7f80d4095866df90666abb03e9cf6/evals/external/semif-v1/manifest.json",
+      "use": "metadata"
     },
     "suites/skills/dev": {
       "files": {

@@ -153,6 +153,15 @@ make env             # show which backend this machine uses
 make test-model      # MLX vs PyTorch parity on the downloaded qwen3.5-4b
 ```
 
+Tools that aren't part of the library live in `scripts/` (`uv run python -m scripts.<name>`): the breadth-v1
+builder, the data mirror, and the runbook's environment and timing checks.
+
+Eval-only extras beside Kev's suites: `make breadth` rebuilds Kev's breadth-v1 panel (14 public datasets) from the
+pinned raws, byte for byte against Kev's published sha256, into `data/{dev,test}/breadth.jsonl`; `binding` and
+`semif` (Kev's role-binding diagnostic and SemIf's authored decisions) come with `make data`. `den evaluate` reports
+Kev's robustness checks (option-order flips, contrastive pair flips, confidence on unknowable items) where a file
+carries them, and `--augment permute` measures option-order sensitivity on any file.
+
 `data/` and `models/` are gitignored. `make data` (Kev's suites and manifests), `make data-raw-*`, `make normalize` and
 `make clean-data` rebuild `data/` from `locks/`, which is committed with `reports/`. To skip the rebuild, `make
 upload-data DATA_REPO=<org>/<name>` puts the whole `data/` (about 6 GB) in a private Hub dataset with a sha256 manifest,

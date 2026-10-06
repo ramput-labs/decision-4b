@@ -153,6 +153,26 @@ class Augment:
     distract: float = 0.15
 
 
+def rotate_options(record: Record, rng: random.Random) -> Record:
+    """Each choice question's options cyclically shifted by a seeded 1..K-1 places, so every option moves (a shuffle
+    may leave some in place): the order a model that reads content must be indifferent to."""
+
+    def one(q: Question) -> Question:
+        if q.type != "choice" or len(q.options) < 2:
+            return q
+        shift = rng.randrange(1, len(q.options))
+        order = [(i + shift) % len(q.options) for i in range(len(q.options))]
+        return replace(
+            q,
+            keys=tuple(q.keys[i] for i in order),
+            options=tuple(q.options[i] for i in order),
+            label=order.index(q.label),
+            target=None if q.target is None else tuple(q.target[i] for i in order),
+        )
+
+    return replace(record, questions=tuple(one(q) for q in record.questions))
+
+
 def _with_options(q: Question, keys: list[str], options: list[str], label: int) -> Question:
     return replace(q, keys=tuple(keys), options=tuple(options), label=label)
 

@@ -5,8 +5,6 @@ den model [MODEL ...]       download models: a key from `den models`, or hf:<org
 den list [SET ...]          show the dataset catalog
 den data [SET ...]          download dataset sets (default: suites; all = every set except raw-bulk)
 den verify                  re-hash every downloaded file against locks/
-den data-upload --repo O/N      upload data/ as a private Hub dataset, with a sha256 manifest
-den data-download --repo O/N    download that copy into data/ and check every file
 den normalize               raw sources -> canonical train / dev / test records under data/*/sources/
 den clean                   write cleaned, deduplicated training copies under data/clean/
 den train [--dry-run] ...   LoRA + pointer-head fine-tune of the model with Unsloth (CUDA)
@@ -246,8 +244,6 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("probe")  # flags are parsed by den.overfit
     sub.add_parser("doctor")  # flags are parsed by den.doctor
     sub.add_parser("publish")  # flags are parsed by den.publish
-    sub.add_parser("data-upload")  # flags are parsed by den.mirror
-    sub.add_parser("data-download")
     sub.add_parser("audit").add_argument("--model", default=_default_model())
     sub.add_parser("env")
     smoke = sub.add_parser("smoke")
@@ -284,10 +280,6 @@ def main(argv: list[str] | None = None) -> int:
         sys.stdout.flush()
         sys.stderr.flush()
         os._exit(code)
-    if args.cmd in ("data-upload", "data-download"):
-        from .mirror import download_main, upload_main
-
-        return (upload_main if args.cmd == "data-upload" else download_main)(rest)
     if args.cmd == "publish":
         from .publish import publish_main
 

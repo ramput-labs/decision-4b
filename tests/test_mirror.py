@@ -8,8 +8,8 @@ from typing import Any
 import huggingface_hub
 import pytest
 
-from den import mirror
 from den.fetch import digest
+from scripts import mirror
 
 
 def data_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
@@ -77,3 +77,8 @@ def test_download_checks_every_file_against_the_manifest(tmp_path: Path, monkeyp
     (source / "train" / "sources" / "yelp" / "train.jsonl").write_text("corrupted\n")
     shutil.rmtree(target)
     assert mirror.download("org/den-data", target) == ["train/sources/yelp/train.jsonl differs from the uploaded file"]
+
+
+def test_the_mirror_needs_a_direction() -> None:
+    with pytest.raises(SystemExit, match="upload,download"):
+        mirror.main(["sideways"])
