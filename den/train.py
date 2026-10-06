@@ -12,7 +12,10 @@ writes the LoRA folded into bf16 weights, which the serving backbones load like 
 
 Choice options get Kev's augmentation on every visit (`--augment kev`: none-of-the-above and distractor options, a
 fresh order), so position carries no signal; `--p-none-pair` adds Kev's minimal pairs. `--eval-steps` validates on a
-dev sample while training; the curve goes into run.json with the exact data used (`data_used`).
+dev sample while training; the curve goes into run.json with the exact data used (`data_used`) and the Trainer's loss
+log (`train_history`). The checkpoint with the lowest dev NLL is kept in `best/` (adapter + head, its own T) for
+`--init-from` or a look back; the final weights are what ships and merges. After `--merge`, `integrity.json` records
+the merged run's checks and every model file's sha256 (`den check-run`).
 """
 
 from __future__ import annotations
@@ -23,6 +26,7 @@ import json
 import math
 import os
 import random
+import shutil
 import statistics
 import subprocess
 import sys
@@ -142,6 +146,11 @@ def runtime() -> dict[str, Any]:
     }
     if torch.cuda.is_available():
         info |= {"cudnn": torch.backends.cudnn.version(), "driver": _driver(), "gpu_count": torch.cuda.device_count()}  # type: ignore[no-untyped-call]
+        info |= {
+            "gpu": torch.cuda.get_device_name(0),
+            "gpu_memory_gb": round(torch.cuda.get_device_properties(0).total_memory / 2**30, 1),
+            "peak_memory_gb": round(torch.cuda.max_memory_allocated() / 2**30, 1),  # this process, over the whole run
+        }
     return info
 
 
@@ -253,12 +262,13 @@ def train(
     backbone = load_backbone(model_dir, lora, longest, args.seed, args.engine)  # unsloth before transformers
 
     import torch
+    from safetensors.torch import load_file
     from transformers import TrainerCallback, TrainerControl, TrainerState, TrainingArguments
 
     from .calibrate import fit_temperature
     from .metrics import Answer, summarize
     from .model import SystemOne, adapted, collate, question_loss, save_head, save_merged
-    from .trainer import PointerTrainer
+    from .trainer import TRAINABLE, PointerTrainer, restore, save_trainable, trainable_state
 
     head = make_head(hidden_size(model_dir), config)
     if config.kind == "letters":  # Qwen's own answer-letter logits: the tied embedding rows of " A" ... " Z"
@@ -328,6 +338,24 @@ def train(
     every = args.eval_steps
     probe = random.Random(args.seed).sample(dev, min(args.eval_max, len(dev))) if every else []
     history: list[dict[str, float]] = []  # the validation curve, saved in run.json
+    # The best checkpoint: lowest dev NLL at T = 1 on the fixed dev sample (all of dev at epoch ends without
+    # --eval-steps). Written to best/ as it improves, so it survives --resume; the final weights still ship.
+    out = Path(args.out)
+    chosen = probe or dev
+    best_dir = out / "best"
+    best: dict[str, Any] = {}
+    if args.resume and (best_dir / "selection.json").is_file():
+        best = json.loads((best_dir / "selection.json").read_text(encoding="utf-8"))
+    elif best_dir.exists():
+        shutil.rmtree(best_dir)  # an earlier run's, in the same --out
+    considered: list[int] = []
+
+    def consider(step: int, nll: float, acc: float) -> None:
+        considered.append(step)
+        if not best or nll < best["nll"]:
+            best.update(step=step, nll=round(nll, 4), accuracy=round(acc, 4))
+            save_trainable(model, best_dir)
+            (best_dir / "selection.json").write_text(json.dumps(best) + "\n", encoding="utf-8")
 
     class Dev(TrainerCallback):
         """Validation while training: a fixed dev sample every --eval-steps steps, all of dev at each epoch's end."""
@@ -338,6 +366,7 @@ def train(
             if probe and state.global_step % every == 0:
                 nll, acc = evaluate(probe)
                 history.append({"step": state.global_step, "nll": round(nll, 4), "accuracy": round(acc, 4)})
+                consider(state.global_step, nll, acc)
                 print(f"\nstep {state.global_step} dev({len(probe)})  nll {nll:.4f}  acc {acc:.4f}", flush=True)
 
         def on_epoch_end(
@@ -346,6 +375,8 @@ def train(
             if dev:
                 nll, acc = evaluate(dev)
                 history.append({"step": state.global_step, "nll": round(nll, 4), "accuracy": round(acc, 4), "full": 1})
+                if not probe:
+                    consider(state.global_step, nll, acc)
                 print(f"\nepoch dev  nll {nll:.4f}  acc {acc:.4f}", flush=True)
 
     started, limit = time.time(), args.max_minutes
@@ -412,58 +443,92 @@ def train(
     result = trainer.train(resume_from_checkpoint=resume) if trainer else None  # --epochs 0: zero-shot
     minutes = (time.time() - started) / 60
     seen = int(trainer.state.num_input_tokens_seen) if trainer else 0
+    final_step = trainer.state.global_step if trainer else 0
+    if trainer and chosen and final_step not in considered:  # the final weights are a candidate too
+        nll, acc = evaluate(chosen)
+        history.append({"step": final_step, "nll": round(nll, 4), "accuracy": round(acc, 4), "final": 1})
+        consider(final_step, nll, acc)
 
     def kinds(rows: list[Example]) -> list[str]:
         return [k for e in rows for k in (e.kinds or ("choice",) * len(e.labels))]
 
-    temperature, temperatures = 1.0, {}
-    if calibration:
-        fitted = predict(calibration)
-        temperature = fit_temperature(*fitted)
-        if args.calibrate_by_type:  # one T per question type with enough calibration questions; the rest share T
-            for kind in sorted(set(kinds(calibration))):
-                pick = [i for i, k in enumerate(kinds(calibration)) if k == kind and fitted[2][i] is None]
-                if len(pick) >= 50:
-                    temperatures[kind] = fit_temperature(
-                        [fitted[0][i] for i in pick], [fitted[1][i] for i in pick], [fitted[2][i] for i in pick]
-                    )
-        print(
-            f"calibration  T {temperature:.3f}" + "".join(f"  {k} {t:.3f}" for k, t in temperatures.items()), flush=True
+    def at(rows: list[Example], fitted: Any, temperature: float, temperatures: dict[str, float]) -> dict[str, Any]:  # noqa: ANN401
+        """`metrics.summarize` of `rows` (scores from `predict`) at T, the type's own T where one was fitted."""
+        sources = [src for e in rows for src in (e.sources or ("",) * len(e.labels))]
+        got = summarize(
+            [
+                Answer((s / temperatures.get(k, temperature)).softmax(-1).tolist(), y, k, src, t)
+                for s, y, t, k, src in zip(*fitted, kinds(rows), sources, strict=True)
+            ]
         )
-    report: dict[str, Any] = {"temperature": temperature, "temperatures": temperatures}
-    dev_at_t: dict[str, float] = {}
-    if dev:
-        scores, labels, targets = predict(dev)
-        sources = [src for e in dev for src in (e.sources or ("",) * len(e.labels))]
-        rows = list(zip(scores, labels, targets, kinds(dev), sources, strict=True))
-        for name, after in (("before", False), ("after", True)):
-            got = summarize(
-                [
-                    Answer(
-                        (s / (temperatures.get(k, temperature) if after else 1.0)).softmax(-1).tolist(), y, k, src, t
-                    )
-                    for s, y, t, k, src in rows
-                ]
-            )
-            report[name] = {m: got[m] for m in ("accuracy", "nll", "brier", "ece", "ece_by_type", "accuracy_by_type")}
-        before, calibrated = report["before"], report["after"]
-        dev_at_t = {"nll": calibrated["nll"], "accuracy": calibrated["accuracy"]}
-        print(
-            f"dev at T  nll {calibrated['nll']:.4f}  acc {calibrated['accuracy']:.4f}  "
-            f"brier {calibrated['brier']:.4f}  ece {calibrated['ece']:.4f}   "
-            f"(T=1: nll {before['nll']:.4f}  ece {before['ece']:.4f})",
-            flush=True,
-        )
+        keep = ("questions", "accuracy", "nll", "brier", "ece", "ece_by_type", "accuracy_by_type")
+        return {m: got[m] for m in keep}
 
-    out = Path(args.out)
+    def measure(label: str = "") -> tuple[float, dict[str, float], dict[str, Any]]:
+        """T fitted on calibration (and per type with --calibrate-by-type) for the weights the model holds now, with
+        the calibration split and dev before and after it."""
+        temperature, temperatures = 1.0, {}
+        report: dict[str, Any] = {}
+        if calibration:
+            fitted = predict(calibration)
+            temperature = fit_temperature(*fitted)
+            if args.calibrate_by_type:  # one T per question type with enough calibration questions; the rest share T
+                for kind in sorted(set(kinds(calibration))):
+                    pick = [i for i, k in enumerate(kinds(calibration)) if k == kind and fitted[2][i] is None]
+                    if len(pick) >= 50:
+                        temperatures[kind] = fit_temperature(
+                            [fitted[0][i] for i in pick], [fitted[1][i] for i in pick], [fitted[2][i] for i in pick]
+                        )
+            report["calibration_split"] = {
+                "files": args.calibration,
+                "before": at(calibration, fitted, 1.0, {}),
+                "after": at(calibration, fitted, temperature, temperatures),
+            }
+            print(
+                f"{label}calibration  T {temperature:.3f}" + "".join(f"  {k} {t:.3f}" for k, t in temperatures.items()),
+                flush=True,
+            )
+        report |= {"temperature": temperature, "temperatures": temperatures}
+        if dev:
+            scored = predict(dev)
+            report["before"], report["after"] = at(dev, scored, 1.0, {}), at(dev, scored, temperature, temperatures)
+            before, calibrated = report["before"], report["after"]
+            print(
+                f"{label}dev at T  nll {calibrated['nll']:.4f}  acc {calibrated['accuracy']:.4f}  "
+                f"brier {calibrated['brier']:.4f}  ece {calibrated['ece']:.4f}   "
+                f"(T=1: nll {before['nll']:.4f}  ece {before['ece']:.4f})",
+                flush=True,
+            )
+        return temperature, temperatures, report
+
+    temperature, temperatures, report = measure()
+    dev_at_t = {"nll": report["after"]["nll"], "accuracy": report["after"]["accuracy"]} if dev else {}
+
     out.mkdir(parents=True, exist_ok=True)
+    meta = {"base": args.model, "lora": lora.rank, "engine": args.engine}
     if lora.rank:
         backbone.save_pretrained(out)
-    save_head(
-        out, model.head, base=args.model, lora=lora.rank, engine=args.engine, temperature=temperature,
-        temperatures=temperatures,
-    )  # fmt: skip
+    save_head(out, model.head, **meta, temperature=temperature, temperatures=temperatures)
     (out / "training_config.json").write_text(json.dumps(vars(args), indent=2, default=str) + "\n", encoding="utf-8")
+    selection: dict[str, Any] | None = None
+    if best:
+        selection = {**best, "on": "dev sample" if probe else "dev", "questions": sum(len(e.labels) for e in chosen),
+                     "metric": "nll at T=1"}  # fmt: skip
+        if best["step"] == final_step:  # the final weights are the best: nothing more to keep
+            shutil.rmtree(best_dir, ignore_errors=True)
+            selection["path"] = "."
+        else:  # the best weights get their own T and dev report, then the final weights come back for the merge
+            final = trainable_state(model)
+            restore(model, load_file(best_dir / TRAINABLE), str(best_dir))
+            best_t, best_ts, best_report = measure(f"best (step {best['step']}) ")
+            if lora.rank:
+                backbone.save_pretrained(best_dir)
+            save_head(best_dir, model.head, **meta, temperature=best_t, temperatures=best_ts, step=best["step"])
+            restore(model, final, "the final weights")
+            for name in (TRAINABLE, "selection.json"):  # the adapter and head hold the weights; run.json the choice
+                (best_dir / name).unlink()
+            selection |= {"path": "best", "temperature": best_t, "calibration_report": best_report}
+        print(f"best   step {best['step']} of {final_step}  dev nll {best['nll']:.4f}  acc {best['accuracy']:.4f}")
     run = {
         **setup,
         "base": args.model,
@@ -515,19 +580,34 @@ def train(
         "temperature": temperature,
         "dev_at_temperature": dev_at_t,
         "dev_history": history,
+        "train_history": train_history(trainer.state.log_history if trainer else []),
+        "best": selection,
         "dev_files": args.dev,
         "data_used": data_used,
         "versions": versions(),
         "commit": commit(),
+        "finished": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
     }
     (out / "run.json").write_text(json.dumps(run, indent=2) + "\n", encoding="utf-8")
     print(f"saved {out}", flush=True)
     if lora.rank and args.merge:  # last: the adapter and head are already safe if this fails
         replaced = save_merged(backbone, model_dir, out / "merged")
         print(f"saved {out / 'merged'}  ({replaced} merged weights)")
+        from .integrity import write
+
+        if not write(out, model_dir)["ok"]:
+            raise SystemExit(f"{out}: the merged run failed its integrity checks (integrity.json)")
 
 
-def main(argv: list[str] | None = None) -> int:
+def train_history(log: Sequence[dict[str, Any]]) -> list[dict[str, Any]]:
+    """The Trainer's log (loss, grad_norm, learning_rate every 10 steps; the run's summary last), as plain JSON."""
+    return [
+        {k: v if isinstance(v, int | str) else round(float(v), 6) for k, v in row.items() if v is not None}
+        for row in log
+    ]
+
+
+def parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="den train")
     p.add_argument("--model", default="qwen3.5-4b")
     p.add_argument("--data", nargs="*", default=[f"train/{s}.jsonl" for s in KEV_TRAIN], help="files under data/clean")
@@ -605,7 +685,11 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--max-state", type=int, default=MAX_STATE_TOKENS)
     p.add_argument("--seed", type=int, default=1)
     p.add_argument("--dry-run", action="store_true", help="tokenize and report; no model, no GPU")
-    args = p.parse_args(argv)
+    return p
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = parser().parse_args(argv)
     if any(Path(d).parts[0] == "test" for d in [*args.data, *args.dev, *args.calibration]):
         raise SystemExit("test partitions are read once per release candidate, never while training")
     if any(Path(d).parts[0] != "calibration" for d in args.calibration):

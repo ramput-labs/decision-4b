@@ -129,6 +129,7 @@ rerun the gate. If Unsloth then refuses to import, stop and report both versions
 ```bash
 uvx hf auth login --token "$HF_TOKEN"     # faster, rate-limit-free downloads; also used by `den publish`
 make model MODEL=qwen3.5-4b               # 9.3 GB, every shard sha256-checked against locks/
+make data                                 # Kev's suites (data/ is not in git; ~100 MB, sha256-checked)
 make data-raw-train data-raw-new data-raw-eval   # public sources for round 2 (~1.7 GB, sha256-checked)
 make normalize                            # raw sources -> leakage-free train/dev/test records (~2 min, deterministic)
 make clean-data                           # data/clean/: Kev's suites and the normalized sources
@@ -136,6 +137,10 @@ make train-check                          # tokenizes round 1's data; no GPU
 uv run den train --dry-run --data --sources-cap 1500 --replay 1500 \
   --replay-from train/core.jsonl train/dates-unknowable.jsonl train/documents.jsonl train/skills.jsonl train/devtools.jsonl
 ```
+
+If the person gave a `DATA_REPO` (a `make upload-data` copy), replace the `make data` through `make clean-data` lines
+with `make download-data DATA_REPO="$DATA_REPO"`: the same `data/`, every file checked against the copy's manifest
+and the pinned ones against `locks/`. It must end with `ok, every file matches`.
 
 **Gate 2:** `make train-check` prints exactly:
 
@@ -351,7 +356,9 @@ regression on Kev's own tasks. `dev/transfer` and the eval-only sources (`dev/so
 other `dev/sources` files are in-distribution for round 2 only. `probes` is left out of the choice: it is mostly
 unknowable items. Call the shipped run `$SHIP`.
 
-**Gate 7:** both runs have `eval.json`, `compare` printed `ship: ...`, and you wrote the table to `~/progress.log`.
+`make post-train RUN=<run>` runs `den check-run` and the dev and augmentation evaluations above in one go.
+
+**Gate 7:** both runs have `eval.json` and an `integrity.json` with `"ok": true`, `compare` printed `ship: ...`, and you wrote the table to `~/progress.log`.
 
 ## Phase 8: test once, publish everything (15 min)
 
@@ -360,7 +367,7 @@ Read the locked test set **once**, for the shipped run only. Never repeat it, an
 ```bash
 TEST="test/core.jsonl test/documents.jsonl test/skills.jsonl test/devtools.jsonl test/transfer.jsonl test/probes.jsonl"
 SRC_TEST=$(cd data/clean && ls test/sources/*/*.jsonl | tr '\n' ' ')
-uv run den evaluate --final --run "$SHIP" $TEST
+uv run den evaluate --final --run "$SHIP" $TEST                       # or: make final-test RUN=$SHIP
 uv run den evaluate --final --run "$SHIP" --limit 1000 $SRC_TEST     # 1,000 sampled records per source file
 uv run den publish --run "$SHIP" --repo "$HF_REPO" --logs runs-timing.log runs-train.log runs-round2.log
 ```
@@ -372,11 +379,17 @@ What the Hub repo then holds (`den publish` bundles it):
 | `merged/` | the shipped model: LoRA folded into bf16 weights, loads like the base checkpoint |
 | `adapter_model.safetensors`, `adapter_config.json` | the LoRA alone, for use on top of `Qwen/Qwen3.5-4B-Base` |
 | `head.safetensors`, `head.json` | the pointer head's weights, and its config (kind, size, backbone hidden size) and T |
-| `run.json`, `training_config.json`, `eval.json` | how it was trained (validation curve included) and measured |
+| `run.json`, `training_config.json`, `eval.json` | how it was trained (loss log `train_history`, validation curve `dev_history`, `calibration_report`, `best`, GPU and peak memory) and measured (every eval entry has `read_at`) |
+| `best/` | the lowest-dev-NLL checkpoint (adapter + head, its own T) when it isn't the final step; not merged, not served |
+| `integrity.json` | the merged run's checks (head/adapter finite, merged = base layout with exactly 248 weights changed) and every model file's sha256; `publish` reruns it and refuses a failure |
+| `baselines.json` | phase 10's A/B/C/D table (`den baselines`), shown on the card |
 | `stages/<name>/` | every earlier stage: adapter, head, run.json, eval.json |
 | `data/` | the exact training data of every stage (sampled files hold only the lines used), every dev, calibration and test file it was scored on, `data/MANIFEST.json` with sha256s |
 | `logs/` | the training logs |
 | `README.md` | model card: results table, stage table, how to use it |
+
+`den evaluate --final` refuses a second read of a test file the run already has in `eval.json`: if a read fails
+midway, the files already read are recorded, so rerun only the missing ones.
 
 **Gate 8:** every test file prints `acc`, `nll`, `brier`, `ece` and `cov@5%`. `publish` prints the URL and file count, and the Hub page
 shows the card with the results and stage tables. If `publish` stops on a missing file, read its message. If
@@ -428,6 +441,14 @@ included:
 for RUN in runs/base-a runs/base-c runs/base-b; do
   [ -d $RUN ] && uv run den evaluate --final --run $RUN $TEST
 done
+```
+
+Then put them side by side, into `$SHIP/baselines.json`, and republish so the card shows the table:
+
+```bash
+uv run den baselines D=$SHIP A=runs/base-a $( [ -d runs/base-c ] && echo C=runs/base-c ) \
+  $( [ -d runs/base-b ] && echo B=runs/base-b ) --files $TEST
+uv run den publish --run "$SHIP" --repo "$HF_REPO" --logs runs-timing.log runs-train.log runs-round2.log
 ```
 
 Upload them under `baselines/`:

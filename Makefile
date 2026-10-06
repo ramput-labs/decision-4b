@@ -6,10 +6,13 @@ RUNS ?= runs/kev-recipe
 ROUND2 ?= runs/round2
 CAP ?= 1500
 EVAL := --eval-steps 400 --eval-max 600
+DEV := dev/core.jsonl dev/documents.jsonl dev/skills.jsonl dev/devtools.jsonl dev/transfer.jsonl dev/probes.jsonl
+TEST := $(subst dev/,test/,$(DEV))
 KEV_SUITES := train/core.jsonl train/dates-unknowable.jsonl train/documents.jsonl train/skills.jsonl train/devtools.jsonl
 TRAIN := $(UV) den train --model $(MODEL)
+DATA_REPO ?= $(DEN_DATA_REPO)
 
-.PHONY: test-cuda doctor train-kev train-round2 serve help setup check test-model list models model data data-raw-train data-raw-new data-raw-eval data-raw-bulk data-all verify normalize clean-data audit train-setup train-check train env smoke
+.PHONY: upload-data download-data post-train final-test test-cuda doctor train-kev train-round2 serve help setup check test-model list models model data data-raw-train data-raw-new data-raw-eval data-raw-bulk data-all verify normalize clean-data audit train-setup train-check train env smoke
 
 help: ## show targets
 	@grep -E '^[a-z0-9-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-15s %s\n", $$1, $$2}'
@@ -59,6 +62,14 @@ data-raw-bulk: ## CFPB, CommitPackFT, CodeReviewer, FlakeFlagger raws (~5 GB)
 data-all: ## every set except raw-bulk
 	$(UV) den data all
 
+upload-data: ## upload data/ (suites, sources, clean) as a private Hub dataset: DATA_REPO=<org>/<name>
+	@test -n "$(DATA_REPO)" || (echo "set DATA_REPO=<org>/<name> (or DEN_DATA_REPO)" && exit 1)
+	$(UV) den data-upload --repo $(DATA_REPO)
+
+download-data: ## download that copy into data/ and check every file: DATA_REPO=<org>/<name>[@commit]
+	@test -n "$(DATA_REPO)" || (echo "set DATA_REPO=<org>/<name>[@commit] (or DEN_DATA_REPO)" && exit 1)
+	$(UV) den data-download --repo $(DATA_REPO)
+
 verify: ## re-hash every downloaded file against locks/
 	$(UV) den verify
 
@@ -96,6 +107,16 @@ train-round2: ## round 2 from round 1: the 17 public sources (CAP each) + CAP re
 	$(TRAIN) --data --sources-cap $(CAP) --replay $(CAP) --replay-from $(KEV_SUITES) --init-from $(RUNS)/4-skills \
 		--lr 2e-5 --batch 4 --accum 2 $(EVAL) --dev dev/core.jsonl dev/documents.jsonl dev/skills.jsonl dev/devtools.jsonl \
 		--merge --out $(ROUND2) $(ARGS)
+
+post-train: ## after training RUN: integrity checks, dev metrics, Kev's augmentations (dev only, never test)
+	$(UV) den check-run --run $(RUN)
+	$(UV) den evaluate --run $(RUN) $(DEV)
+	for AUG in pairs none-replace none-add distract; do \
+		$(UV) den evaluate --run $(RUN) --augment $$AUG dev/core.jsonl dev/documents.jsonl dev/skills.jsonl || exit 1; \
+	done
+
+final-test: ## the locked test set, read once, for the shipped RUN only (refuses a second read)
+	$(UV) den evaluate --final --run $(RUN) $(TEST)
 
 serve: ## serve RUN (a run directory or hf:<org>/<name>) at POST /v1/systemone; PORT=8009
 	$(UV) den serve --run $(RUN) --port $(or $(PORT),8009)

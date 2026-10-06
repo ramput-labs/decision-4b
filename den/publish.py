@@ -54,6 +54,7 @@ def card(run: Path, repo: str) -> str:
         for name, m in sorted(evaluated.items())
     )
     versions = ", ".join(f"{k} {v}" for k, v in trained.get("versions", {}).items())
+    details = "\n".join(p for p in (calibrated(trained), behavior(evaluated), compared(run), checked(run)) if p)
     return f"""---
 base_model: {base}
 library_name: peft
@@ -89,13 +90,18 @@ on confidence, not accuracy.
 |---|---|---|---|---|---|---|
 {rows or "| (not evaluated yet) | | | | | | |"}
 
+{details}
+
 ## Files
 
 - `merged/`: the LoRA folded into bf16 weights; loads like the base checkpoint.
 - `head.safetensors`, `head.json`: the pointer head's weights, and its config (kind, size, the backbone's hidden size)
   and T. No pickle: the whole repo is safetensors and JSON.
 - `adapter_model.safetensors`, `adapter_config.json`: the LoRA alone, for use on top of the base.
-- `run.json`, `training_config.json`, `eval.json`: how it was trained and measured.
+- `run.json`, `training_config.json`, `eval.json`: how it was trained (loss log, dev curve, calibration) and measured.
+- `best/` (when present): the checkpoint with the lowest dev NLL, adapter and head with its own T; the final
+  weights above are the ones that ship.
+- `integrity.json`: the merged run's checks and every model file's sha256; `baselines.json`: the mode comparison.
 - `stages/`: every earlier training stage (adapter, head, its run.json), to continue or compare from.
 - `data/`: the exact training data of every stage (sampled files hold only the lines used), the dev, calibration and
   test files it was scored on, and `data/MANIFEST.json` with their sha256.
@@ -114,6 +120,65 @@ Code {trained.get("commit", "?")}; {versions}.
 """
 
 
+def calibrated(trained: dict[str, Any]) -> str:
+    """Calibration: what T did, on the calibration split it was fitted on and on dev."""
+    report = trained.get("calibration_report") or {}
+    rows: list[str] = []
+    for split, label in ((report.get("calibration_split") or {}, "calibration (fit)"), (report, "dev")):
+        for when in ("before", "after"):
+            if (r := split.get(when)) is not None:
+                t = "T = 1" if when == "before" else f"T = {report.get('temperature', float('nan')):.3f}"
+                rows.append(f"| {label} | {t} | {r['accuracy']:.4f} | {r['nll']:.4f} | {r['ece']:.4f} |")
+    best = trained.get("best")
+    note = ""
+    if best:
+        where = "the final weights" if best.get("path") == "." else "`best/`"
+        note = (
+            f"\n\nLowest dev NLL (T = 1, {best['questions']} {best['on']} questions): step {best['step']} of "
+            f"{trained.get('steps', '?')}, nll {best['nll']:.4f}, accuracy {best['accuracy']:.4f}: {where}."
+        )
+    if not rows:
+        return note.strip()
+    table = "| split | at | accuracy | nll | ece |\n|---|---|---|---|---|\n" + "\n".join(rows)
+    return f"## Calibration\n\n{table}{note}\n"
+
+
+def behavior(evaluated: dict[str, Any]) -> str:
+    """Kev's minimal pairs: both halves right, the true option present (a none option wrong) and removed."""
+    rows = [
+        f"| `{name}` | {m['pairs']} | {m['pair_accuracy']:.4f} | {m['accuracy_present']:.4f} "
+        f"| {m['accuracy_absent']:.4f} |"
+        for name, m in sorted(evaluated.items())
+        if "pair_accuracy" in m
+    ]
+    head = "| file | pairs | pair accuracy | true option present | true option removed |\n|---|---|---|---|---|\n"
+    return f"## Minimal pairs\n\n{head}" + "\n".join(rows) + "\n" if rows else ""
+
+
+def compared(run: Path) -> str:
+    """The baselines table from `den baselines`."""
+    from .evaluate import markdown
+
+    table = _json(run / "baselines.json")
+    if not table:
+        return ""
+    return (
+        "## Baselines\n\nA zero-shot Qwen (answer-letter logits), B LoRA + letters, C frozen Qwen + pointer head, D "
+        f"LoRA + pointer head; the same files, the same protocol.\n\n{markdown(table)}\n"
+    )
+
+
+def checked(run: Path) -> str:
+    report = _json(run / "integrity.json")
+    if not report:
+        return ""
+    passed = sum(c["ok"] for c in report["checks"])
+    return (
+        f"## Integrity\n\n{passed} of {len(report['checks'])} checks passed (`integrity.json`); "
+        f"{len(report['files'])} model files with their sha256.\n"
+    )
+
+
 STAGE_FILES = (
     "adapter_model.safetensors",
     "adapter_config.json",
@@ -122,6 +187,7 @@ STAGE_FILES = (
     "run.json",
     "training_config.json",
     "eval.json",
+    "integrity.json",
 )
 CLEAN = Path("data/clean")
 
@@ -178,11 +244,20 @@ def bundle(run: Path, logs: Sequence[Path] = ()) -> dict[str, Any]:
     return manifest
 
 
+def verify(run: Path) -> None:
+    """The integrity checks, rerun on what is about to be uploaded; refuses a run that fails them."""
+    from .integrity import base_of, write
+
+    if not write(run, base_of(run))["ok"]:
+        raise SystemExit(f"{run} failed its integrity checks (integrity.json): not uploading it")
+
+
 def publish(run: Path, repo: str, private: bool = True, logs: Sequence[Path] = ()) -> list[str]:
     from huggingface_hub import create_repo, list_repo_files, upload_large_folder
 
     if missing := [f for f in NEEDED if not (run / f).is_file()]:
         raise SystemExit(f"{run} is missing {missing}: train with --merge first")
+    verify(run)
     bundle(run, logs)
     (run / "README.md").write_text(card(run, repo), encoding="utf-8")
     create_repo(repo, private=private, repo_type="model", exist_ok=True)
@@ -204,6 +279,7 @@ def publish_main(argv: list[str] | None = None) -> int:
     )
     args = p.parse_args(argv)
     if args.local:
+        verify(args.run)
         manifest = bundle(args.run, args.logs)
         (args.run / "README.md").write_text(card(args.run, args.repo), encoding="utf-8")
         print(f"bundled {args.run}: {len(manifest)} data files, {len(stages(args.run)) - 1} earlier stages")

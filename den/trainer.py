@@ -39,11 +39,15 @@ def load_trainable(model: torch.nn.Module, directory: Path) -> None:
     """Restore the trainable parameters saved by `save_trainable`; refuses a checkpoint of another model."""
     from safetensors.torch import load_file
 
-    saved = load_file(directory / TRAINABLE)
+    restore(model, load_file(directory / TRAINABLE), str(directory))
+
+
+def restore(model: torch.nn.Module, saved: dict[str, torch.Tensor], what: str = "the state") -> None:
+    """Copy a `trainable_state` back into the model's trainable parameters; refuses one of another model."""
     params = {n: p for n, p in model.named_parameters() if p.requires_grad}
     if set(saved) != set(params):
         missing, extra = sorted(set(params) - set(saved))[:3], sorted(set(saved) - set(params))[:3]
-        raise SystemExit(f"{directory} is a checkpoint of another model (missing {missing}, unexpected {extra})")
+        raise SystemExit(f"{what} is a checkpoint of another model (missing {missing}, unexpected {extra})")
     with torch.no_grad():
         for name, p in params.items():
             p.copy_(saved[name].to(p.device, p.dtype))

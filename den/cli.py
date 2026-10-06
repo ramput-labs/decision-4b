@@ -5,6 +5,8 @@ den model [MODEL ...]       download models: a key from `den models`, or hf:<org
 den list [SET ...]          show the dataset catalog
 den data [SET ...]          download dataset sets (default: suites; all = every set except raw-bulk)
 den verify                  re-hash every downloaded file against locks/
+den data-upload --repo O/N      upload data/ as a private Hub dataset, with a sha256 manifest
+den data-download --repo O/N    download that copy into data/ and check every file
 den normalize               raw sources -> canonical train / dev / test records under data/*/sources/
 den clean                   write cleaned, deduplicated training copies under data/clean/
 den train [--dry-run] ...   LoRA + pointer-head fine-tune of the model with Unsloth (CUDA)
@@ -12,6 +14,8 @@ den evaluate --run R FILES  accuracy, NLL and calibration of a trained run
 den predict --run R [JSONL] /v1/systemone responses for request lines (R may be hf:<org>/<name>)
 den serve --run R [--port P]    POST /v1/systemone over HTTP (Kev's API)
 den compare RUN RUN ...         pick the run to ship from dev results
+den baselines D=RUN A=RUN ...   modes A/B/C/D side by side on the same files (baselines.json)
+den check-run --run R           integrity of a finished run: head, adapter, merged vs base, sha256 (integrity.json)
 den overfit [--n 100]           gate: the head must fit 100 real examples; behavioral checks after
 den probe --dev F [--train F]   modes A (zero-shot letters) and C (frozen backbone + head) on cached features
 den publish --run R --repo O/N  upload a run as a private Hub model with a generated card
@@ -235,11 +239,15 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("evaluate")  # flags are parsed by den.evaluate
     sub.add_parser("predict")
     sub.add_parser("compare")
+    sub.add_parser("baselines")
+    sub.add_parser("check-run")  # flags are parsed by den.integrity
     sub.add_parser("serve")  # flags are parsed by den.serve
     sub.add_parser("overfit")  # flags are parsed by den.overfit
     sub.add_parser("probe")  # flags are parsed by den.overfit
     sub.add_parser("doctor")  # flags are parsed by den.doctor
     sub.add_parser("publish")  # flags are parsed by den.publish
+    sub.add_parser("data-upload")  # flags are parsed by den.mirror
+    sub.add_parser("data-download")
     sub.add_parser("audit").add_argument("--model", default=_default_model())
     sub.add_parser("env")
     smoke = sub.add_parser("smoke")
@@ -264,15 +272,22 @@ def main(argv: list[str] | None = None) -> int:
         from .serve import serve_main
 
         return serve_main(rest)
-    if args.cmd in ("evaluate", "predict", "compare"):
-        from .evaluate import compare_main, evaluate_main, predict_main
+    if args.cmd in ("evaluate", "predict", "compare", "baselines", "check-run"):
+        from .evaluate import baselines_main, compare_main, evaluate_main, predict_main
+        from .integrity import check_main
 
-        code = {"evaluate": evaluate_main, "predict": predict_main, "compare": compare_main}[args.cmd](rest)
+        mains = {"evaluate": evaluate_main, "predict": predict_main, "compare": compare_main,
+                 "baselines": baselines_main, "check-run": check_main}  # fmt: skip
+        code = mains[args.cmd](rest)
         # Results are written. Skip interpreter teardown, where native libraries have crashed (SIGSEGV) after a
         # finished run; a nonzero exit would fail a scripted pipeline that had succeeded.
         sys.stdout.flush()
         sys.stderr.flush()
         os._exit(code)
+    if args.cmd in ("data-upload", "data-download"):
+        from .mirror import download_main, upload_main
+
+        return (upload_main if args.cmd == "data-upload" else download_main)(rest)
     if args.cmd == "publish":
         from .publish import publish_main
 

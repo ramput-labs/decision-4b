@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import math
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -178,3 +179,80 @@ def test_probe_refuses_test_files_and_mixed_modes() -> None:
         probe_main(["--head-kind", "letters", "--train", "train/core.jsonl", "--dev", "dev/core.jsonl"])
     with pytest.raises(SystemExit, match="need --train"):
         probe_main(["--dev", "dev/core.jsonl"])
+
+
+def test_the_locked_test_set_is_read_once_per_run(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from den import evaluate
+
+    run = tmp_path / "run"
+    _eval(run, {"test/core.jsonl": 0.8, "dev/core.jsonl": 0.9})
+    loaded: list[Path] = []
+    monkeypatch.setattr(evaluate, "Model", lambda path, backend: loaded.append(path))
+    with pytest.raises(SystemExit, match="read once per run"):
+        evaluate.evaluate_main(["--run", str(run), "--final", "test/core.jsonl"])
+    assert not loaded  # refused before the model is even loaded
+
+
+def _run(path: Path, kind: str, lora: int, scores: dict[str, float]) -> Path:
+    _eval(path, scores)
+    (path / "head.json").write_text(json.dumps({"kind": kind, "lora": lora, "temperature": 1.5}))
+    return path
+
+
+def test_baselines_label_each_mode_and_land_on_the_card(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    from den.evaluate import baselines_main
+    from den.publish import card
+
+    files = {"test/core.jsonl": 0.86}
+    ship = _run(tmp_path / "ship", "set", 16, files)
+    a = _run(tmp_path / "a", "letters", 0, {"test/core.jsonl": 0.55})
+    c = _run(tmp_path / "c", "set", 0, {"test/core.jsonl": 0.71})
+    b = _run(tmp_path / "b", "letters", 16, {"test/core.jsonl": 0.80})
+    baselines_main([f"D={ship}", f"A={a}", f"C={c}", f"B={b}"])
+    table = json.loads((ship / "baselines.json").read_text())
+    assert {k: r["mode"] for k, r in table["runs"].items()} == {"D": "D", "A": "A", "C": "C", "B": "B"}
+    assert table["runs"]["C"]["results"]["test/core.jsonl"]["accuracy"] == 0.71
+    assert "| `test/core.jsonl` | A | A | 100 | 0.5500 |" in capsys.readouterr().out
+    (ship / "run.json").write_text(json.dumps({"base": "qwen3.5-4b"}))
+    assert "## Baselines" in card(ship, "org/x") and "| `test/core.jsonl` | C | C | 100 | 0.7100 |" in card(
+        ship, "org/x"
+    )
+    with pytest.raises(SystemExit, match="not evaluated on"):
+        baselines_main([f"D={ship}", f"A={a}", "--files", "dev/core.jsonl"])
+
+
+def test_card_reports_calibration_best_checkpoint_pairs_and_integrity(tmp_path: Path) -> None:
+    from den.publish import card
+
+    split = {"accuracy": 0.8, "nll": 0.7, "ece": 0.09}
+    (tmp_path / "run.json").write_text(json.dumps({
+        "base": "qwen3.5-4b", "steps": 900,
+        "calibration_report": {"temperature": 1.4, "before": split, "after": {**split, "nll": 0.5, "ece": 0.02},
+                               "calibration_split": {"before": split, "after": {**split, "ece": 0.01}}},
+        "best": {"step": 800, "nll": 0.51, "accuracy": 0.81, "on": "dev sample", "questions": 600, "path": "best"},
+    }))  # fmt: skip
+    pairs = {"questions": 10, "accuracy": 0.9, "nll": 0.3, "ece": 0.02, "pairs": 5, "pair_accuracy": 0.6,
+             "accuracy_present": 0.8, "accuracy_absent": 0.7}  # fmt: skip
+    (tmp_path / "eval.json").write_text(json.dumps({"dev/core.jsonl+pairs": pairs}))
+    (tmp_path / "integrity.json").write_text(json.dumps({"checks": [{"ok": True}, {"ok": True}], "files": {"a": 1}}))
+    text = card(tmp_path, "org/x")
+    assert "| calibration (fit) | T = 1.400 | 0.8000 | 0.7000 | 0.0100 |" in text
+    assert (
+        "| dev | T = 1 | 0.8000 | 0.7000 | 0.0900 |" in text
+        and "| dev | T = 1.400 | 0.8000 | 0.5000 | 0.0200 |" in text
+    )
+    assert "step 800 of 900, nll 0.5100, accuracy 0.8100: `best/`" in text
+    assert "| `dev/core.jsonl+pairs` | 5 | 0.6000 | 0.8000 | 0.7000 |" in text
+    assert "2 of 2 checks passed" in text
+
+
+def test_train_history_is_plain_json() -> None:
+    from den.train import train_history
+
+    log: list[dict[str, Any]] = [
+        {"loss": 1.23456789, "grad_norm": 0.5, "learning_rate": 5e-5, "epoch": 0.1, "step": 10},
+        {"train_runtime": 12.0, "step": 20, "total_flos": None},
+    ]
+    assert train_history(log) == [{"loss": 1.234568, "grad_norm": 0.5, "learning_rate": 5e-05, "epoch": 0.1,
+                                   "step": 10}, {"train_runtime": 12.0, "step": 20}]  # fmt: skip
+    json.dumps(train_history(log))

@@ -8,6 +8,7 @@ base model; the head runs in PyTorch on the CPU.
     den predict  --run runs/round2 requests.jsonl                # one /v1/systemone response per line
     den predict  --run hf:<org>/<name> requests.jsonl           # the same, straight from the Hub
     den evaluate --run runs/round2 dev/core.jsonl                # files under data/clean; test needs --final
+    den baselines D=runs/round2 A=runs/base-a C=runs/base-c test/core.jsonl   # one table, into D's baselines.json
 """
 
 from __future__ import annotations
@@ -213,11 +214,12 @@ def evaluate_main(argv: list[str] | None = None) -> int:
     args = p.parse_args(argv)
     if not args.final and any(Path(f).parts[0] == "test" for f in args.files):
         raise SystemExit("test partitions are read once per release candidate: pass --final for that one read")
-    run = locate(args.run)
-    model = Model(run, args.backend)
     report_path = Path(args.run) / "eval.json" if not args.run.startswith("hf:") else None  # never into the Hub cache
     report = json.loads(report_path.read_text(encoding="utf-8")) if report_path and report_path.is_file() else {}
     suffix = (f"+{args.augment}" if args.augment else "") + (f"+max{args.max_options}" if args.max_options else "")
+    if again := [f + suffix for f in args.files if Path(f).parts[0] == "test" and f + suffix in report]:
+        raise SystemExit(f"{args.run} has already read {again}: the locked test set is read once per run")
+    model = Model(locate(args.run), args.backend)
     for f in args.files:
         records = sample(CLEAN / f, args.limit, seed=0) if args.limit else list(read(CLEAN / f))
         if args.max_options:
@@ -234,12 +236,14 @@ def evaluate_main(argv: list[str] | None = None) -> int:
         )
         if args.limit:
             result["sampled_records"] = len(records)
+        result["read_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        result["locked_test"] = Path(f).parts[0] == "test"
         report[f + suffix] = result
+        if report_path:  # after every file: a test file read is recorded even if a later one fails
+            report_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
         coverage = result["coverage_at_5%_error"]
         print(f"{f + suffix:<40} n {result['questions']:>6.0f}  acc {result['accuracy']:.4f}  nll {result['nll']:.4f}  "
               f"brier {result['brier']:.4f}  ece {result['ece']:.4f}  cov@5% {coverage:.3f}", flush=True)  # fmt: skip
-    if report_path:
-        report_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     return 0
 
 
@@ -282,4 +286,62 @@ def compare_main(argv: list[str] | None = None) -> int:
         if mean[run] > mean[best] and drop <= args.max_drop:
             best = run
     print(f"ship: {best}")
+    return 0
+
+
+BASELINE_METRICS = ("questions", "accuracy", "nll", "brier", "ece", "coverage_at_5%_error", "ms_per_question")
+
+
+def baselines(runs: dict[str, Path], files: Sequence[str]) -> dict[str, Any]:
+    """Every run's numbers on the same files, from each run's eval.json, with its mode read from head.json:
+    A zero-shot Qwen (letters, no LoRA, no training), B LoRA + letters, C frozen Qwen + head, D LoRA + head."""
+    table: dict[str, Any] = {"files": list(files), "runs": {}}
+    for label, run in runs.items():
+        evaluated = json.loads((run / "eval.json").read_text(encoding="utf-8"))
+        if missing := [f for f in files if f not in evaluated]:
+            raise SystemExit(f"{run} was not evaluated on {missing}: den evaluate --run {run} ... first")
+        head = json.loads((run / "head.json").read_text(encoding="utf-8"))
+        letters, lora = head.get("kind") == "letters", bool(head.get("lora"))
+        mode = ("B" if lora else "A") if letters else ("D" if lora else "C")  # letters + no LoRA never trains
+        table["runs"][label] = {
+            "path": str(run),
+            "mode": mode,
+            "head": head.get("kind"),
+            "lora": head.get("lora"),
+            "temperature": head.get("temperature"),
+            "results": {f: {m: evaluated[f].get(m) for m in BASELINE_METRICS} for f in files},
+        }
+    return table
+
+
+def markdown(table: dict[str, Any]) -> str:
+    """The baselines table, one row per file and run."""
+    rows = ["| file | run | mode | questions | accuracy | nll | brier | ece | cov@5% |", "|---" * 9 + "|"]
+    nan = float("nan")
+    for f in table["files"]:
+        for label, r in table["runs"].items():
+            m = {k: nan if v is None else v for k, v in r["results"][f].items()}
+            rows.append(
+                f"| `{f}` | {label} | {r['mode']} | {m['questions']:.0f} | {m['accuracy']:.4f} | {m['nll']:.4f} "
+                f"| {m['brier']:.4f} | {m['ece']:.4f} | {m['coverage_at_5%_error']:.3f} |"
+            )
+    return "\n".join(rows)
+
+
+def baselines_main(argv: list[str] | None = None) -> int:
+    """The baseline comparison (Qwen zero-shot A, frozen head C, LoRA + letters B, ours D) on the same files, written
+    into the first run's baselines.json, which `den publish` puts on the model card."""
+    p = argparse.ArgumentParser(prog="den baselines")
+    p.add_argument("runs", nargs="+", help="LABEL=RUN pairs, the shipped run first, e.g. D=runs/round2 A=runs/base-a")
+    p.add_argument("--files", nargs="+", help="files every run was evaluated on (default: those the first run has)")
+    args = p.parse_args(argv)
+    if bad := [r for r in args.runs if "=" not in r]:
+        raise SystemExit(f"give runs as LABEL=RUN: {bad}")
+    runs = {label: Path(path) for label, _, path in (r.partition("=") for r in args.runs)}
+    first = next(iter(runs.values()))
+    files = args.files or sorted(json.loads((first / "eval.json").read_text(encoding="utf-8")))
+    table = baselines(runs, files)
+    (first / "baselines.json").write_text(json.dumps(table, indent=2) + "\n", encoding="utf-8")
+    print(markdown(table))
+    print(f"wrote {first / 'baselines.json'}")
     return 0

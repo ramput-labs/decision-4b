@@ -14,6 +14,8 @@ make check          # ruff check + ruff format --check + mypy --strict + pytest.
 make train-check    # tokenize data/clean, print shape (no GPU; works on the Mac)
 make clean-data     # rebuild data/clean/ (gitignored) from suites + normalized sources
 make audit          # full data audit -> reports/data-audit.json
+make upload-data DATA_REPO=<org>/<name>     # data/ (gitignored) -> private Hub dataset + sha256 manifest
+make download-data DATA_REPO=<org>/<name>   # and back, every file checked against the manifest and locks/
 uv run pytest -q tests/test_train.py   # one file
 ```
 
@@ -49,6 +51,8 @@ One flat package, `den/`, at the repo root, like kev's `kev/`. One module per co
   flags (`den train ...`).
 - `evaluate.py`: loads a trained run (`merged/` + `head.safetensors`/`head.json`) through `device.load`, so a run is scored by the same
   backbone code that serves it. `den evaluate` (acc/NLL/ECE, `--final` for test) and `den predict`.
+- `integrity.py`: `den check-run`, run after `--merge` and before every upload: head/adapter finite, `merged/` has
+  the base's layout and files with exactly the adapted weights changed, sha256 of every model file -> `integrity.json`.
 - `publish.py`: `den publish` bundles `stages/`, `data/` (exact training data + every scored file, sha256
   manifest) and `logs/` into the run, writes the card, uploads it as a private Hub model (resumable), checks the listing. `predict`/`evaluate` accept `--run hf:<org>/<name>`.
 - `device.py`, `mlx_model.py`, `torch_model.py`: MLX (Apple Silicon) and PyTorch (CUDA/CPU) inference backbones,
@@ -133,8 +137,14 @@ One flat package, `den/`, at the repo root, like kev's `kev/`. One module per co
 - Training is two rounds: round 1 `make train-kev` (below), round 2 `make train-round2` (from round 1: public
   sources capped at `CAP` each + `CAP` replayed from each Kev suite). `den compare` picks the round to ship on dev
   only (mean accuracy, no file down more than 1 point); the test set is read once, for the shipped run.
-- `--eval-steps N` validates on a fixed `--eval-max` dev sample during training; `run.json` keeps `dev_history` and
+- `--eval-steps N` validates on a fixed `--eval-max` dev sample during training; `run.json` keeps `dev_history`,
+  `train_history` (the Trainer's loss log), `calibration_report` (calibration split and dev, before/after T) and
   `data_used` (every file, sha256, sampled lines), which `den publish` uses to upload the exact training data.
+- The lowest-dev-NLL checkpoint goes to `best/` (adapter + head with its own T; `run.json` `best`). It is mirrored to
+  disk while training so `--resume` keeps it. The final weights still ship and merge: `best/` is for `--init-from`.
+- `den evaluate --final` refuses to re-read a test file a run already has in `eval.json`. `den baselines D=.. A=..`
+  writes the A/B/C/D table to the shipped run's `baselines.json`; the card shows it. `make post-train RUN=..` and
+  `make final-test RUN=..` run the after-training steps.
 - The release recipe is Kev-4B's, `make train-kev`: four stages (core ×2 at 5e-5 with 25% none minimal pairs →
   dates → documents → skills+devtools, at 2e-5 with 2k/2k/4k `core` replay), each `--init-from` the last. It is
   sourced from Kev's model card and `kev/train.py`/`kev/data.py`; change it only with evidence, and say so.

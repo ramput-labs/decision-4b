@@ -153,8 +153,11 @@ make env             # show which backend this machine uses
 make test-model      # MLX vs PyTorch parity on the downloaded qwen3.5-4b
 ```
 
-`data/` is in git: Kev's suites and manifests (~100 MB). Raw downloads (`data/sources/`), normalized outputs
-(`data/*/sources/`) and `models/` are gitignored. They are rebuilt from `locks/`, which is committed with `reports/`.
+`data/` and `models/` are gitignored. `make data` (Kev's suites and manifests), `make data-raw-*`, `make normalize` and
+`make clean-data` rebuild `data/` from `locks/`, which is committed with `reports/`. To skip the rebuild, `make
+upload-data DATA_REPO=<org>/<name>` puts the whole `data/` (about 6 GB) in a private Hub dataset with a sha256 manifest,
+and `make download-data DATA_REPO=<org>/<name>[@commit]` restores it, checking every file against that manifest and
+every pinned file against `locks/`.
 
 ## Backends
 

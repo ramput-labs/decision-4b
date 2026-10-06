@@ -7,13 +7,9 @@ __pycache__/
 models/
 *.part
 
-# data/ is tracked: Kev's suites and manifests (~100 MB). Raw downloads and normalized outputs are rebuilt from
-# locks/ by `make data-raw-*` and `make normalize`, so they stay out of git.
-data/sources/
-data/*/sources/
-data/.normalize/
-data/**/.cache/
-data/clean/
+# data/ stays out of git: `make data` (+ data-raw-*, normalize, clean-data) rebuilds it from locks/, and
+# `make download-data` fetches the uploaded copy (`make upload-data`). Every pinned file is sha256-checked.
+data/
 
 # training outputs: adapters, head.pt, configs
 runs/

@@ -251,3 +251,56 @@ def test_heads_run_under_bf16_autocast(kind: str, rep: str) -> None:
     assert torch.isfinite(loss) and [s.shape[0] for (s,) in out] == [2, 3, 5]
     assert all(p.grad is None or torch.isfinite(p.grad).all() for p in head.parameters())
     assert all(p.dtype == torch.float32 for p in head.parameters())  # fp32 master weights; autocast only computes
+
+
+class Rows:
+    """`train.Shuffled`'s interface over fixed examples."""
+
+    def __init__(self, rows: list[Example]) -> None:
+        self.rows, self.lengths = rows, [len(e.ids) for e in rows]
+
+    def __len__(self) -> int:
+        return len(self.rows)
+
+    def __getitem__(self, n: int) -> Example:
+        return self.rows[n]
+
+
+def test_a_run_saves_its_best_checkpoint_loss_log_and_calibration(tmp_path: Any, monkeypatch: Any) -> None:  # noqa: ANN401
+    """`den train` end to end on the tiny model. Dev contradicts the training labels, so dev NLL rises as it trains:
+    the best checkpoint is an early step, saved to best/ with its own T, while the final weights stay the run's."""
+    import json
+
+    from safetensors.torch import load_file
+
+    from den import model as den_model
+    from den import train as den_train
+
+    torch.manual_seed(0)
+    backbone = peft.get_peft_model(Causal(), peft.LoraConfig(r=4, lora_alpha=8, target_modules=["q_proj", "up_proj"]))
+    monkeypatch.setattr(den_model, "load_backbone", lambda *a, **k: backbone)
+    monkeypatch.setattr(den_train, "hidden_size", lambda path: HIDDEN)
+    data = [example(k, k - 1, offset=i) for i, k in enumerate([2, 3, 4, 5, 3, 2, 4, 5])]
+    dev = [example(k, 0, offset=i) for i, k in enumerate([2, 3, 4, 5, 3, 2, 4, 5])]
+    out = tmp_path / "run"
+    args = den_train.parser().parse_args(
+        ["--engine", "peft", "--lora", "4", "--head-dim", "8", "--head-heads", "2", "--max-steps", "6", "--batch",
+         "2", "--accum", "1", "--lr", "5e-3", "--eval-steps", "1", "--eval-max", "8", "--out", str(out)]
+    )  # fmt: skip
+    den_train.train(args, tmp_path, Rows(data), dev, dev, [])  # type: ignore[arg-type]
+
+    run = json.loads((out / "run.json").read_text())
+    probes = [h for h in run["dev_history"] if "full" not in h]
+    assert run["steps"] == 6 and [h["step"] for h in probes] == [1, 2, 3, 4, 5, 6]
+    best = run["best"]
+    assert best["step"] == min(probes, key=lambda h: h["nll"])["step"] < 6 and best["path"] == "best"
+    assert best["on"] == "dev sample" and best["questions"] == 8 and "after" in best["calibration_report"]
+    assert sorted(p.name for p in (out / "best").iterdir()) == [
+        "README.md", "adapter_config.json", "adapter_model.safetensors", "head.json", "head.safetensors"
+    ]  # fmt: skip
+    assert json.loads((out / "best" / "head.json").read_text())["step"] == best["step"]
+    final, early = load_file(out / "head.safetensors"), load_file(out / "best" / "head.safetensors")
+    assert any(not torch.equal(final[k], early[k]) for k in final)  # the final weights came back after best/
+    assert run["train_history"][-1]["step"] == 6 and "train_loss" in run["train_history"][-1]
+    split = run["calibration_report"]["calibration_split"]
+    assert split["after"]["nll"] <= split["before"]["nll"] + 1e-9  # T fitted on it can only lower its NLL
