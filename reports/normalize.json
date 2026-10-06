@@ -1,0 +1,2837 @@
+{
+  "salt": "normalize/v1",
+  "cap": 5000,
+  "sources": {
+    "intent/banking77": {
+      "raw": "sources/train/intent/banking77",
+      "trainable": true,
+      "plan": {
+        "train": [
+          "train"
+        ],
+        "dev": [],
+        "test": [
+          "test"
+        ]
+      },
+      "rows": 13083,
+      "rejected": 0,
+      "conflicting": 0,
+      "duplicates": 12,
+      "carved": {
+        "dev": 1003
+      },
+      "capped": {
+        "dev": 0,
+        "test": 0
+      },
+      "leaked": {
+        "test": 81,
+        "dev": 105,
+        "train": 52
+      },
+      "splits": {
+        "dev": {
+          "records": 898,
+          "questions": 898,
+          "sha256": "7d3f2759e8d4a2061d93d8a557daf4662f88528264a62bde12ececdd76e2061b",
+          "labels": {
+            "intent": {
+              "card_payment_fee_charged": 23,
+              "top_up_by_cash_or_cheque": 14,
+              "country_support": 11,
+              "declined_transfer": 10,
+              "card_arrival": 11,
+              "refund_not_showing_up": 14,
+              "pin_blocked": 13,
+              "why_verify_identity": 20,
+              "terminate_account": 11,
+              "reverted_card_payment?": 12,
+              "activate_my_card": 11,
+              "contactless_not_working": 1,
+              "passcode_forgotten": 14,
+              "balance_not_updated_after_bank_transfer": 18,
+              "apple_pay_or_google_pay": 12,
+              "getting_virtual_card": 11,
+              "direct_debit_payment_not_recognised": 16,
+              "balance_not_updated_after_cheque_or_cash_deposit": 14,
+              "verify_source_of_funds": 11,
+              "verify_my_identity": 8,
+              "pending_top_up": 12,
+              "card_payment_wrong_exchange_rate": 22,
+              "exchange_rate": 11,
+              "transfer_into_account": 11,
+              "wrong_exchange_rate_for_cash_withdrawal": 15,
+              "card_delivery_estimate": 14,
+              "extra_charge_on_statement": 25,
+              "order_physical_card": 15,
+              "transfer_fee_charged": 11,
+              "atm_support": 11,
+              "virtual_card_not_working": 5,
+              "cash_withdrawal_not_recognised": 15,
+              "supported_cards_and_currencies": 13,
+              "card_about_to_expire": 8,
+              "card_linking": 7,
+              "transfer_not_received_by_recipient": 12,
+              "fiat_currency_support": 13,
+              "request_refund": 16,
+              "cancel_transfer": 15,
+              "card_payment_not_recognised": 20,
+              "exchange_via_app": 10,
+              "cash_withdrawal_charge": 20,
+              "compromised_card": 6,
+              "top_up_reverted": 7,
+              "verify_top_up": 7,
+              "top_up_limits": 8,
+              "topping_up_by_card": 10,
+              "top_up_by_card_charge": 9,
+              "top_up_by_bank_transfer_charge": 8,
+              "unable_to_verify_identity": 7,
+              "change_pin": 11,
+              "card_not_working": 9,
+              "visa_or_mastercard": 8,
+              "get_disposable_virtual_card": 13,
+              "card_swallowed": 7,
+              "wrong_amount_of_cash_received": 15,
+              "transaction_charged_twice": 16,
+              "pending_transfer": 15,
+              "failed_transfer": 9,
+              "top_up_failed": 13,
+              "transfer_timing": 9,
+              "exchange_charge": 9,
+              "edit_personal_details": 13,
+              "beneficiary_not_allowed": 11,
+              "age_limit": 8,
+              "declined_card_payment": 14,
+              "pending_cash_withdrawal": 16,
+              "card_acceptance": 4,
+              "get_physical_card": 5,
+              "disposable_card_limits": 12,
+              "getting_spare_card": 9,
+              "declined_cash_withdrawal": 10,
+              "receiving_money": 4,
+              "pending_card_payment": 16,
+              "lost_or_stolen_card": 6,
+              "automatic_top_up": 6,
+              "lost_or_stolen_phone": 12
+            }
+          }
+        },
+        "test": {
+          "records": 2998,
+          "questions": 2998,
+          "sha256": "9aa717dade9c852d47a46051fffe77f63c3c5d019d26c7a83be1274c6229e907",
+          "labels": {
+            "intent": {
+              "declined_card_payment": 38,
+              "transfer_timing": 40,
+              "verify_source_of_funds": 39,
+              "card_swallowed": 40,
+              "getting_spare_card": 38,
+              "apple_pay_or_google_pay": 39,
+              "lost_or_stolen_phone": 39,
+              "pending_card_payment": 39,
+              "request_refund": 39,
+              "wrong_exchange_rate_for_cash_withdrawal": 39,
+              "top_up_reverted": 40,
+              "cancel_transfer": 36,
+              "top_up_limits": 40,
+              "fiat_currency_support": 40,
+              "card_linking": 39,
+              "extra_charge_on_statement": 40,
+              "transaction_charged_twice": 39,
+              "top_up_by_cash_or_cheque": 40,
+              "card_delivery_estimate": 39,
+              "country_support": 39,
+              "cash_withdrawal_charge": 38,
+              "receiving_money": 39,
+              "card_payment_not_recognised": 38,
+              "top_up_by_card_charge": 39,
+              "age_limit": 39,
+              "balance_not_updated_after_cheque_or_cash_deposit": 40,
+              "verify_top_up": 39,
+              "reverted_card_payment?": 40,
+              "activate_my_card": 39,
+              "order_physical_card": 37,
+              "visa_or_mastercard": 40,
+              "atm_support": 38,
+              "card_acceptance": 39,
+              "pending_cash_withdrawal": 37,
+              "getting_virtual_card": 37,
+              "passcode_forgotten": 39,
+              "edit_personal_details": 39,
+              "transfer_into_account": 38,
+              "contactless_not_working": 39,
+              "get_disposable_virtual_card": 38,
+              "cash_withdrawal_not_recognised": 40,
+              "exchange_rate": 40,
+              "card_payment_wrong_exchange_rate": 40,
+              "failed_transfer": 40,
+              "card_payment_fee_charged": 38,
+              "exchange_via_app": 40,
+              "exchange_charge": 37,
+              "card_about_to_expire": 36,
+              "top_up_failed": 39,
+              "why_verify_identity": 40,
+              "direct_debit_payment_not_recognised": 39,
+              "change_pin": 38,
+              "declined_transfer": 39,
+              "wrong_amount_of_cash_received": 40,
+              "verify_my_identity": 39,
+              "transfer_not_received_by_recipient": 40,
+              "balance_not_updated_after_bank_transfer": 39,
+              "card_arrival": 39,
+              "supported_cards_and_currencies": 39,
+              "topping_up_by_card": 39,
+              "automatic_top_up": 40,
+              "disposable_card_limits": 40,
+              "terminate_account": 37,
+              "pin_blocked": 39,
+              "declined_cash_withdrawal": 40,
+              "pending_transfer": 40,
+              "lost_or_stolen_card": 40,
+              "beneficiary_not_allowed": 39,
+              "pending_top_up": 39,
+              "unable_to_verify_identity": 39,
+              "refund_not_showing_up": 36,
+              "get_physical_card": 40,
+              "top_up_by_bank_transfer_charge": 40,
+              "transfer_fee_charged": 39,
+              "virtual_card_not_working": 39,
+              "card_not_working": 39,
+              "compromised_card": 37
+            }
+          }
+        },
+        "train": {
+          "records": 8937,
+          "questions": 8937,
+          "sha256": "c408370b4099e8284df5eb35b1c3400e28def6766532ed683efb6ee5456a815d",
+          "labels": {
+            "intent": {
+              "card_arrival": 140,
+              "card_linking": 130,
+              "exchange_rate": 99,
+              "card_payment_wrong_exchange_rate": 143,
+              "extra_charge_on_statement": 139,
+              "pending_cash_withdrawal": 123,
+              "fiat_currency_support": 112,
+              "card_delivery_estimate": 96,
+              "automatic_top_up": 120,
+              "card_not_working": 102,
+              "exchange_via_app": 104,
+              "lost_or_stolen_card": 74,
+              "age_limit": 99,
+              "pin_blocked": 100,
+              "contactless_not_working": 34,
+              "top_up_by_bank_transfer_charge": 102,
+              "pending_top_up": 135,
+              "cancel_transfer": 139,
+              "top_up_limits": 89,
+              "wrong_amount_of_cash_received": 162,
+              "card_payment_fee_charged": 162,
+              "transfer_not_received_by_recipient": 155,
+              "supported_cards_and_currencies": 113,
+              "getting_virtual_card": 85,
+              "card_acceptance": 53,
+              "top_up_reverted": 138,
+              "balance_not_updated_after_cheque_or_cash_deposit": 164,
+              "card_payment_not_recognised": 146,
+              "edit_personal_details": 106,
+              "why_verify_identity": 98,
+              "unable_to_verify_identity": 95,
+              "get_physical_card": 98,
+              "visa_or_mastercard": 124,
+              "topping_up_by_card": 92,
+              "disposable_card_limits": 108,
+              "compromised_card": 76,
+              "atm_support": 72,
+              "direct_debit_payment_not_recognised": 160,
+              "passcode_forgotten": 87,
+              "declined_cash_withdrawal": 160,
+              "pending_card_payment": 141,
+              "lost_or_stolen_phone": 109,
+              "request_refund": 150,
+              "declined_transfer": 121,
+              "refund_not_showing_up": 142,
+              "declined_card_payment": 139,
+              "pending_transfer": 131,
+              "terminate_account": 94,
+              "card_swallowed": 54,
+              "transaction_charged_twice": 155,
+              "verify_source_of_funds": 99,
+              "transfer_timing": 119,
+              "reverted_card_payment?": 148,
+              "change_pin": 107,
+              "beneficiary_not_allowed": 140,
+              "transfer_fee_charged": 156,
+              "receiving_money": 89,
+              "failed_transfer": 125,
+              "transfer_into_account": 102,
+              "verify_top_up": 117,
+              "getting_spare_card": 115,
+              "top_up_by_cash_or_cheque": 100,
+              "order_physical_card": 103,
+              "virtual_card_not_working": 36,
+              "wrong_exchange_rate_for_cash_withdrawal": 147,
+              "get_disposable_virtual_card": 82,
+              "top_up_failed": 132,
+              "balance_not_updated_after_bank_transfer": 151,
+              "cash_withdrawal_not_recognised": 144,
+              "exchange_charge": 112,
+              "top_up_by_card_charge": 104,
+              "activate_my_card": 145,
+              "cash_withdrawal_charge": 153,
+              "card_about_to_expire": 120,
+              "apple_pay_or_google_pay": 113,
+              "verify_my_identity": 92,
+              "country_support": 116
+            }
+          }
+        }
+      }
+    },
+    "intent/massive-en": {
+      "raw": "sources/train/intent/massive-en",
+      "trainable": true,
+      "plan": {
+        "train": [
+          "train"
+        ],
+        "dev": [
+          "validation"
+        ],
+        "test": [
+          "test"
+        ]
+      },
+      "rows": 16521,
+      "rejected": 0,
+      "conflicting": 14,
+      "duplicates": 82,
+      "carved": {},
+      "capped": {
+        "dev": 0,
+        "test": 0
+      },
+      "leaked": {
+        "test": 0,
+        "dev": 0,
+        "train": 2
+      },
+      "splits": {
+        "dev": {
+          "records": 2025,
+          "questions": 4050,
+          "sha256": "59da89d4dfbef110f1febf0d033d7d63f512d97c9d3cf76116bf98b5fff06ae6",
+          "labels": {
+            "intent": {
+              "play_music": 123,
+              "transport_ticket": 25,
+              "general_quirky": 104,
+              "iot_coffee": 14,
+              "transport_query": 36,
+              "alarm_query": 19,
+              "qa_maths": 13,
+              "iot_wemo_on": 7,
+              "datetime_query": 62,
+              "calendar_set": 131,
+              "email_query": 73,
+              "email_sendemail": 63,
+              "social_post": 49,
+              "weather_query": 125,
+              "play_radio": 46,
+              "qa_factoid": 89,
+              "lists_query": 50,
+              "cooking_recipe": 41,
+              "calendar_query": 102,
+              "music_query": 30,
+              "recommendation_events": 26,
+              "takeaway_order": 20,
+              "qa_currency": 31,
+              "recommendation_locations": 31,
+              "qa_definition": 55,
+              "alarm_set": 31,
+              "iot_wemo_off": 5,
+              "iot_cleaning": 19,
+              "calendar_remove": 47,
+              "iot_hue_lightdim": 17,
+              "takeaway_query": 24,
+              "lists_remove": 37,
+              "social_query": 18,
+              "lists_createoradd": 25,
+              "general_joke": 15,
+              "audio_volume_down": 8,
+              "play_podcasts": 34,
+              "music_likeness": 16,
+              "play_game": 22,
+              "audio_volume_up": 12,
+              "news_query": 82,
+              "qa_stock": 24,
+              "alarm_remove": 14,
+              "iot_hue_lightup": 12,
+              "transport_taxi": 27,
+              "iot_hue_lightchange": 22,
+              "transport_traffic": 22,
+              "play_audiobook": 34,
+              "music_settings": 8,
+              "iot_hue_lighton": 5,
+              "recommendation_movies": 12,
+              "datetime_convert": 9,
+              "email_querycontact": 16,
+              "iot_hue_lightoff": 17,
+              "audio_volume_mute": 15,
+              "cooking_query": 2,
+              "email_addcontact": 5,
+              "general_greet": 2,
+              "music_dislikeness": 2
+            },
+            "scenario": {
+              "play": 259,
+              "transport": 110,
+              "general": 121,
+              "iot": 118,
+              "alarm": 64,
+              "qa": 212,
+              "datetime": 71,
+              "calendar": 280,
+              "email": 157,
+              "social": 67,
+              "weather": 125,
+              "lists": 112,
+              "cooking": 43,
+              "music": 56,
+              "recommendation": 69,
+              "takeaway": 44,
+              "audio": 35,
+              "news": 82
+            }
+          }
+        },
+        "test": {
+          "records": 2968,
+          "questions": 5936,
+          "sha256": "668c3acc77113b87defb3ad984e8418446802967d47703d90a54e87ae01df83e",
+          "labels": {
+            "intent": {
+              "general_quirky": 168,
+              "cooking_recipe": 72,
+              "social_post": 80,
+              "play_game": 35,
+              "alarm_set": 41,
+              "lists_remove": 52,
+              "qa_factoid": 141,
+              "email_sendemail": 114,
+              "email_query": 119,
+              "transport_taxi": 23,
+              "calendar_query": 126,
+              "takeaway_query": 35,
+              "general_joke": 18,
+              "email_querycontact": 26,
+              "alarm_remove": 21,
+              "weather_query": 156,
+              "play_music": 176,
+              "play_radio": 72,
+              "qa_definition": 57,
+              "lists_createoradd": 39,
+              "news_query": 124,
+              "transport_query": 51,
+              "transport_traffic": 15,
+              "play_audiobook": 41,
+              "calendar_set": 209,
+              "lists_query": 51,
+              "iot_hue_lightoff": 43,
+              "recommendation_movies": 20,
+              "audio_volume_down": 11,
+              "datetime_query": 88,
+              "iot_coffee": 36,
+              "audio_volume_mute": 32,
+              "play_podcasts": 63,
+              "recommendation_events": 43,
+              "qa_maths": 25,
+              "audio_volume_up": 13,
+              "transport_ticket": 34,
+              "recommendation_locations": 31,
+              "qa_currency": 38,
+              "music_dislikeness": 4,
+              "calendar_remove": 67,
+              "email_addcontact": 12,
+              "datetime_convert": 15,
+              "music_likeness": 36,
+              "takeaway_order": 22,
+              "iot_cleaning": 26,
+              "iot_hue_lightdim": 21,
+              "iot_wemo_on": 10,
+              "alarm_query": 33,
+              "social_query": 25,
+              "iot_hue_lightchange": 36,
+              "iot_hue_lightup": 27,
+              "music_query": 35,
+              "qa_stock": 26,
+              "iot_wemo_off": 18,
+              "audio_volume_other": 6,
+              "music_settings": 6,
+              "iot_hue_lighton": 3,
+              "general_greet": 1
+            },
+            "scenario": {
+              "general": 187,
+              "cooking": 72,
+              "social": 105,
+              "play": 387,
+              "alarm": 95,
+              "lists": 142,
+              "qa": 287,
+              "email": 271,
+              "transport": 123,
+              "calendar": 402,
+              "takeaway": 57,
+              "weather": 156,
+              "news": 124,
+              "iot": 220,
+              "recommendation": 94,
+              "audio": 62,
+              "datetime": 103,
+              "music": 81
+            }
+          }
+        },
+        "train": {
+          "records": 11430,
+          "questions": 22860,
+          "sha256": "89edc8b9ee0e67f760a8d1100dfb265c12bacf4c12b847a3d8ea9e01200e4780",
+          "labels": {
+            "intent": {
+              "alarm_set": 182,
+              "audio_volume_mute": 108,
+              "iot_hue_lightchange": 124,
+              "iot_hue_lightoff": 151,
+              "iot_hue_lightdim": 76,
+              "iot_cleaning": 93,
+              "calendar_query": 564,
+              "play_music": 634,
+              "general_quirky": 553,
+              "datetime_query": 342,
+              "datetime_convert": 52,
+              "takeaway_query": 121,
+              "alarm_remove": 78,
+              "alarm_query": 130,
+              "news_query": 501,
+              "music_likeness": 113,
+              "music_query": 153,
+              "iot_hue_lightup": 76,
+              "takeaway_order": 132,
+              "weather_query": 567,
+              "music_settings": 51,
+              "general_joke": 71,
+              "music_dislikeness": 14,
+              "audio_volume_other": 18,
+              "iot_coffee": 123,
+              "general_greet": 23,
+              "audio_volume_up": 109,
+              "iot_wemo_on": 48,
+              "iot_hue_lighton": 22,
+              "iot_wemo_off": 52,
+              "audio_volume_down": 52,
+              "qa_stock": 150,
+              "play_radio": 283,
+              "recommendation_locations": 173,
+              "qa_factoid": 539,
+              "calendar_set": 806,
+              "play_audiobook": 150,
+              "play_podcasts": 191,
+              "social_query": 108,
+              "transport_query": 226,
+              "email_sendemail": 353,
+              "recommendation_movies": 69,
+              "lists_query": 196,
+              "play_game": 111,
+              "transport_ticket": 126,
+              "recommendation_events": 189,
+              "email_query": 412,
+              "transport_traffic": 117,
+              "cooking_query": 4,
+              "qa_definition": 266,
+              "calendar_remove": 307,
+              "lists_remove": 162,
+              "cooking_recipe": 204,
+              "email_querycontact": 127,
+              "lists_createoradd": 177,
+              "transport_taxi": 99,
+              "qa_maths": 78,
+              "social_post": 278,
+              "qa_currency": 142,
+              "email_addcontact": 54
+            },
+            "scenario": {
+              "alarm": 390,
+              "audio": 287,
+              "iot": 765,
+              "calendar": 1677,
+              "play": 1369,
+              "general": 647,
+              "datetime": 394,
+              "takeaway": 253,
+              "news": 501,
+              "music": 331,
+              "weather": 567,
+              "qa": 1175,
+              "recommendation": 431,
+              "social": 386,
+              "transport": 568,
+              "email": 946,
+              "lists": 535,
+              "cooking": 208
+            }
+          }
+        }
+      }
+    },
+    "topic/ag-news": {
+      "raw": "sources/train/topic/ag-news",
+      "trainable": true,
+      "plan": {
+        "train": [
+          "train"
+        ],
+        "dev": [],
+        "test": [
+          "test"
+        ]
+      },
+      "rows": 127600,
+      "rejected": 0,
+      "conflicting": 48,
+      "duplicates": 144,
+      "carved": {
+        "dev": 4997
+      },
+      "capped": {
+        "dev": 0,
+        "test": 2599
+      },
+      "leaked": {
+        "test": 55,
+        "dev": 39,
+        "train": 60
+      },
+      "splits": {
+        "dev": {
+          "records": 4958,
+          "questions": 4958,
+          "sha256": "64c4b3ffe153371091784cdaf83005e8a18a55166c061c2ba671716766f1bd5f",
+          "labels": {
+            "topic": {
+              "business": 1223,
+              "world": 1272,
+              "scitech": 1221,
+              "sports": 1242
+            }
+          }
+        },
+        "test": {
+          "records": 4945,
+          "questions": 4945,
+          "sha256": "279c1058a2717b7fe3a3d8fedddf3b1b95efc4adc34fd37f05a6601f7cf45985",
+          "labels": {
+            "topic": {
+              "sports": 1223,
+              "scitech": 1254,
+              "business": 1221,
+              "world": 1247
+            }
+          }
+        },
+        "train": {
+          "records": 114752,
+          "questions": 114752,
+          "sha256": "05b5cee8ba3d00effcdab243fb6b6c3ae9585431de95ffe53fe3ecda538534c1",
+          "labels": {
+            "topic": {
+              "business": 28697,
+              "scitech": 28666,
+              "sports": 28703,
+              "world": 28686
+            }
+          }
+        }
+      }
+    },
+    "topic/trec": {
+      "raw": "sources/train/topic/trec",
+      "trainable": true,
+      "plan": {
+        "train": [
+          "train"
+        ],
+        "dev": [],
+        "test": [
+          "test"
+        ]
+      },
+      "rows": 5952,
+      "rejected": 0,
+      "conflicting": 2,
+      "duplicates": 82,
+      "carved": {
+        "dev": 551
+      },
+      "capped": {
+        "dev": 0,
+        "test": 0
+      },
+      "leaked": {
+        "test": 80,
+        "dev": 97,
+        "train": 54
+      },
+      "splits": {
+        "dev": {
+          "records": 454,
+          "questions": 454,
+          "sha256": "0d0690eb3f6f3c60bfcbc624386bcb2e7ae6e8199a8f54f7de5ebcb343537c8d",
+          "labels": {
+            "answer_type": {
+              "location": 74,
+              "entity": 122,
+              "number": 60,
+              "human": 96,
+              "description": 96,
+              "abbreviation": 6
+            }
+          }
+        },
+        "test": {
+          "records": 419,
+          "questions": 419,
+          "sha256": "a01ce2d403d5ccb0cf7d070522625e2fbec34c95922b6889013d18382f83ebd5",
+          "labels": {
+            "answer_type": {
+              "number": 95,
+              "description": 119,
+              "entity": 78,
+              "human": 53,
+              "location": 66,
+              "abbreviation": 8
+            }
+          }
+        },
+        "train": {
+          "records": 4764,
+          "questions": 4764,
+          "sha256": "9009e2e06269ae64c6b1786676032e9158b8dc53ee8a26747f42677b5318f791",
+          "labels": {
+            "answer_type": {
+              "description": 1005,
+              "entity": 1090,
+              "abbreviation": 77,
+              "human": 1094,
+              "number": 770,
+              "location": 728
+            }
+          }
+        }
+      }
+    },
+    "topic/dbpedia14": {
+      "raw": "sources/train/topic/dbpedia14",
+      "trainable": true,
+      "plan": {
+        "train": [
+          "train"
+        ],
+        "dev": [],
+        "test": [
+          "test"
+        ]
+      },
+      "rows": 630000,
+      "rejected": 0,
+      "conflicting": 0,
+      "duplicates": 140,
+      "carved": {
+        "dev": 4934
+      },
+      "capped": {
+        "dev": 0,
+        "test": 65000
+      },
+      "leaked": {
+        "test": 8,
+        "dev": 10,
+        "train": 60
+      },
+      "splits": {
+        "dev": {
+          "records": 4924,
+          "questions": 4924,
+          "sha256": "b54fcc34da438a5b872a6bf2a1bc4a751d5df826f16addfaf8ab83a7d1398b0c",
+          "labels": {
+            "category": {
+              "athlete": 352,
+              "album": 349,
+              "written_work": 321,
+              "artist": 352,
+              "animal": 367,
+              "plant": 359,
+              "film": 360,
+              "building": 332,
+              "educational_institution": 347,
+              "village": 314,
+              "company": 364,
+              "office_holder": 359,
+              "mean_of_transportation": 355,
+              "natural_place": 393
+            }
+          }
+        },
+        "test": {
+          "records": 4992,
+          "questions": 4992,
+          "sha256": "69e9e3745a69f5a153ba06a5e34e5cef478f609307796d1af9310c73be7832a4",
+          "labels": {
+            "category": {
+              "building": 400,
+              "office_holder": 356,
+              "album": 330,
+              "written_work": 379,
+              "village": 386,
+              "animal": 380,
+              "film": 343,
+              "mean_of_transportation": 314,
+              "plant": 354,
+              "company": 327,
+              "athlete": 387,
+              "educational_institution": 350,
+              "natural_place": 324,
+              "artist": 362
+            }
+          }
+        },
+        "train": {
+          "records": 554866,
+          "questions": 554866,
+          "sha256": "beea64be927c03694e91ced5f9ed8317b9c4cce5aac8dde049ec567f22d51a6c",
+          "labels": {
+            "category": {
+              "company": 39628,
+              "educational_institution": 39637,
+              "artist": 39637,
+              "athlete": 39645,
+              "office_holder": 39633,
+              "mean_of_transportation": 39638,
+              "building": 39663,
+              "natural_place": 39519,
+              "village": 39681,
+              "animal": 39625,
+              "plant": 39628,
+              "album": 39642,
+              "film": 39633,
+              "written_work": 39657
+            }
+          }
+        }
+      }
+    },
+    "reading/boolq": {
+      "raw": "sources/train/reading/boolq",
+      "trainable": true,
+      "plan": {
+        "train": [
+          "train"
+        ],
+        "dev": [],
+        "test": [
+          "validation"
+        ]
+      },
+      "rows": 12697,
+      "rejected": 0,
+      "conflicting": 0,
+      "duplicates": 0,
+      "carved": {
+        "dev": 946
+      },
+      "capped": {
+        "dev": 0,
+        "test": 0
+      },
+      "leaked": {
+        "test": 354,
+        "dev": 233,
+        "train": 881
+      },
+      "splits": {
+        "dev": {
+          "records": 713,
+          "questions": 713,
+          "sha256": "508e951221174b421e89ba63bac6040f0e5e515f4c5e99ca08db138172b306ac",
+          "labels": {
+            "answer": {
+              "true": 448,
+              "false": 265
+            }
+          }
+        },
+        "test": {
+          "records": 2916,
+          "questions": 2916,
+          "sha256": "5f10e73557987911a26a9c0bdcbc2397c38b2a64fe0d0034e2cfa8a1f7c2d171",
+          "labels": {
+            "answer": {
+              "true": 1809,
+              "false": 1107
+            }
+          }
+        },
+        "train": {
+          "records": 7600,
+          "questions": 7600,
+          "sha256": "1b854bf2550cbbf39f21e0c26e8de85734e44ff764c5f1c90e6744e7d5baa9ef",
+          "labels": {
+            "answer": {
+              "true": 4723,
+              "false": 2877
+            }
+          }
+        }
+      }
+    },
+    "reading/multinli": {
+      "raw": "sources/train/reading/multinli",
+      "trainable": true,
+      "plan": {
+        "train": [
+          "train"
+        ],
+        "dev": [
+          "matched"
+        ],
+        "test": [
+          "mismatched"
+        ]
+      },
+      "rows": 412349,
+      "rejected": 0,
+      "conflicting": 188,
+      "duplicates": 32,
+      "carved": {},
+      "capped": {
+        "dev": 4815,
+        "test": 4830
+      },
+      "leaked": {
+        "test": 2,
+        "dev": 117,
+        "train": 546
+      },
+      "splits": {
+        "dev": {
+          "records": 4883,
+          "questions": 4883,
+          "sha256": "564d7923dbfe688651c7606faca0d0ab8f640a2206f1edc7cc188c9e454fb485",
+          "labels": {
+            "relation": {
+              "entailment": 1714,
+              "neutral": 1571,
+              "contradiction": 1598
+            }
+          }
+        },
+        "test": {
+          "records": 4998,
+          "questions": 4998,
+          "sha256": "5c82ee3c54c65a5b181c386b1354bd048e24f032b774bfeb79e06a4b15e3da04",
+          "labels": {
+            "relation": {
+              "neutral": 1558,
+              "entailment": 1751,
+              "contradiction": 1689
+            }
+          }
+        },
+        "train": {
+          "records": 391938,
+          "questions": 391938,
+          "sha256": "1b05ff31d56c796cb604506dcca84658e4e50baccbac9499ecb1d7dcedb5eff3",
+          "labels": {
+            "relation": {
+              "neutral": 130640,
+              "entailment": 130617,
+              "contradiction": 130681
+            }
+          }
+        }
+      }
+    },
+    "sentiment/sst5": {
+      "raw": "sources/train/sentiment/sst5",
+      "trainable": true,
+      "plan": {
+        "train": [
+          "train"
+        ],
+        "dev": [
+          "dev"
+        ],
+        "test": [
+          "test"
+        ]
+      },
+      "rows": 11855,
+      "rejected": 0,
+      "conflicting": 0,
+      "duplicates": 14,
+      "carved": {},
+      "capped": {
+        "dev": 0,
+        "test": 0
+      },
+      "leaked": {
+        "test": 80,
+        "dev": 0,
+        "train": 60
+      },
+      "splits": {
+        "dev": {
+          "records": 1100,
+          "questions": 1100,
+          "sha256": "536760a64a13264c78e52f21af58f5d14fd80e2f7deaeeda084fb73c51430983",
+          "labels": {
+            "rating": {
+              "2": 228,
+              "0": 139,
+              "4": 165,
+              "1": 289,
+              "3": 279
+            }
+          }
+        },
+        "test": {
+          "records": 2130,
+          "questions": 2130,
+          "sha256": "5a2446db9a3ff9d238303dd3135f4c479401f8155d0cc8578c4a48500726fec8",
+          "labels": {
+            "rating": {
+              "2": 375,
+              "3": 485,
+              "4": 387,
+              "0": 271,
+              "1": 612
+            }
+          }
+        },
+        "train": {
+          "records": 8471,
+          "questions": 8471,
+          "sha256": "3c29c1cfb012a5840d929e3ef82c56082d8ee3b88feaecbf3f9fe1688d895925",
+          "labels": {
+            "rating": {
+              "4": 1279,
+              "1": 2197,
+              "2": 1614,
+              "3": 2302,
+              "0": 1079
+            }
+          }
+        }
+      }
+    },
+    "sentiment/yelp-full": {
+      "raw": "sources/train/sentiment/yelp-full",
+      "trainable": true,
+      "plan": {
+        "train": [
+          "train"
+        ],
+        "dev": [],
+        "test": [
+          "test"
+        ]
+      },
+      "rows": 700000,
+      "rejected": 0,
+      "conflicting": 63,
+      "duplicates": 108,
+      "carved": {
+        "dev": 5182
+      },
+      "capped": {
+        "dev": 182,
+        "test": 44995
+      },
+      "leaked": {
+        "test": 5,
+        "dev": 12,
+        "train": 61
+      },
+      "splits": {
+        "dev": {
+          "records": 4988,
+          "questions": 4988,
+          "sha256": "5971d5af5890d12c41eda773faf3013e2d8e32cb1ed6326f038e962438a29f92",
+          "labels": {
+            "rating": {
+              "4": 1022,
+              "1": 1009,
+              "3": 1030,
+              "0": 980,
+              "2": 947
+            }
+          }
+        },
+        "test": {
+          "records": 4995,
+          "questions": 4995,
+          "sha256": "8bf1f54d8838a564f76a8d518dd173e38d56bd4757fc2bc9437dca3fc9752a68",
+          "labels": {
+            "rating": {
+              "4": 938,
+              "1": 1076,
+              "2": 1053,
+              "3": 953,
+              "0": 975
+            }
+          }
+        },
+        "train": {
+          "records": 644591,
+          "questions": 644591,
+          "sha256": "50887deaf0f54ed4de9e0f33f267b0fdff44f28d8066204a118f2bd981fb5630",
+          "labels": {
+            "rating": {
+              "4": 128904,
+              "1": 128912,
+              "3": 128888,
+              "0": 128917,
+              "2": 128970
+            }
+          }
+        }
+      }
+    },
+    "sentiment/amazon-reviews": {
+      "raw": "sources/train/sentiment/amazon-reviews",
+      "trainable": true,
+      "plan": {
+        "train": [
+          "train"
+        ],
+        "dev": [
+          "validation"
+        ],
+        "test": [
+          "test"
+        ]
+      },
+      "rows": 210000,
+      "rejected": 0,
+      "conflicting": 677,
+      "duplicates": 251,
+      "carved": {},
+      "capped": {
+        "dev": 0,
+        "test": 0
+      },
+      "leaked": {
+        "test": 80,
+        "dev": 0,
+        "train": 60
+      },
+      "splits": {
+        "dev": {
+          "records": 4988,
+          "questions": 4988,
+          "sha256": "57ab702f1141690f0021ddb1c0e30ce9711e1e33a10e6998d5439528e1957b29",
+          "labels": {
+            "rating": {
+              "4": 997,
+              "3": 997,
+              "2": 999,
+              "1": 998,
+              "0": 997
+            }
+          }
+        },
+        "test": {
+          "records": 4910,
+          "questions": 4910,
+          "sha256": "0a4f7e10fa4884b17a408901d455a345d84c0f921a04aad53f9b7aea581d7819",
+          "labels": {
+            "rating": {
+              "0": 982,
+              "3": 983,
+              "1": 983,
+              "2": 982,
+              "4": 980
+            }
+          }
+        },
+        "train": {
+          "records": 199034,
+          "questions": 199034,
+          "sha256": "235a5221dad33b6f4f07553bc46d30e69fd6e5c4f3364d1c0fc5da3761704074",
+          "labels": {
+            "rating": {
+              "0": 39787,
+              "1": 39866,
+              "2": 39858,
+              "3": 39792,
+              "4": 39731
+            }
+          }
+        }
+      }
+    },
+    "sentiment/imdb": {
+      "raw": "sources/train/sentiment/imdb",
+      "trainable": true,
+      "plan": {
+        "train": [
+          "train"
+        ],
+        "dev": [],
+        "test": [
+          "test"
+        ]
+      },
+      "rows": 50000,
+      "rejected": 0,
+      "conflicting": 0,
+      "duplicates": 422,
+      "carved": {
+        "dev": 2465
+      },
+      "capped": {
+        "dev": 0,
+        "test": 19799
+      },
+      "leaked": {
+        "test": 15,
+        "dev": 89,
+        "train": 59
+      },
+      "splits": {
+        "dev": {
+          "records": 2376,
+          "questions": 2376,
+          "sha256": "0badd626094523b3b83f69e49a5bc68e342264853efd7779ad02d9bd5fc889dd",
+          "labels": {
+            "positive": {
+              "true": 1189,
+              "false": 1187
+            }
+          }
+        },
+        "test": {
+          "records": 4985,
+          "questions": 4985,
+          "sha256": "82fba72a3afa7036fbcb8c6dbc682d913bf00b251c71cc191ad0d7d39577d572",
+          "labels": {
+            "positive": {
+              "false": 2500,
+              "true": 2485
+            }
+          }
+        },
+        "train": {
+          "records": 22255,
+          "questions": 22255,
+          "sha256": "cc03bba2f83bba5072ceded04b0b97bb4ffa5e9ce6e650e37ab2baef20c55362",
+          "labels": {
+            "positive": {
+              "false": 11078,
+              "true": 11177
+            }
+          }
+        }
+      }
+    },
+    "safety/aegis": {
+      "raw": "sources/train/safety/aegis",
+      "trainable": true,
+      "plan": {
+        "train": [
+          "train"
+        ],
+        "dev": [
+          "validation"
+        ],
+        "test": [
+          "test"
+        ]
+      },
+      "rows": 28216,
+      "rejected": 4216,
+      "conflicting": 432,
+      "duplicates": 1152,
+      "carved": {},
+      "capped": {
+        "dev": 0,
+        "test": 0
+      },
+      "leaked": {
+        "test": 0,
+        "dev": 3,
+        "train": 46
+      },
+      "splits": {
+        "dev": {
+          "records": 1026,
+          "questions": 1132,
+          "sha256": "6cf35674829cbbc57a5eb2e7c94f2b3764906111fc10378c772cf1b0a06f2e36",
+          "labels": {
+            "unsafe": {
+              "false": 525,
+              "true": 501
+            },
+            "category": {
+              "profanity": 9,
+              "criminal_planning_confessions": 28,
+              "unauthorized_advice": 13,
+              "hate_identity_hate": 16,
+              "pii_privacy": 10,
+              "suicide_and_self_harm": 6,
+              "harassment": 10,
+              "fraud_deception": 2,
+              "guns_and_illegal_weapons": 2,
+              "sexual": 4,
+              "high_risk_gov_decision_making": 1,
+              "immoral_unethical": 1,
+              "controlled_regulated_substances": 2,
+              "malware": 1,
+              "threat": 1
+            }
+          }
+        },
+        "test": {
+          "records": 1714,
+          "questions": 1941,
+          "sha256": "098b086a49d2912878cf5e697bcda61d757299c6a54a7345728319003c8bc2b2",
+          "labels": {
+            "unsafe": {
+              "false": 856,
+              "true": 858
+            },
+            "category": {
+              "criminal_planning_confessions": 66,
+              "hate_identity_hate": 37,
+              "unauthorized_advice": 21,
+              "guns_and_illegal_weapons": 6,
+              "harassment": 10,
+              "sexual": 14,
+              "pii_privacy": 29,
+              "copyright_trademark_plagiarism": 2,
+              "violence": 6,
+              "suicide_and_self_harm": 9,
+              "profanity": 13,
+              "political_misinformation_conspiracy": 4,
+              "immoral_unethical": 2,
+              "fraud_deception": 3,
+              "controlled_regulated_substances": 5
+            }
+          }
+        },
+        "train": {
+          "records": 19627,
+          "questions": 21827,
+          "sha256": "88f9ef0abb5e359b04444aefe9cdc0c966bc6bd959de87e73ce080d2b552838f",
+          "labels": {
+            "unsafe": {
+              "true": 8784,
+              "false": 10843
+            },
+            "category": {
+              "hate_identity_hate": 210,
+              "copyright_trademark_plagiarism": 13,
+              "criminal_planning_confessions": 423,
+              "suicide_and_self_harm": 114,
+              "controlled_regulated_substances": 77,
+              "unauthorized_advice": 361,
+              "sexual": 155,
+              "violence": 89,
+              "fraud_deception": 21,
+              "pii_privacy": 219,
+              "harassment": 190,
+              "malware": 16,
+              "profanity": 179,
+              "guns_and_illegal_weapons": 36,
+              "illegal_activity": 10,
+              "immoral_unethical": 20,
+              "political_misinformation_conspiracy": 52,
+              "threat": 2,
+              "high_risk_gov_decision_making": 5,
+              "sexual_minor": 8
+            }
+          }
+        }
+      }
+    },
+    "knowledge/arc": {
+      "raw": "sources/train/knowledge/arc",
+      "trainable": true,
+      "plan": {
+        "train": [
+          "train"
+        ],
+        "dev": [
+          "validation"
+        ],
+        "test": [
+          "test"
+        ]
+      },
+      "rows": 7787,
+      "rejected": 0,
+      "conflicting": 0,
+      "duplicates": 3,
+      "carved": {},
+      "capped": {
+        "dev": 0,
+        "test": 0
+      },
+      "leaked": {
+        "test": 0,
+        "dev": 2,
+        "train": 19
+      },
+      "splits": {
+        "dev": {
+          "records": 867,
+          "questions": 867,
+          "sha256": "f1db9061d6c422412ebfd33b5d5ac3c1159ad0a43f0096806a5393631bacc1f8",
+          "labels": {
+            "answer": {
+              "opt_3": 220,
+              "opt_4": 200,
+              "opt_2": 224,
+              "opt_1": 222,
+              "opt_5": 1
+            }
+          }
+        },
+        "test": {
+          "records": 3548,
+          "questions": 3548,
+          "sha256": "e5703b599e59a9d7a67c1ee9827c753fa17f42a42158ec5789a2bf1016367aa0",
+          "labels": {
+            "answer": {
+              "opt_3": 943,
+              "opt_4": 846,
+              "opt_1": 862,
+              "opt_2": 896,
+              "opt_5": 1
+            }
+          }
+        },
+        "train": {
+          "records": 3348,
+          "questions": 3348,
+          "sha256": "725180ec659ff9f45a8843b2640ac3df039ce1cbfb85efbc78ff43b666f9fc24",
+          "labels": {
+            "answer": {
+              "opt_1": 780,
+              "opt_2": 879,
+              "opt_4": 823,
+              "opt_3": 864,
+              "opt_5": 2
+            }
+          }
+        }
+      }
+    },
+    "knowledge/openbookqa": {
+      "raw": "sources/train/knowledge/openbookqa",
+      "trainable": true,
+      "plan": {
+        "train": [
+          "train"
+        ],
+        "dev": [
+          "validation"
+        ],
+        "test": [
+          "test"
+        ]
+      },
+      "rows": 5957,
+      "rejected": 0,
+      "conflicting": 0,
+      "duplicates": 5,
+      "carved": {},
+      "capped": {
+        "dev": 0,
+        "test": 0
+      },
+      "leaked": {
+        "test": 0,
+        "dev": 0,
+        "train": 46
+      },
+      "splits": {
+        "dev": {
+          "records": 500,
+          "questions": 500,
+          "sha256": "de5a442eadedf63a6e2e2982e488541c570ad4233972a046eb132d404b008f06",
+          "labels": {
+            "answer": {
+              "opt_4": 126,
+              "opt_3": 110,
+              "opt_1": 126,
+              "opt_2": 138
+            }
+          }
+        },
+        "test": {
+          "records": 500,
+          "questions": 500,
+          "sha256": "161a084df84f7a70b74072b2ac821604a631d2073903f1591752468c0078fe6a",
+          "labels": {
+            "answer": {
+              "opt_1": 138,
+              "opt_4": 104,
+              "opt_3": 132,
+              "opt_2": 126
+            }
+          }
+        },
+        "train": {
+          "records": 4906,
+          "questions": 4906,
+          "sha256": "ccd384131dc3e5fffa2f3e72b2c4091eb5d48152612203f76851dccb56866da8",
+          "labels": {
+            "answer": {
+              "opt_4": 1209,
+              "opt_3": 1135,
+              "opt_1": 1366,
+              "opt_2": 1196
+            }
+          }
+        }
+      }
+    },
+    "knowledge/commonsenseqa": {
+      "raw": "sources/train/knowledge/commonsenseqa",
+      "trainable": true,
+      "plan": {
+        "train": [
+          "train"
+        ],
+        "dev": [],
+        "test": [
+          "validation"
+        ]
+      },
+      "rows": 10962,
+      "rejected": 48,
+      "conflicting": 0,
+      "duplicates": 0,
+      "carved": {
+        "dev": 942
+      },
+      "capped": {
+        "dev": 0,
+        "test": 0
+      },
+      "leaked": {
+        "test": 0,
+        "dev": 0,
+        "train": 0
+      },
+      "splits": {
+        "dev": {
+          "records": 942,
+          "questions": 942,
+          "sha256": "1552de12718fc9958564f627f2e6b61e0e551ea9a89c120813744f7de776801e",
+          "labels": {
+            "answer": {
+              "opt_4": 194,
+              "opt_3": 191,
+              "opt_1": 191,
+              "opt_2": 179,
+              "opt_5": 187
+            }
+          }
+        },
+        "test": {
+          "records": 1215,
+          "questions": 1215,
+          "sha256": "11dfb51b8fb664e1644906e6807092232ad86e815de192b405708c83b22b7d73",
+          "labels": {
+            "answer": {
+              "opt_2": 255,
+              "opt_4": 251,
+              "opt_1": 237,
+              "opt_3": 243,
+              "opt_5": 229
+            }
+          }
+        },
+        "train": {
+          "records": 8757,
+          "questions": 8757,
+          "sha256": "32c224947cf2581c2cec8c4dfe05b15b2959b1bbece3f326c7b1d9358d8181f6",
+          "labels": {
+            "answer": {
+              "opt_1": 1708,
+              "opt_2": 1786,
+              "opt_4": 1789,
+              "opt_3": 1752,
+              "opt_5": 1722
+            }
+          }
+        }
+      }
+    },
+    "knowledge/qasc": {
+      "raw": "sources/train/knowledge/qasc",
+      "trainable": true,
+      "plan": {
+        "train": [
+          "train"
+        ],
+        "dev": [],
+        "test": [
+          "validation"
+        ]
+      },
+      "rows": 9060,
+      "rejected": 0,
+      "conflicting": 0,
+      "duplicates": 0,
+      "carved": {
+        "dev": 801
+      },
+      "capped": {
+        "dev": 0,
+        "test": 0
+      },
+      "leaked": {
+        "test": 0,
+        "dev": 0,
+        "train": 8
+      },
+      "splits": {
+        "dev": {
+          "records": 801,
+          "questions": 801,
+          "sha256": "2130968e613f848391075aab6ae2a1b6aac87cc3c34b3443238f57bff9b5ccca",
+          "labels": {
+            "answer": {
+              "opt_6": 105,
+              "opt_7": 91,
+              "opt_5": 92,
+              "opt_3": 110,
+              "opt_1": 104,
+              "opt_8": 96,
+              "opt_4": 102,
+              "opt_2": 101
+            }
+          }
+        },
+        "test": {
+          "records": 926,
+          "questions": 926,
+          "sha256": "ddafcbc3fd3a9fc1cf87e161044c8fbdd408d08ded1477b6293264c44c8e0d04",
+          "labels": {
+            "answer": {
+              "opt_7": 135,
+              "opt_1": 121,
+              "opt_5": 120,
+              "opt_4": 111,
+              "opt_3": 122,
+              "opt_6": 104,
+              "opt_8": 110,
+              "opt_2": 103
+            }
+          }
+        },
+        "train": {
+          "records": 7325,
+          "questions": 7325,
+          "sha256": "bea6af4174081f7873fa53dd657fb2a2533f40c73e7c5f5df3116a20d95a184f",
+          "labels": {
+            "answer": {
+              "opt_6": 944,
+              "opt_5": 930,
+              "opt_2": 915,
+              "opt_3": 925,
+              "opt_1": 903,
+              "opt_8": 874,
+              "opt_7": 895,
+              "opt_4": 939
+            }
+          }
+        }
+      }
+    },
+    "tools/glaive-function-calling": {
+      "raw": "sources/train/tools/glaive-function-calling",
+      "trainable": true,
+      "plan": {
+        "train": [
+          "train"
+        ],
+        "dev": [],
+        "test": []
+      },
+      "rows": 112960,
+      "rejected": 34949,
+      "conflicting": 10135,
+      "duplicates": 30239,
+      "carved": {
+        "dev": 3850,
+        "test": 3763
+      },
+      "capped": {
+        "dev": 0,
+        "test": 0
+      },
+      "leaked": {
+        "test": 0,
+        "dev": 0,
+        "train": 0
+      },
+      "splits": {
+        "dev": {
+          "records": 3850,
+          "questions": 5304,
+          "sha256": "ce7b1f4ab3133b57dd34536aa49c5f0fb17c1d8af5c8c58e74b232a29165b629",
+          "labels": {
+            "call": {
+              "true": 1982,
+              "false": 1868
+            },
+            "function": {
+              "calculate_distance": 50,
+              "convert_currency": 73,
+              "generate_random_number": 21,
+              "calculate_discount": 61,
+              "none": 408,
+              "get_stock_price": 44,
+              "calculate_bmi": 68,
+              "get_movie_details": 32,
+              "play_music": 11,
+              "search_tweets": 1,
+              "calculate_tip": 80,
+              "calculate_age": 62,
+              "create_calendar_event": 5,
+              "analyze_text": 1,
+              "analyze_sentiment": 14,
+              "search_restaurants": 10,
+              "calculate_area": 32,
+              "calculate_mortgage": 6,
+              "generate_random_quote": 8,
+              "find_nearby_restaurants": 3,
+              "get_lyrics": 10,
+              "search_books": 40,
+              "search_recipes": 34,
+              "search_in_database": 1,
+              "calculate_rectangle_area": 2,
+              "search_news": 6,
+              "search_movies": 18,
+              "get_news_headlines": 11,
+              "schedule_meeting": 6,
+              "search_movie": 4,
+              "calculate_shipping_cost": 11,
+              "get_random_number": 5,
+              "get_definition": 10,
+              "find_nearest_gas_station": 1,
+              "create_invoice": 10,
+              "translate_text": 14,
+              "calculate_age_difference": 3,
+              "calculate_triangle_area": 2,
+              "get_song_lyrics": 6,
+              "search_recipe": 14,
+              "generate_barcode": 5,
+              "search_book": 8,
+              "send_email": 6,
+              "search_restaurant": 5,
+              "calculate_tax": 11,
+              "search_images": 2,
+              "find_books": 1,
+              "track_expenses": 3,
+              "calculate_carbon_footprint": 3,
+              "search_definition": 1,
+              "calculate_mortgage_payment": 5,
+              "analyze_image": 2,
+              "calculate_duration": 2,
+              "calculate_gross_salary": 3,
+              "get_random_fact": 7,
+              "convert_temperature": 11,
+              "calculate_gpa": 2,
+              "calculate_interest": 7,
+              "find_average": 1,
+              "get_news": 16,
+              "calculate_car_emissions": 1,
+              "calculate_tip_split": 3,
+              "create_todo": 1,
+              "generate_username": 12,
+              "get_random_joke": 10,
+              "get_recipe": 2,
+              "post_social_media_status": 1,
+              "search_hotels": 2,
+              "generate_invoice": 15,
+              "calculate_perimeter": 1,
+              "calculate_fuel_cost": 2,
+              "get_exercise_plan": 1,
+              "check_word_meaning": 1,
+              "search_jobs": 7,
+              "calculate_percentage": 1,
+              "calculate_future_value": 1,
+              "generate_anagram": 1,
+              "calculate_discounted_price": 4,
+              "check_stock_availability": 1,
+              "check_email_availability": 5,
+              "calculate_fibonacci_sequence": 1,
+              "find_restaurants": 2,
+              "search_articles": 1,
+              "search_wikipedia": 3,
+              "calculate_average": 3,
+              "book_flight": 1,
+              "calculate_fuel_efficiency": 3,
+              "calculate_loan_payment": 5,
+              "calculate_profit": 2,
+              "calculate_body_mass_index": 1,
+              "check_website_status": 1,
+              "get_distance": 1,
+              "search_news_articles": 1,
+              "get_directions": 1,
+              "calculate_sales_tax": 3,
+              "upload_file": 1,
+              "find_hotels": 2,
+              "check_spelling": 3,
+              "calculate_loan_interest": 2,
+              "get_top_news": 1,
+              "check_movie_showtimes": 2,
+              "get_current_time": 1,
+              "play_song": 1,
+              "calculate_square_root": 1,
+              "searchrecipes": 1,
+              "analyze_website": 1,
+              "get_translation": 2,
+              "generate_random_date": 1,
+              "calculate_volume": 2,
+              "calculate_gas_cost": 1,
+              "track_package": 2,
+              "compute_average": 1,
+              "calculate_total_cost": 1,
+              "check_prime_number": 2,
+              "find_nearest_park": 1,
+              "generate_random_string": 1,
+              "generate_fibonacci_sequence": 1,
+              "get_recipe_details": 1,
+              "search_events": 1,
+              "calculate_fibonacci": 1,
+              "fetch_news": 1,
+              "check_palindrome": 3,
+              "play_sound": 1,
+              "get_movie_info": 1,
+              "generate_random_fact": 2,
+              "calculate_taxes": 1,
+              "search_music": 3,
+              "get_sports_scores": 1,
+              "calculate_tip_percentage": 1,
+              "calculate_fuel_consumption": 1,
+              "execute_program": 1,
+              "calculate_loan_amortization": 1,
+              "get_word_synonyms": 1,
+              "get_recipe_ingredients": 1,
+              "create_event": 1
+            }
+          }
+        },
+        "test": {
+          "records": 3763,
+          "questions": 5167,
+          "sha256": "54d215a157d607f832ca1ff6f26ac5c178d0b9d530413a2163ceaed83e8031cd",
+          "labels": {
+            "call": {
+              "false": 1853,
+              "true": 1910
+            },
+            "function": {
+              "none": 420,
+              "calculate_age_difference": 3,
+              "convert_currency": 65,
+              "get_news": 21,
+              "calculate_area": 30,
+              "calculate_tip": 58,
+              "get_definition": 11,
+              "search_hotels": 2,
+              "calculate_age": 73,
+              "check_email_availability": 8,
+              "generate_barcode": 3,
+              "calculate_discount": 70,
+              "get_news_headlines": 13,
+              "search_movies": 12,
+              "calculate_distance": 41,
+              "search_books": 24,
+              "generate_random_number": 30,
+              "get_user_info": 1,
+              "convert_temperature": 8,
+              "get_random_fact": 2,
+              "create_invoice": 12,
+              "get_stock_price": 37,
+              "generate_random_color": 4,
+              "execute_program": 3,
+              "find_nearest_gas_station": 5,
+              "calculate_bmi": 49,
+              "calculate_tax": 16,
+              "search_recipes": 37,
+              "search_book": 7,
+              "search_recipe": 17,
+              "get_random_joke": 6,
+              "generate_invoice": 13,
+              "find_nearby_hotels": 2,
+              "calculate_shipping_cost": 8,
+              "get_movie_details": 36,
+              "play_music": 5,
+              "calculate_average": 8,
+              "book_flight": 2,
+              "calculate_interest": 8,
+              "get_recipe": 4,
+              "search_restaurants": 7,
+              "generate_uuid": 2,
+              "get_random_quote": 7,
+              "get_song_lyrics": 5,
+              "search_news": 4,
+              "check_website_availability": 2,
+              "check_visa_requirements": 1,
+              "find_nearby_restaurants": 2,
+              "send_email": 4,
+              "generate_username": 8,
+              "find_nearby_gas_stations": 1,
+              "search_stock_price": 1,
+              "analyze_sentiment": 9,
+              "search_movie": 5,
+              "search_jobs": 6,
+              "calculate_calories_burned": 2,
+              "calculate_shipping_time": 1,
+              "find_movie_info": 1,
+              "translate_text": 12,
+              "find_movie_details": 1,
+              "calculate_retirement_savings": 1,
+              "schedule_meeting": 6,
+              "get_lyrics": 5,
+              "search_movie_theaters": 1,
+              "calculate_rectangle_area": 2,
+              "generate_quote": 1,
+              "calculate_gpa": 2,
+              "generate_random_quote": 7,
+              "analyze_text": 1,
+              "find_nearest_restaurant": 5,
+              "calculate_sales_tax": 4,
+              "get_translation": 2,
+              "track_package": 3,
+              "calculate_discounted_price": 8,
+              "get_news_articles": 3,
+              "calculate_mortgage_payment": 4,
+              "get_current_time": 6,
+              "analyze_stock": 1,
+              "calculate_car_emissions": 1,
+              "execute_command": 1,
+              "check_availability": 1,
+              "calculate_fuel_cost": 2,
+              "calculate_score": 1,
+              "check_movie_showtimes": 1,
+              "get_random_number": 2,
+              "search_restaurant": 2,
+              "calculate_loan_payment": 6,
+              "create_contact": 4,
+              "calculate_fibonacci_sequence": 3,
+              "search_music": 1,
+              "search_images": 2,
+              "check_word_count": 1,
+              "create_calendar_event": 2,
+              "search_definition": 2,
+              "calculate_fuel_efficiency": 1,
+              "calculate_salary": 1,
+              "calculate_fuel_consumption": 1,
+              "calculate_fibonacci": 1,
+              "calculate_age_in_months": 1,
+              "book_table": 1,
+              "check_palindrome": 3,
+              "analyze_image": 2,
+              "calculate_profit": 3,
+              "search_songs": 1,
+              "check_stock_availability": 1,
+              "get_movie_recommendations": 1,
+              "track_expenses": 2,
+              "calculate_percentage": 3,
+              "create_todo": 1,
+              "find_movie": 1,
+              "search_wikipedia": 3,
+              "find_restaurants": 1,
+              "calculate_square": 1,
+              "generate_random_fact": 2,
+              "search_product": 3,
+              "calculate_triangle_area": 2,
+              "generate_password": 2,
+              "check_spelling": 1,
+              "recommend_books": 1,
+              "getnewsheadlines": 1,
+              "play_song": 1,
+              "calculate_future_value": 1,
+              "calculate_perimeter": 1,
+              "calculate_shipping_distance": 1,
+              "calculate_route_distance": 1,
+              "calculate_recurring_payment": 1,
+              "search_articles": 1,
+              "add_contact": 1,
+              "get_daily_news": 1,
+              "check_prime": 1,
+              "calculate_route": 1,
+              "calculate_mortgage": 1,
+              "calculate_hypotenuse": 1,
+              "search_products": 1
+            }
+          }
+        },
+        "train": {
+          "records": 30024,
+          "questions": 41212,
+          "sha256": "8f8d15a31b1e685c660a654fd9ce518544ef82fd49fa0b79ee0938b8343e986d",
+          "labels": {
+            "call": {
+              "false": 15009,
+              "true": 15015
+            },
+            "function": {
+              "none": 3409,
+              "convert_temperature": 65,
+              "get_stock_price": 305,
+              "search_recipe": 128,
+              "convert_currency": 505,
+              "generate_username": 32,
+              "calculate_age": 484,
+              "calculate_bmi": 492,
+              "generate_qr_code": 1,
+              "search_books": 250,
+              "get_movie_details": 248,
+              "calculate bmi": 1,
+              "get_current_time": 38,
+              "calculate_discount": 467,
+              "update_calendar": 1,
+              "calculate_tip": 487,
+              "generate_random_number": 268,
+              "calculate_distance": 365,
+              "calculate_fuel_efficiency": 10,
+              "get_quote_of_the_day": 10,
+              "generate_invoice": 98,
+              "generate_random_name": 11,
+              "analyze_sentiment": 100,
+              "search_recipes": 297,
+              "get_definition": 99,
+              "calculate_area": 246,
+              "get_song_lyrics": 37,
+              "calculate_average": 35,
+              "calculate_fahrenheit_to_celsius": 2,
+              "book_flight": 15,
+              "search_movie_theater": 1,
+              "get_translation": 10,
+              "calculate_fibonacci": 4,
+              "generate_random_quote": 59,
+              "create_invoice": 72,
+              "get_stock_prices": 5,
+              "search_movies": 141,
+              "find_nearest_gas_station": 16,
+              "calculatetip": 1,
+              "calculate_shipping_cost": 53,
+              "get_lyrics": 32,
+              "generate_random_color": 20,
+              "search_news": 43,
+              "calculate_interest": 42,
+              "calculate_tip_percentage": 6,
+              "calculate_profit": 18,
+              "get_random_joke": 61,
+              "generate_unique_id": 2,
+              "get_random_fact": 63,
+              "translate_text": 134,
+              "calculate_tax": 127,
+              "play_music": 58,
+              "analyze_image": 10,
+              "send_email": 40,
+              "get_news": 119,
+              "search_restaurants": 108,
+              "search_definition": 2,
+              "search_hotels": 16,
+              "send_notification": 3,
+              "recommend_books": 3,
+              "execute_program": 17,
+              "get_random_number": 20,
+              "find_nearby_places": 12,
+              "calculate_loan_payment": 31,
+              "generate_barcode": 32,
+              "get_news_headlines": 87,
+              "search_music": 14,
+              "search_contacts": 1,
+              "calculate_tip_split": 9,
+              "create_reminder": 3,
+              "schedule_meeting": 27,
+              "search_videos": 2,
+              "search_book": 22,
+              "search_articles": 4,
+              "calculate_mortgage_payment": 25,
+              "search_movie": 44,
+              "calculate_distance_traveled": 1,
+              "add_to_shopping_cart": 2,
+              "calculate_fuel_consumption": 10,
+              "search_jobs": 42,
+              "calculate_mortgage": 21,
+              "create_note": 1,
+              "calculate_tip_amount": 7,
+              "calculate_factorial": 2,
+              "generate_uuid": 15,
+              "create_poll": 2,
+              "find_nearby_restaurants": 30,
+              "check_phone_number": 1,
+              "check_palindrome": 35,
+              "track_package": 15,
+              "fetch_news": 2,
+              "calculate_loan_repayment": 6,
+              "calculate_duration": 3,
+              "find_max_value": 1,
+              "calculate_discounted_price": 49,
+              "find_hotels": 7,
+              "calculate_future_value": 6,
+              "generate_random_fact": 18,
+              "calculate_age_difference": 20,
+              "check_email_availability": 35,
+              "calculate_pace": 2,
+              "calculate_square_root": 10,
+              "get_horoscope": 2,
+              "search_restaurant": 8,
+              "calculate_gpa": 6,
+              "get_road_traffic": 1,
+              "generate_random_joke": 5,
+              "calculate_percentage": 8,
+              "calculate_profit_margin": 5,
+              "calculate_gross_salary": 15,
+              "generate_password": 1,
+              "get_recipe": 20,
+              "track_fitness": 1,
+              "search_images": 16,
+              "check_movie_showtimes": 3,
+              "search_flights": 1,
+              "calculate_calories_burned": 2,
+              "check_stock_price": 3,
+              "search_song": 10,
+              "calculate_circle_area": 2,
+              "get_sunrise_sunset_time": 1,
+              "check_stock": 1,
+              "create_calendar_event": 19,
+              "calculate_sales_tax": 19,
+              "get_movie_recommendations": 3,
+              "get_upcoming_events": 4,
+              "get_daily_news": 2,
+              "calculate_route_distance": 8,
+              "check_flight_status": 18,
+              "calculate_taxes": 2,
+              "search_events": 6,
+              "calculate_gas_cost": 1,
+              "play_sound": 6,
+              "generate_quote": 10,
+              "check_spelling": 12,
+              "check_website_status": 7,
+              "calculate_emission": 1,
+              "create_contact": 8,
+              "get_traffic_status": 1,
+              "calculate_rectangle_area": 13,
+              "create_todo": 1,
+              "encrypt_text": 7,
+              "send_sms": 2,
+              "analyze_stock": 2,
+              "calculate_body_mass_index": 4,
+              "get_current_weather": 1,
+              "calculate_car_emissions": 3,
+              "search_wikipedia": 8,
+              "search_exercises": 1,
+              "get_file_contents": 1,
+              "generate_meme": 3,
+              "get_movie_info": 6,
+              "get_currency_exchange_rate": 3,
+              "get_flight_status": 1,
+              "calculate_cylinder_volume": 1,
+              "get_exchange_rate": 10,
+              "analyze_market_trends": 1,
+              "get_news_articles": 15,
+              "get_current_news": 1,
+              "add_to_shopping_list": 1,
+              "get_random_dog_image": 1,
+              "get_dog_breed": 1,
+              "generate_anagram": 4,
+              "check_stock_availability": 3,
+              "find_nearest_restaurant": 6,
+              "get_word_synonyms": 2,
+              "search_product": 11,
+              "find_shortest_path": 12,
+              "get_random_quote": 21,
+              "calculate_fuel_cost": 10,
+              "convert_units": 2,
+              "create_roadmap": 1,
+              "calculate_square_area": 1,
+              "calculate_volume": 10,
+              "generate_random_string": 5,
+              "calculate_route": 4,
+              "find_route": 2,
+              "calculate_square": 8,
+              "analyze_tone": 1,
+              "check_anagram": 2,
+              "check_visa_requirements": 1,
+              "get_sports_scores": 8,
+              "calculate_savings": 1,
+              "calculate_calories": 2,
+              "find_restaurant": 2,
+              "find_restaurants": 13,
+              "create_todo_list": 2,
+              "calculate_salary": 3,
+              "calculateinterest": 1,
+              "calculate_celsius_to_fahrenheit": 1,
+              "retrieve_user_details": 1,
+              "check_prime_number": 5,
+              "calculate_fibonacci_sequence": 6,
+              "generate_email_signature": 1,
+              "multiply": 1,
+              "reverse_string": 1,
+              "create_playlist": 2,
+              "get_calendar_events": 1,
+              "get_exercise_recommendations": 1,
+              "calculate_time_difference": 4,
+              "convert_celsius_to_fahrenheit": 1,
+              "encrypt_message": 1,
+              "search_songs": 1,
+              "get_quote": 1,
+              "book_hotel": 4,
+              "generate_sudoku": 1,
+              "calculate_hypotenuse": 2,
+              "calculatedistance": 1,
+              "check_text_sentiment": 1,
+              "search_hotel": 1,
+              "search_movies_by_genre": 4,
+              "check_domain_availability": 1,
+              "analyze_website": 3,
+              "calculate_carbon_footprint": 4,
+              "calculate_age_in_days": 1,
+              "check_word_count": 3,
+              "get_directions": 3,
+              "get_movie_recommendation": 1,
+              "search_movie_reviews": 2,
+              "check_word_anagram": 1,
+              "search_holidays": 1,
+              "find_hotel": 2,
+              "analyze_customer_reviews": 2,
+              "find_movie": 8,
+              "calculate_car_loan": 1,
+              "check_username_availability": 3,
+              "calculate_car_fuel_cost": 1,
+              "analyze_text_sentiment": 1,
+              "get_recipe_nutrition": 1,
+              "generate_password_reset_token": 1,
+              "get_traffic_info": 3,
+              "check_road_conditions": 1,
+              "get_location_coordinates": 1,
+              "retrieve_contact": 1,
+              "get_fuel_price": 2,
+              "track_expenses": 4,
+              "search_place": 1,
+              "add_numbers": 2,
+              "generate_id": 1,
+              "calculate_triangle_area": 6,
+              "find_similar_products": 1,
+              "search_products": 4,
+              "get_nearby_events": 1,
+              "search_job": 1,
+              "calculate_pension": 1,
+              "count_characters": 1,
+              "get_user_profile": 3,
+              "calculate_biorhythm": 1,
+              "search_movie_by_genre": 1,
+              "convert_weight": 1,
+              "search_location": 1,
+              "check_news": 1,
+              "convert_currencies": 1,
+              "check_website_availability": 6,
+              "find_nearest_pharmacy": 1,
+              "analyze_text": 3,
+              "check_email": 2,
+              "find_recipe": 1,
+              "create_recipe": 1,
+              "fetch_news_headlines": 1,
+              "play_song": 2,
+              "get_movie_data": 1,
+              "calculate_discounted_price_with_coupon": 1,
+              "search_news_articles": 2,
+              "create_ticket": 1,
+              "calculate_roi": 1,
+              "calculate_lifespan": 1,
+              "find_median": 2,
+              "get_latest_news": 1,
+              "add_task": 1,
+              "detect_language": 1,
+              "get_note": 2,
+              "calculate_vat": 1,
+              "search_tweets": 1,
+              "analyze_social_media_mentions": 1,
+              "search_for_recipes": 1,
+              "calculate_discounted_percentage": 1,
+              "get_sunset_time": 2,
+              "create_task_reminder": 1,
+              "generate_fibonacci_sequence": 1,
+              "find_nearby_hotels": 1,
+              "generate_random_numbers": 2,
+              "generate_report": 1,
+              "generate_random_password": 1,
+              "get_pokemon_details": 1,
+              "take_notes": 1,
+              "calculate_median": 3,
+              "calculatebmi": 4,
+              "generate_license_key": 1,
+              "calculate_mortgage_payments": 2,
+              "get_user_data": 1,
+              "search_podcast": 1,
+              "create_todo_item": 1,
+              "analyze_customer_sentiment": 1,
+              "get_currency_conversion_rate": 1,
+              "convert_length": 2,
+              "get_time": 3,
+              "calculate_daily_calorie_intake": 1,
+              "calculate_speed": 2,
+              "calculate_age_in_months": 1,
+              "find_max": 1,
+              "search_for_restaurants": 1,
+              "search_albums": 1,
+              "analyze_traffic": 1,
+              "read_text_file": 1,
+              "analyze_text_similarity": 1,
+              "get_poem": 1,
+              "get_current_date": 2,
+              "track_calories": 3,
+              "find_movie_showtimes": 1,
+              "get_exercise_recommendation": 1,
+              "send_message": 1,
+              "get_random_quote_of_the_day": 1,
+              "find_movie_details": 2,
+              "get_word_definitions": 2,
+              "get_sunrise_sunset": 2,
+              "generate_phone_number": 2,
+              "find_nearby_parks": 1,
+              "get_quotations": 1,
+              "get_holidays": 1,
+              "find_largest_number": 1,
+              "analyze_social_media_sentiment": 1,
+              "calculate_gcd": 1,
+              "calculate_body_fat_percentage": 1,
+              "bookflight": 1,
+              "get_definitions": 1,
+              "calculate_car_loan_payment": 1,
+              "get_restaurant_reviews": 1,
+              "generate_invoice_number": 1,
+              "get_daily_horoscope": 1,
+              "get_concert_info": 1,
+              "get_holiday_dates": 1,
+              "check_if_website_is_up": 1,
+              "create_event": 2,
+              "get_book_details": 1,
+              "create_task": 1,
+              "calculate_premium": 1,
+              "check_email_duplicate": 1,
+              "find_song_lyrics": 1,
+              "calculate_resistance": 1,
+              "find_nearest_pizza_place": 1,
+              "post_social_media_status": 1,
+              "check_word_definition": 1,
+              "analyze_website_traffic": 1,
+              "get_joke": 2,
+              "search_parks": 1,
+              "analyze_social_media_post": 1,
+              "get_sports_score": 1,
+              "search_movie_showtimes": 1,
+              "search_quotes": 1,
+              "search_book_reviews": 1,
+              "generate_random_word": 1,
+              "calculate_area_volume": 1,
+              "count_words": 1,
+              "get_word_definition": 1
+            }
+          }
+        }
+      }
+    },
+    "transfer/qnli": {
+      "raw": "sources/eval/transfer/qnli",
+      "trainable": false,
+      "plan": {
+        "dev": [
+          "train"
+        ],
+        "test": [
+          "validation"
+        ]
+      },
+      "rows": 110206,
+      "rejected": 0,
+      "conflicting": 0,
+      "duplicates": 22,
+      "carved": {},
+      "capped": {
+        "dev": 99721,
+        "test": 463
+      },
+      "leaked": {
+        "test": 237,
+        "dev": 1
+      },
+      "splits": {
+        "dev": {
+          "records": 4999,
+          "questions": 4999,
+          "sha256": "924a3d2724c38b5c074466c7c087b061cd9d1faf83ff2c364f4c561f54de21e6",
+          "labels": {
+            "answers": {
+              "true": 2517,
+              "false": 2482
+            }
+          }
+        },
+        "test": {
+          "records": 4763,
+          "questions": 4763,
+          "sha256": "137a585b02ecd19b39a9dc9ecea70dc9f979f034d59bffa459fe7f89a2441f26",
+          "labels": {
+            "answers": {
+              "true": 2361,
+              "false": 2402
+            }
+          }
+        }
+      }
+    },
+    "transfer/paws": {
+      "raw": "sources/eval/transfer/paws",
+      "trainable": false,
+      "plan": {
+        "dev": [
+          "validation"
+        ],
+        "test": [
+          "test"
+        ]
+      },
+      "rows": 16000,
+      "rejected": 0,
+      "conflicting": 10,
+      "duplicates": 21,
+      "carved": {},
+      "capped": {
+        "dev": 2993,
+        "test": 2976
+      },
+      "leaked": {
+        "test": 136,
+        "dev": 0
+      },
+      "splits": {
+        "dev": {
+          "records": 5000,
+          "questions": 5000,
+          "sha256": "3024b5a3c54871ee0e05caecc7f5fe78a95d19ecfc5843b87999a564de8fd9c7",
+          "labels": {
+            "paraphrase": {
+              "false": 2802,
+              "true": 2198
+            }
+          }
+        },
+        "test": {
+          "records": 4864,
+          "questions": 4864,
+          "sha256": "f50845c9b0aa30c4be1f21b5aa7d059b731b32f702b21fd35e4acafa2cd2fa90",
+          "labels": {
+            "paraphrase": {
+              "true": 2112,
+              "false": 2752
+            }
+          }
+        }
+      }
+    },
+    "transfer/sciq": {
+      "raw": "sources/eval/transfer/sciq",
+      "trainable": false,
+      "plan": {
+        "dev": [
+          "validation"
+        ],
+        "test": [
+          "test"
+        ]
+      },
+      "rows": 2000,
+      "rejected": 2,
+      "conflicting": 0,
+      "duplicates": 0,
+      "carved": {},
+      "capped": {
+        "dev": 0,
+        "test": 0
+      },
+      "leaked": {
+        "test": 139,
+        "dev": 0
+      },
+      "splits": {
+        "dev": {
+          "records": 1000,
+          "questions": 1000,
+          "sha256": "6f78059e27f5f22e5190ae4f41e2f4346452cfecb5b214cbd893b60e2d8ede43",
+          "labels": {
+            "answer": {
+              "opt_2": 256,
+              "opt_4": 249,
+              "opt_1": 229,
+              "opt_3": 266
+            }
+          }
+        },
+        "test": {
+          "records": 859,
+          "questions": 859,
+          "sha256": "4e4b0e168fa5df0d2ec52276c79b0fafc4161a9111f61f7a185c00496c73de72",
+          "labels": {
+            "answer": {
+              "opt_3": 217,
+              "opt_2": 217,
+              "opt_1": 212,
+              "opt_4": 213
+            }
+          }
+        }
+      }
+    },
+    "transfer/mmlu": {
+      "raw": "sources/eval/transfer/mmlu",
+      "trainable": false,
+      "plan": {
+        "dev": [
+          "validation"
+        ],
+        "test": [
+          "test"
+        ]
+      },
+      "rows": 15573,
+      "rejected": 5,
+      "conflicting": 0,
+      "duplicates": 41,
+      "carved": {},
+      "capped": {
+        "dev": 0,
+        "test": 9011
+      },
+      "leaked": {
+        "test": 90,
+        "dev": 11
+      },
+      "splits": {
+        "dev": {
+          "records": 1505,
+          "questions": 1505,
+          "sha256": "1102f0d1e07efc1544159d43e3a04dc324f61bf2454409c4506bfafb7f0b7e4c",
+          "labels": {
+            "answer": {
+              "opt_1": 375,
+              "opt_3": 383,
+              "opt_2": 372,
+              "opt_4": 375
+            }
+          }
+        },
+        "test": {
+          "records": 4910,
+          "questions": 4910,
+          "sha256": "b4b5385aa7cefc3399e2e9cb983f961a6506ef3281a3f5ccba91fc55d04c5b8b",
+          "labels": {
+            "answer": {
+              "opt_1": 1157,
+              "opt_3": 1241,
+              "opt_2": 1208,
+              "opt_4": 1304
+            }
+          }
+        }
+      }
+    },
+    "transfer/mmlu-pro": {
+      "raw": "sources/eval/transfer/mmlu-pro",
+      "trainable": false,
+      "plan": {
+        "dev": [
+          "validation"
+        ],
+        "test": [
+          "test"
+        ]
+      },
+      "rows": 12102,
+      "rejected": 0,
+      "conflicting": 0,
+      "duplicates": 0,
+      "carved": {},
+      "capped": {
+        "dev": 0,
+        "test": 7032
+      },
+      "leaked": {
+        "test": 124,
+        "dev": 0
+      },
+      "splits": {
+        "dev": {
+          "records": 70,
+          "questions": 70,
+          "sha256": "c74ae9b9672e991991cabd6b5c53ac040e43ef00e936d7ae5b7e58717923fa8c",
+          "labels": {
+            "answer": {
+              "opt_2": 8,
+              "opt_1": 11,
+              "opt_10": 8,
+              "opt_3": 5,
+              "opt_4": 5,
+              "opt_7": 5,
+              "opt_5": 8,
+              "opt_6": 6,
+              "opt_9": 7,
+              "opt_8": 7
+            }
+          }
+        },
+        "test": {
+          "records": 4876,
+          "questions": 4876,
+          "sha256": "a0988ea6576441d715feaee6ad07772a108188c70d230e6121cc837bf820a5a9",
+          "labels": {
+            "answer": {
+              "opt_4": 545,
+              "opt_3": 544,
+              "opt_10": 379,
+              "opt_6": 456,
+              "opt_5": 482,
+              "opt_7": 475,
+              "opt_2": 534,
+              "opt_8": 450,
+              "opt_9": 457,
+              "opt_1": 554
+            }
+          }
+        }
+      }
+    },
+    "transfer/emotion": {
+      "raw": "sources/eval/transfer/emotion",
+      "trainable": false,
+      "plan": {
+        "dev": [
+          "validation"
+        ],
+        "test": [
+          "test"
+        ]
+      },
+      "rows": 4000,
+      "rejected": 0,
+      "conflicting": 10,
+      "duplicates": 0,
+      "carved": {},
+      "capped": {
+        "dev": 0,
+        "test": 0
+      },
+      "leaked": {
+        "test": 140,
+        "dev": 0
+      },
+      "splits": {
+        "dev": {
+          "records": 1993,
+          "questions": 1993,
+          "sha256": "66ac8bbee14cdc7a694f4b54e0a1b99573df26d6771380a6a5b0bebdce44d683",
+          "labels": {
+            "emotion": {
+              "joy": 702,
+              "anger": 274,
+              "love": 176,
+              "sadness": 550,
+              "surprise": 80,
+              "fear": 211
+            }
+          }
+        },
+        "test": {
+          "records": 1857,
+          "questions": 1857,
+          "sha256": "c2b368dc7173746d12666c6bf3c9e7082988f5c68489fc1f1c92313a279d59fa",
+          "labels": {
+            "emotion": {
+              "sadness": 538,
+              "joy": 646,
+              "love": 143,
+              "fear": 210,
+              "anger": 258,
+              "surprise": 62
+            }
+          }
+        }
+      }
+    },
+    "transfer/tweeteval-offensive": {
+      "raw": "sources/eval/transfer/tweeteval-offensive",
+      "trainable": false,
+      "plan": {
+        "dev": [
+          "validation"
+        ],
+        "test": [
+          "test"
+        ]
+      },
+      "rows": 2184,
+      "rejected": 0,
+      "conflicting": 4,
+      "duplicates": 14,
+      "carved": {},
+      "capped": {
+        "dev": 0,
+        "test": 0
+      },
+      "leaked": {
+        "test": 140,
+        "dev": 0
+      },
+      "splits": {
+        "dev": {
+          "records": 1319,
+          "questions": 1319,
+          "sha256": "bf59b8efc0bc214c7c12bbaf48538ad85b3cd5f89aaf88b3bec1ad735a7c7f96",
+          "labels": {
+            "offensive": {
+              "true": 457,
+              "false": 862
+            }
+          }
+        },
+        "test": {
+          "records": 707,
+          "questions": 707,
+          "sha256": "2cbf59a42923ddc26aaa71a721fa33a77de87465b477fa5e2cf6ad218233b9d5",
+          "labels": {
+            "offensive": {
+              "false": 517,
+              "true": 190
+            }
+          }
+        }
+      }
+    },
+    "devtools/when2call": {
+      "raw": "sources/eval/devtools/when2call",
+      "trainable": false,
+      "plan": {
+        "dev": [],
+        "test": [
+          "test"
+        ]
+      },
+      "rows": 3652,
+      "rejected": 0,
+      "conflicting": 36,
+      "duplicates": 6,
+      "carved": {
+        "dev": 1821
+      },
+      "capped": {
+        "dev": 0,
+        "test": 0
+      },
+      "leaked": {
+        "test": 0,
+        "dev": 0
+      },
+      "splits": {
+        "dev": {
+          "records": 1821,
+          "questions": 1821,
+          "sha256": "1b53aece1fd82884b6b84664b707a541097d1e4d3c62725224b49fc2ffbbc69c",
+          "labels": {
+            "action": {
+              "cannot_answer": 641,
+              "tool_call": 630,
+              "request_for_info": 550
+            }
+          }
+        },
+        "test": {
+          "records": 1789,
+          "questions": 1789,
+          "sha256": "521f29520170b83a78f218e31d4a61873984b7ff722b16c4999b32860f88423e",
+          "labels": {
+            "action": {
+              "tool_call": 647,
+              "cannot_answer": 649,
+              "request_for_info": 493
+            }
+          }
+        }
+      }
+    },
+    "devtools/prompt-injection": {
+      "raw": "sources/eval/devtools",
+      "trainable": false,
+      "plan": {
+        "dev": [
+          "dev"
+        ],
+        "test": [
+          "test"
+        ]
+      },
+      "rows": 1662,
+      "rejected": 0,
+      "conflicting": 0,
+      "duplicates": 1,
+      "carved": {},
+      "capped": {
+        "dev": 0,
+        "test": 0
+      },
+      "leaked": {
+        "test": 20,
+        "dev": 131
+      },
+      "splits": {
+        "dev": {
+          "records": 1302,
+          "questions": 1302,
+          "sha256": "98c9c9f9bf1a10abef42e21264086d75428998824ab34715eb475566df4db191",
+          "labels": {
+            "injection": {
+              "true": 1025,
+              "false": 277
+            }
+          }
+        },
+        "test": {
+          "records": 208,
+          "questions": 208,
+          "sha256": "b8fa7f31a43fd2db76e3a8dc5a71d8c6d4af671aff9b0f5b22eee043f0464041",
+          "labels": {
+            "injection": {
+              "true": 160,
+              "false": 48
+            }
+          }
+        }
+      }
+    }
+  }
+}

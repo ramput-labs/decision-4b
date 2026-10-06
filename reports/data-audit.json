@@ -1,0 +1,1806 @@
+{
+  "files": [
+    {
+      "path": "train/core.jsonl",
+      "records": 12576,
+      "questions": 15576,
+      "types": {
+        "score": 3448,
+        "noul": 5224,
+        "choice": 6904
+      },
+      "noul_true_rate": 0.41,
+      "first_option_rate": 0.24,
+      "soft_targets": 0,
+      "duplicates": 420,
+      "state_tokens": {
+        "median": 58,
+        "p99": 294,
+        "max": 378
+      }
+    },
+    {
+      "path": "train/dates-unknowable.jsonl",
+      "records": 1425,
+      "questions": 1425,
+      "types": {
+        "noul": 416,
+        "score": 900,
+        "choice": 109
+      },
+      "noul_true_rate": 0.5,
+      "first_option_rate": 0.492,
+      "soft_targets": 256,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 90,
+        "p99": 130,
+        "max": 132
+      }
+    },
+    {
+      "path": "train/devtools.jsonl",
+      "records": 5320,
+      "questions": 6973,
+      "types": {
+        "noul": 5320,
+        "choice": 1653
+      },
+      "noul_true_rate": 0.5,
+      "first_option_rate": 0.151,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 154,
+        "p99": 820,
+        "max": 3284
+      }
+    },
+    {
+      "path": "train/documents.jsonl",
+      "records": 5219,
+      "questions": 7488,
+      "types": {
+        "choice": 7488
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.307,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 420,
+        "p99": 3269,
+        "max": 7329
+      }
+    },
+    {
+      "path": "train/skills.jsonl",
+      "records": 6000,
+      "questions": 9310,
+      "types": {
+        "choice": 7084,
+        "noul": 1946,
+        "score": 280
+      },
+      "noul_true_rate": 0.472,
+      "first_option_rate": 0.228,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 122,
+        "p99": 4679,
+        "max": 4971
+      }
+    },
+    {
+      "path": "train/sources/intent/banking77.jsonl",
+      "records": 8937,
+      "questions": 8937,
+      "types": {
+        "choice": 8937
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.016,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 11,
+        "p99": 49,
+        "max": 93
+      }
+    },
+    {
+      "path": "train/sources/intent/massive-en.jsonl",
+      "records": 11430,
+      "questions": 22860,
+      "types": {
+        "choice": 22860
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.032,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 7,
+        "p99": 19,
+        "max": 37
+      }
+    },
+    {
+      "path": "train/sources/knowledge/arc.jsonl",
+      "records": 3348,
+      "questions": 3348,
+      "types": {
+        "choice": 3348
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.233,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 21,
+        "p99": 76,
+        "max": 132
+      }
+    },
+    {
+      "path": "train/sources/knowledge/commonsenseqa.jsonl",
+      "records": 8757,
+      "questions": 8757,
+      "types": {
+        "choice": 8757
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.195,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 16,
+        "p99": 38,
+        "max": 70
+      }
+    },
+    {
+      "path": "train/sources/knowledge/openbookqa.jsonl",
+      "records": 4906,
+      "questions": 4906,
+      "types": {
+        "choice": 4906
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.278,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 13,
+        "p99": 38,
+        "max": 80
+      }
+    },
+    {
+      "path": "train/sources/knowledge/qasc.jsonl",
+      "records": 7325,
+      "questions": 7325,
+      "types": {
+        "choice": 7325
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.123,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 43,
+        "p99": 63,
+        "max": 83
+      }
+    },
+    {
+      "path": "train/sources/reading/boolq.jsonl",
+      "records": 7600,
+      "questions": 7600,
+      "types": {
+        "noul": 7600
+      },
+      "noul_true_rate": 0.621,
+      "first_option_rate": null,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 114,
+        "p99": 352,
+        "max": 787
+      }
+    },
+    {
+      "path": "train/sources/reading/multinli.jsonl",
+      "records": 391938,
+      "questions": 391938,
+      "types": {
+        "choice": 391938
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.333,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 21,
+        "p99": 79,
+        "max": 404
+      }
+    },
+    {
+      "path": "train/sources/safety/aegis.jsonl",
+      "records": 19627,
+      "questions": 21827,
+      "types": {
+        "noul": 19627,
+        "choice": 2200
+      },
+      "noul_true_rate": 0.448,
+      "first_option_rate": 0.192,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 17,
+        "p99": 976,
+        "max": 4171
+      }
+    },
+    {
+      "path": "train/sources/sentiment/amazon-reviews.jsonl",
+      "records": 199034,
+      "questions": 199034,
+      "types": {
+        "score": 199034
+      },
+      "noul_true_rate": null,
+      "first_option_rate": null,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 29,
+        "p99": 194,
+        "max": 928
+      }
+    },
+    {
+      "path": "train/sources/sentiment/imdb.jsonl",
+      "records": 22255,
+      "questions": 22255,
+      "types": {
+        "noul": 22255
+      },
+      "noul_true_rate": 0.502,
+      "first_option_rate": null,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 216,
+        "p99": 1125,
+        "max": 3060
+      }
+    },
+    {
+      "path": "train/sources/sentiment/sst5.jsonl",
+      "records": 8471,
+      "questions": 8471,
+      "types": {
+        "score": 8471
+      },
+      "noul_true_rate": null,
+      "first_option_rate": null,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 21,
+        "p99": 52,
+        "max": 77
+      }
+    },
+    {
+      "path": "train/sources/sentiment/yelp-full.jsonl",
+      "records": 644591,
+      "questions": 644591,
+      "types": {
+        "score": 644591
+      },
+      "noul_true_rate": null,
+      "first_option_rate": null,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 123,
+        "p99": 757,
+        "max": 1937
+      }
+    },
+    {
+      "path": "train/sources/tools/glaive-function-calling.jsonl",
+      "records": 30024,
+      "questions": 41212,
+      "types": {
+        "noul": 30024,
+        "choice": 11188
+      },
+      "noul_true_rate": 0.5,
+      "first_option_rate": 0.353,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 61,
+        "p99": 106,
+        "max": 214
+      }
+    },
+    {
+      "path": "train/sources/topic/ag-news.jsonl",
+      "records": 114752,
+      "questions": 114752,
+      "types": {
+        "choice": 114752
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.25,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 49,
+        "p99": 105,
+        "max": 295
+      }
+    },
+    {
+      "path": "train/sources/topic/dbpedia14.jsonl",
+      "records": 554866,
+      "questions": 554866,
+      "types": {
+        "choice": 554866
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.071,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 69,
+        "p99": 139,
+        "max": 5295
+      }
+    },
+    {
+      "path": "train/sources/topic/trec.jsonl",
+      "records": 4764,
+      "questions": 4764,
+      "types": {
+        "choice": 4764
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.016,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 11,
+        "p99": 27,
+        "max": 40
+      }
+    },
+    {
+      "path": "calibration/core.jsonl",
+      "records": 968,
+      "questions": 1148,
+      "types": {
+        "noul": 332,
+        "choice": 572,
+        "score": 244
+      },
+      "noul_true_rate": 0.422,
+      "first_option_rate": 0.278,
+      "soft_targets": 0,
+      "duplicates": 60,
+      "state_tokens": {
+        "median": 72,
+        "p99": 281,
+        "max": 345
+      }
+    },
+    {
+      "path": "calibration/heldout.jsonl",
+      "records": 580,
+      "questions": 580,
+      "types": {
+        "choice": 252,
+        "noul": 236,
+        "score": 92
+      },
+      "noul_true_rate": 0.411,
+      "first_option_rate": 0.353,
+      "soft_targets": 0,
+      "duplicates": 12,
+      "state_tokens": {
+        "median": 52,
+        "p99": 236,
+        "max": 369
+      }
+    },
+    {
+      "path": "dev/core.jsonl",
+      "records": 1204,
+      "questions": 1468,
+      "types": {
+        "choice": 756,
+        "noul": 472,
+        "score": 240
+      },
+      "noul_true_rate": 0.388,
+      "first_option_rate": 0.221,
+      "soft_targets": 0,
+      "duplicates": 37,
+      "state_tokens": {
+        "median": 49,
+        "p99": 292,
+        "max": 378
+      }
+    },
+    {
+      "path": "dev/devtools.jsonl",
+      "records": 900,
+      "questions": 1074,
+      "types": {
+        "choice": 325,
+        "noul": 749
+      },
+      "noul_true_rate": 0.499,
+      "first_option_rate": 0.252,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 158,
+        "p99": 1617,
+        "max": 2312
+      }
+    },
+    {
+      "path": "dev/documents.jsonl",
+      "records": 568,
+      "questions": 920,
+      "types": {
+        "choice": 920
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.328,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 392,
+        "p99": 3661,
+        "max": 5001
+      }
+    },
+    {
+      "path": "dev/probes.jsonl",
+      "records": 1264,
+      "questions": 1264,
+      "types": {
+        "choice": 704,
+        "noul": 400,
+        "score": 160
+      },
+      "noul_true_rate": 0.448,
+      "first_option_rate": 0.278,
+      "soft_targets": 0,
+      "duplicates": 28,
+      "state_tokens": {
+        "median": 58,
+        "p99": 258,
+        "max": 335
+      }
+    },
+    {
+      "path": "dev/skills.jsonl",
+      "records": 700,
+      "questions": 1083,
+      "types": {
+        "choice": 824,
+        "noul": 224,
+        "score": 35
+      },
+      "noul_true_rate": 0.455,
+      "first_option_rate": 0.226,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 106,
+        "p99": 4538,
+        "max": 4911
+      }
+    },
+    {
+      "path": "dev/sources/devtools/prompt-injection.jsonl",
+      "records": 1302,
+      "questions": 1302,
+      "types": {
+        "noul": 1302
+      },
+      "noul_true_rate": 0.787,
+      "first_option_rate": null,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 12,
+        "p99": 100,
+        "max": 967
+      }
+    },
+    {
+      "path": "dev/sources/devtools/when2call.jsonl",
+      "records": 1821,
+      "questions": 1821,
+      "types": {
+        "choice": 1821
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.346,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 119,
+        "p99": 332,
+        "max": 899
+      }
+    },
+    {
+      "path": "dev/sources/intent/banking77.jsonl",
+      "records": 898,
+      "questions": 898,
+      "types": {
+        "choice": 898
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.012,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 11,
+        "p99": 46,
+        "max": 80
+      }
+    },
+    {
+      "path": "dev/sources/intent/massive-en.jsonl",
+      "records": 2025,
+      "questions": 4050,
+      "types": {
+        "choice": 4050
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.032,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 7,
+        "p99": 18,
+        "max": 29
+      }
+    },
+    {
+      "path": "dev/sources/knowledge/arc.jsonl",
+      "records": 867,
+      "questions": 867,
+      "types": {
+        "choice": 867
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.256,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 21,
+        "p99": 75,
+        "max": 122
+      }
+    },
+    {
+      "path": "dev/sources/knowledge/commonsenseqa.jsonl",
+      "records": 942,
+      "questions": 942,
+      "types": {
+        "choice": 942
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.203,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 16,
+        "p99": 36,
+        "max": 57
+      }
+    },
+    {
+      "path": "dev/sources/knowledge/openbookqa.jsonl",
+      "records": 500,
+      "questions": 500,
+      "types": {
+        "choice": 500
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.252,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 12,
+        "p99": 46,
+        "max": 65
+      }
+    },
+    {
+      "path": "dev/sources/knowledge/qasc.jsonl",
+      "records": 801,
+      "questions": 801,
+      "types": {
+        "choice": 801
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.13,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 42,
+        "p99": 63,
+        "max": 75
+      }
+    },
+    {
+      "path": "dev/sources/reading/boolq.jsonl",
+      "records": 713,
+      "questions": 713,
+      "types": {
+        "noul": 713
+      },
+      "noul_true_rate": 0.628,
+      "first_option_rate": null,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 113,
+        "p99": 371,
+        "max": 875
+      }
+    },
+    {
+      "path": "dev/sources/reading/multinli.jsonl",
+      "records": 4883,
+      "questions": 4883,
+      "types": {
+        "choice": 4883
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.351,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 20,
+        "p99": 77,
+        "max": 207
+      }
+    },
+    {
+      "path": "dev/sources/safety/aegis.jsonl",
+      "records": 1026,
+      "questions": 1132,
+      "types": {
+        "noul": 1026,
+        "choice": 106
+      },
+      "noul_true_rate": 0.488,
+      "first_option_rate": 0.264,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 16,
+        "p99": 934,
+        "max": 2334
+      }
+    },
+    {
+      "path": "dev/sources/sentiment/amazon-reviews.jsonl",
+      "records": 4988,
+      "questions": 4988,
+      "types": {
+        "score": 4988
+      },
+      "noul_true_rate": null,
+      "first_option_rate": null,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 29,
+        "p99": 189,
+        "max": 762
+      }
+    },
+    {
+      "path": "dev/sources/sentiment/imdb.jsonl",
+      "records": 2376,
+      "questions": 2376,
+      "types": {
+        "noul": 2376
+      },
+      "noul_true_rate": 0.5,
+      "first_option_rate": null,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 215,
+        "p99": 1155,
+        "max": 2113
+      }
+    },
+    {
+      "path": "dev/sources/sentiment/sst5.jsonl",
+      "records": 1100,
+      "questions": 1100,
+      "types": {
+        "score": 1100
+      },
+      "noul_true_rate": null,
+      "first_option_rate": null,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 22,
+        "p99": 50,
+        "max": 56
+      }
+    },
+    {
+      "path": "dev/sources/sentiment/yelp-full.jsonl",
+      "records": 4988,
+      "questions": 4988,
+      "types": {
+        "score": 4988
+      },
+      "noul_true_rate": null,
+      "first_option_rate": null,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 125,
+        "p99": 781,
+        "max": 1829
+      }
+    },
+    {
+      "path": "dev/sources/tools/glaive-function-calling.jsonl",
+      "records": 3850,
+      "questions": 5304,
+      "types": {
+        "noul": 3850,
+        "choice": 1454
+      },
+      "noul_true_rate": 0.515,
+      "first_option_rate": 0.367,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 61,
+        "p99": 107,
+        "max": 157
+      }
+    },
+    {
+      "path": "dev/sources/topic/ag-news.jsonl",
+      "records": 4958,
+      "questions": 4958,
+      "types": {
+        "choice": 4958
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.257,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 49,
+        "p99": 104,
+        "max": 216
+      }
+    },
+    {
+      "path": "dev/sources/topic/dbpedia14.jsonl",
+      "records": 4924,
+      "questions": 4924,
+      "types": {
+        "choice": 4924
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.074,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 68,
+        "p99": 138,
+        "max": 237
+      }
+    },
+    {
+      "path": "dev/sources/topic/trec.jsonl",
+      "records": 454,
+      "questions": 454,
+      "types": {
+        "choice": 454
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.013,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 10,
+        "p99": 27,
+        "max": 53
+      }
+    },
+    {
+      "path": "dev/sources/transfer/emotion.jsonl",
+      "records": 1993,
+      "questions": 1993,
+      "types": {
+        "choice": 1993
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.276,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 17,
+        "p99": 53,
+        "max": 66
+      }
+    },
+    {
+      "path": "dev/sources/transfer/mmlu-pro.jsonl",
+      "records": 70,
+      "questions": 70,
+      "types": {
+        "choice": 70
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.157,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 37,
+        "p99": 432,
+        "max": 452
+      }
+    },
+    {
+      "path": "dev/sources/transfer/mmlu.jsonl",
+      "records": 1505,
+      "questions": 1505,
+      "types": {
+        "choice": 1505
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.249,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 32,
+        "p99": 392,
+        "max": 722
+      }
+    },
+    {
+      "path": "dev/sources/transfer/paws.jsonl",
+      "records": 5000,
+      "questions": 5000,
+      "types": {
+        "noul": 5000
+      },
+      "noul_true_rate": 0.44,
+      "first_option_rate": null,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 27,
+        "p99": 46,
+        "max": 54
+      }
+    },
+    {
+      "path": "dev/sources/transfer/qnli.jsonl",
+      "records": 4999,
+      "questions": 4999,
+      "types": {
+        "noul": 4999
+      },
+      "noul_true_rate": 0.504,
+      "first_option_rate": null,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 33,
+        "p99": 94,
+        "max": 200
+      }
+    },
+    {
+      "path": "dev/sources/transfer/sciq.jsonl",
+      "records": 1000,
+      "questions": 1000,
+      "types": {
+        "choice": 1000
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.229,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 83,
+        "p99": 467,
+        "max": 592
+      }
+    },
+    {
+      "path": "dev/sources/transfer/tweeteval-offensive.jsonl",
+      "records": 1319,
+      "questions": 1319,
+      "types": {
+        "noul": 1319
+      },
+      "noul_true_rate": 0.346,
+      "first_option_rate": null,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 27,
+        "p99": 112,
+        "max": 143
+      }
+    },
+    {
+      "path": "dev/transfer.jsonl",
+      "records": 764,
+      "questions": 764,
+      "types": {
+        "choice": 444,
+        "noul": 280,
+        "score": 40
+      },
+      "noul_true_rate": 0.443,
+      "first_option_rate": 0.324,
+      "soft_targets": 0,
+      "duplicates": 26,
+      "state_tokens": {
+        "median": 42,
+        "p99": 258,
+        "max": 335
+      }
+    },
+    {
+      "path": "test/core.jsonl",
+      "records": 1176,
+      "questions": 1440,
+      "types": {
+        "choice": 696,
+        "noul": 504,
+        "score": 240
+      },
+      "noul_true_rate": 0.421,
+      "first_option_rate": 0.185,
+      "soft_targets": 0,
+      "duplicates": 6,
+      "state_tokens": {
+        "median": 49,
+        "p99": 288,
+        "max": 356
+      }
+    },
+    {
+      "path": "test/devtools.jsonl",
+      "records": 900,
+      "questions": 1073,
+      "types": {
+        "choice": 325,
+        "noul": 748
+      },
+      "noul_true_rate": 0.5,
+      "first_option_rate": 0.237,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 127,
+        "p99": 1669,
+        "max": 2520
+      }
+    },
+    {
+      "path": "test/documents.jsonl",
+      "records": 574,
+      "questions": 936,
+      "types": {
+        "choice": 936
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.316,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 376,
+        "p99": 2584,
+        "max": 3846
+      }
+    },
+    {
+      "path": "test/probes.jsonl",
+      "records": 1264,
+      "questions": 1264,
+      "types": {
+        "choice": 704,
+        "noul": 400,
+        "score": 160
+      },
+      "noul_true_rate": 0.427,
+      "first_option_rate": 0.213,
+      "soft_targets": 0,
+      "duplicates": 25,
+      "state_tokens": {
+        "median": 58,
+        "p99": 287,
+        "max": 368
+      }
+    },
+    {
+      "path": "test/skills.jsonl",
+      "records": 700,
+      "questions": 1088,
+      "types": {
+        "choice": 826,
+        "noul": 226,
+        "score": 36
+      },
+      "noul_true_rate": 0.473,
+      "first_option_rate": 0.23,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 120,
+        "p99": 4438,
+        "max": 4579
+      }
+    },
+    {
+      "path": "test/sources/devtools/prompt-injection.jsonl",
+      "records": 208,
+      "questions": 208,
+      "types": {
+        "noul": 208
+      },
+      "noul_true_rate": 0.769,
+      "first_option_rate": null,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 14,
+        "p99": 112,
+        "max": 133
+      }
+    },
+    {
+      "path": "test/sources/devtools/when2call.jsonl",
+      "records": 1789,
+      "questions": 1789,
+      "types": {
+        "choice": 1789
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.362,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 125,
+        "p99": 356,
+        "max": 1334
+      }
+    },
+    {
+      "path": "test/sources/intent/banking77.jsonl",
+      "records": 2998,
+      "questions": 2998,
+      "types": {
+        "choice": 2998
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.013,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 10,
+        "p99": 44,
+        "max": 78
+      }
+    },
+    {
+      "path": "test/sources/intent/massive-en.jsonl",
+      "records": 2968,
+      "questions": 5936,
+      "types": {
+        "choice": 5936
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.033,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 7,
+        "p99": 18,
+        "max": 61
+      }
+    },
+    {
+      "path": "test/sources/knowledge/arc.jsonl",
+      "records": 3548,
+      "questions": 3548,
+      "types": {
+        "choice": 3548
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.243,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 21,
+        "p99": 78,
+        "max": 174
+      }
+    },
+    {
+      "path": "test/sources/knowledge/commonsenseqa.jsonl",
+      "records": 1215,
+      "questions": 1215,
+      "types": {
+        "choice": 1215
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.195,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 16,
+        "p99": 37,
+        "max": 63
+      }
+    },
+    {
+      "path": "test/sources/knowledge/openbookqa.jsonl",
+      "records": 500,
+      "questions": 500,
+      "types": {
+        "choice": 500
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.276,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 11,
+        "p99": 45,
+        "max": 68
+      }
+    },
+    {
+      "path": "test/sources/knowledge/qasc.jsonl",
+      "records": 926,
+      "questions": 926,
+      "types": {
+        "choice": 926
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.131,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 42,
+        "p99": 60,
+        "max": 70
+      }
+    },
+    {
+      "path": "test/sources/reading/boolq.jsonl",
+      "records": 2916,
+      "questions": 2916,
+      "types": {
+        "noul": 2916
+      },
+      "noul_true_rate": 0.62,
+      "first_option_rate": null,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 112,
+        "p99": 365,
+        "max": 1249
+      }
+    },
+    {
+      "path": "test/sources/reading/multinli.jsonl",
+      "records": 4998,
+      "questions": 4998,
+      "types": {
+        "choice": 4998
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.35,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 22,
+        "p99": 80,
+        "max": 158
+      }
+    },
+    {
+      "path": "test/sources/safety/aegis.jsonl",
+      "records": 1714,
+      "questions": 1941,
+      "types": {
+        "noul": 1714,
+        "choice": 227
+      },
+      "noul_true_rate": 0.501,
+      "first_option_rate": 0.291,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 15,
+        "p99": 807,
+        "max": 1884
+      }
+    },
+    {
+      "path": "test/sources/sentiment/amazon-reviews.jsonl",
+      "records": 4910,
+      "questions": 4910,
+      "types": {
+        "score": 4910
+      },
+      "noul_true_rate": null,
+      "first_option_rate": null,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 29,
+        "p99": 185,
+        "max": 535
+      }
+    },
+    {
+      "path": "test/sources/sentiment/imdb.jsonl",
+      "records": 4985,
+      "questions": 4985,
+      "types": {
+        "noul": 4985
+      },
+      "noul_true_rate": 0.498,
+      "first_option_rate": null,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 213,
+        "p99": 1110,
+        "max": 2763
+      }
+    },
+    {
+      "path": "test/sources/sentiment/sst5.jsonl",
+      "records": 2130,
+      "questions": 2130,
+      "types": {
+        "score": 2130
+      },
+      "noul_true_rate": null,
+      "first_option_rate": null,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 21,
+        "p99": 51,
+        "max": 63
+      }
+    },
+    {
+      "path": "test/sources/sentiment/yelp-full.jsonl",
+      "records": 4995,
+      "questions": 4995,
+      "types": {
+        "score": 4995
+      },
+      "noul_true_rate": null,
+      "first_option_rate": null,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 127,
+        "p99": 803,
+        "max": 1362
+      }
+    },
+    {
+      "path": "test/sources/tools/glaive-function-calling.jsonl",
+      "records": 3763,
+      "questions": 5167,
+      "types": {
+        "noul": 3763,
+        "choice": 1404
+      },
+      "noul_true_rate": 0.508,
+      "first_option_rate": 0.364,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 61,
+        "p99": 107,
+        "max": 134
+      }
+    },
+    {
+      "path": "test/sources/topic/ag-news.jsonl",
+      "records": 4945,
+      "questions": 4945,
+      "types": {
+        "choice": 4945
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.252,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 49,
+        "p99": 103,
+        "max": 218
+      }
+    },
+    {
+      "path": "test/sources/topic/dbpedia14.jsonl",
+      "records": 4992,
+      "questions": 4992,
+      "types": {
+        "choice": 4992
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.066,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 68,
+        "p99": 138,
+        "max": 274
+      }
+    },
+    {
+      "path": "test/sources/topic/trec.jsonl",
+      "records": 419,
+      "questions": 419,
+      "types": {
+        "choice": 419
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.019,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 8,
+        "p99": 16,
+        "max": 21
+      }
+    },
+    {
+      "path": "test/sources/transfer/emotion.jsonl",
+      "records": 1857,
+      "questions": 1857,
+      "types": {
+        "choice": 1857
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.29,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 18,
+        "p99": 52,
+        "max": 62
+      }
+    },
+    {
+      "path": "test/sources/transfer/mmlu-pro.jsonl",
+      "records": 4876,
+      "questions": 4876,
+      "types": {
+        "choice": 4876
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.114,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 48,
+        "p99": 351,
+        "max": 1524
+      }
+    },
+    {
+      "path": "test/sources/transfer/mmlu.jsonl",
+      "records": 4910,
+      "questions": 4910,
+      "types": {
+        "choice": 4910
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.236,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 32,
+        "p99": 419,
+        "max": 952
+      }
+    },
+    {
+      "path": "test/sources/transfer/paws.jsonl",
+      "records": 4864,
+      "questions": 4864,
+      "types": {
+        "noul": 4864
+      },
+      "noul_true_rate": 0.434,
+      "first_option_rate": null,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 27,
+        "p99": 48,
+        "max": 65
+      }
+    },
+    {
+      "path": "test/sources/transfer/qnli.jsonl",
+      "records": 4763,
+      "questions": 4763,
+      "types": {
+        "noul": 4763
+      },
+      "noul_true_rate": 0.496,
+      "first_option_rate": null,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 33,
+        "p99": 103,
+        "max": 237
+      }
+    },
+    {
+      "path": "test/sources/transfer/sciq.jsonl",
+      "records": 859,
+      "questions": 859,
+      "types": {
+        "choice": 859
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.247,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 84,
+        "p99": 500,
+        "max": 655
+      }
+    },
+    {
+      "path": "test/sources/transfer/tweeteval-offensive.jsonl",
+      "records": 707,
+      "questions": 707,
+      "types": {
+        "noul": 707
+      },
+      "noul_true_rate": 0.269,
+      "first_option_rate": null,
+      "soft_targets": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 33,
+        "p99": 86,
+        "max": 125
+      }
+    },
+    {
+      "path": "test/transfer.jsonl",
+      "records": 764,
+      "questions": 764,
+      "types": {
+        "choice": 444,
+        "noul": 280,
+        "score": 40
+      },
+      "noul_true_rate": 0.414,
+      "first_option_rate": 0.232,
+      "soft_targets": 0,
+      "duplicates": 25,
+      "state_tokens": {
+        "median": 43,
+        "p99": 299,
+        "max": 338
+      }
+    }
+  ],
+  "sources": {
+    "sources/eval/breadth/arts/cfcolor": {
+      "files": 1,
+      "rows": 0
+    },
+    "sources/eval/breadth/arts/humicroedit": {
+      "files": 1,
+      "rows": 0
+    },
+    "sources/eval/breadth/knowledge/chessbench": {
+      "files": 1,
+      "rows": 0
+    },
+    "sources/eval/breadth/knowledge/musr": {
+      "files": 3,
+      "rows": 756
+    },
+    "sources/eval/breadth/knowledge/sata-bench": {
+      "files": 1,
+      "rows": 1604
+    },
+    "sources/eval/breadth/language/contractnli": {
+      "files": 1,
+      "rows": 0
+    },
+    "sources/eval/breadth/language/hellaswag": {
+      "files": 1,
+      "rows": 10042
+    },
+    "sources/eval/breadth/retrieval/bright": {
+      "files": 14,
+      "rows": 512246
+    },
+    "sources/eval/breadth/retrieval/clinc150": {
+      "files": 3,
+      "rows": 8610
+    },
+    "sources/eval/breadth/retrieval/sgd": {
+      "files": 1,
+      "rows": 0
+    },
+    "sources/eval/breadth/tools/apibank": {
+      "files": 1,
+      "rows": 399
+    },
+    "sources/eval/breadth/tools/bfcl": {
+      "files": 18,
+      "rows": 5824
+    },
+    "sources/eval/breadth/tools/routerbench": {
+      "files": 1,
+      "rows": 0
+    },
+    "sources/eval/breadth/tools/toolret-queries": {
+      "files": 33,
+      "rows": 6860
+    },
+    "sources/eval/breadth/tools/toolret-tools": {
+      "files": 3,
+      "rows": 44453
+    },
+    "sources/eval/devtools/prompt-injection-deepset": {
+      "files": 2,
+      "rows": 662
+    },
+    "sources/eval/devtools/prompt-injection-gandalf": {
+      "files": 3,
+      "rows": 1000
+    },
+    "sources/eval/devtools/when2call": {
+      "files": 1,
+      "rows": 3652
+    },
+    "sources/eval/transfer/emotion": {
+      "files": 3,
+      "rows": 20000
+    },
+    "sources/eval/transfer/mmlu": {
+      "files": 3,
+      "rows": 15858
+    },
+    "sources/eval/transfer/mmlu-pro": {
+      "files": 2,
+      "rows": 12102
+    },
+    "sources/eval/transfer/paws": {
+      "files": 3,
+      "rows": 65401
+    },
+    "sources/eval/transfer/qnli": {
+      "files": 3,
+      "rows": 115669
+    },
+    "sources/eval/transfer/sciq": {
+      "files": 3,
+      "rows": 13679
+    },
+    "sources/eval/transfer/tweeteval-offensive": {
+      "files": 3,
+      "rows": 14100
+    },
+    "sources/train/intent/banking77": {
+      "files": 2,
+      "rows": 13083
+    },
+    "sources/train/intent/massive-en": {
+      "files": 3,
+      "rows": 16521
+    },
+    "sources/train/knowledge/arc": {
+      "files": 6,
+      "rows": 7787
+    },
+    "sources/train/knowledge/commonsenseqa": {
+      "files": 3,
+      "rows": 12102
+    },
+    "sources/train/knowledge/openbookqa": {
+      "files": 3,
+      "rows": 5957
+    },
+    "sources/train/knowledge/qasc": {
+      "files": 3,
+      "rows": 9980
+    },
+    "sources/train/reading/boolq": {
+      "files": 2,
+      "rows": 12697
+    },
+    "sources/train/reading/multinli": {
+      "files": 3,
+      "rows": 412349
+    },
+    "sources/train/safety/aart-filter": {
+      "files": 1,
+      "rows": 3269
+    },
+    "sources/train/safety/aegis": {
+      "files": 3,
+      "rows": 28216
+    },
+    "sources/train/sentiment/amazon-reviews": {
+      "files": 3,
+      "rows": 210000
+    },
+    "sources/train/sentiment/imdb": {
+      "files": 2,
+      "rows": 50000
+    },
+    "sources/train/sentiment/sst5": {
+      "files": 3,
+      "rows": 11855
+    },
+    "sources/train/sentiment/yelp-full": {
+      "files": 2,
+      "rows": 700000
+    },
+    "sources/train/tools/glaive-function-calling": {
+      "files": 1,
+      "rows": 112960
+    },
+    "sources/train/topic/ag-news": {
+      "files": 2,
+      "rows": 127600
+    },
+    "sources/train/topic/dbpedia14": {
+      "files": 2,
+      "rows": 630000
+    },
+    "sources/train/topic/trec": {
+      "files": 2,
+      "rows": 5952
+    }
+  },
+  "findings": [
+    {
+      "level": "warning",
+      "where": "train/core.jsonl",
+      "message": "420 records repeat another record exactly"
+    },
+    {
+      "level": "warning",
+      "where": "calibration/core.jsonl",
+      "message": "60 records repeat another record exactly"
+    },
+    {
+      "level": "warning",
+      "where": "calibration/heldout.jsonl",
+      "message": "12 records repeat another record exactly"
+    },
+    {
+      "level": "warning",
+      "where": "calibration/heldout.jsonl",
+      "message": "same question, different labels: 18 unknowable"
+    },
+    {
+      "level": "warning",
+      "where": "dev/core.jsonl",
+      "message": "37 records repeat another record exactly"
+    },
+    {
+      "level": "warning",
+      "where": "dev/probes.jsonl",
+      "message": "28 records repeat another record exactly"
+    },
+    {
+      "level": "warning",
+      "where": "dev/probes.jsonl",
+      "message": "same question, different labels: 29 unknowable"
+    },
+    {
+      "level": "warning",
+      "where": "dev/sources/devtools/prompt-injection.jsonl",
+      "message": "noul labels are 79% true"
+    },
+    {
+      "level": "warning",
+      "where": "dev/transfer.jsonl",
+      "message": "26 records repeat another record exactly"
+    },
+    {
+      "level": "warning",
+      "where": "test/core.jsonl",
+      "message": "6 records repeat another record exactly"
+    },
+    {
+      "level": "warning",
+      "where": "test/probes.jsonl",
+      "message": "25 records repeat another record exactly"
+    },
+    {
+      "level": "warning",
+      "where": "test/probes.jsonl",
+      "message": "same question, different labels: 30 unknowable"
+    },
+    {
+      "level": "warning",
+      "where": "test/sources/devtools/prompt-injection.jsonl",
+      "message": "noul labels are 77% true"
+    },
+    {
+      "level": "warning",
+      "where": "test/transfer.jsonl",
+      "message": "25 records repeat another record exactly"
+    },
+    {
+      "level": "warning",
+      "where": "calibration/core.jsonl x dev/probes.jsonl",
+      "message": "1 identical questions on identical states"
+    },
+    {
+      "level": "warning",
+      "where": "dev/probes.jsonl x test/probes.jsonl",
+      "message": "1 identical questions on identical states"
+    },
+    {
+      "level": "warning",
+      "where": "dev/probes.jsonl",
+      "message": "held-out set has questions from trained generators: 180 unknowable"
+    },
+    {
+      "level": "warning",
+      "where": "test/probes.jsonl",
+      "message": "held-out set has questions from trained generators: 180 unknowable"
+    },
+    {
+      "level": "warning",
+      "where": "calibration/heldout.jsonl",
+      "message": "held-out set has questions from trained generators: 108 unknowable"
+    }
+  ]
+}

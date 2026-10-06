@@ -1,0 +1,117 @@
+{
+  "entries": {
+    "raw-new/intent/massive-en": {
+      "files": {
+        "sources/train/intent/massive-en/en-US/test/0000.parquet": {
+          "bytes": 191261,
+          "sha256": "c418da9a5f3a7425b5cf44941bcea032a31040dbda2da85e0dd9323785c7731e"
+        },
+        "sources/train/intent/massive-en/en-US/train/0000.parquet": {
+          "bytes": 676404,
+          "sha256": "9c8b3ce8a96ec3b0d4aee104d8778d9f6bacdbd18f2cea232f6d8333d24401b1"
+        },
+        "sources/train/intent/massive-en/en-US/validation/0000.parquet": {
+          "bytes": 139770,
+          "sha256": "cf22bf142963c86ee164c5bb1fe22c67c1261df5c52dfd7217ea87b977c7bb43"
+        }
+      },
+      "source": "hf://datasets/AmazonScience/massive@ed58ac423a2f4121720918bf5301577edce4ffd3",
+      "use": "trainable"
+    },
+    "raw-new/knowledge/arc": {
+      "files": {
+        "sources/train/knowledge/arc/ARC-Challenge/test-00000-of-00001.parquet": {
+          "bytes": 203808,
+          "sha256": "62f03257e737aed263f55c6abf87c7bb0028a44a6bdd2a26eb1279eb42c1d1e9"
+        },
+        "sources/train/knowledge/arc/ARC-Challenge/train-00000-of-00001.parquet": {
+          "bytes": 189909,
+          "sha256": "e488c1587ffdcfc8443f916c53488a95cd471c5790e0746c6bfe4cecf20962cb"
+        },
+        "sources/train/knowledge/arc/ARC-Challenge/validation-00000-of-00001.parquet": {
+          "bytes": 55743,
+          "sha256": "395a5c88d1580d69855fbaee9450270578df1ad5af6259771cd0a42c20e99f05"
+        },
+        "sources/train/knowledge/arc/ARC-Easy/test-00000-of-00001.parquet": {
+          "bytes": 346257,
+          "sha256": "4160597d618ae851c7eb04e281574f3f654776216ac6b6641588d64527b47177"
+        },
+        "sources/train/knowledge/arc/ARC-Easy/train-00000-of-00001.parquet": {
+          "bytes": 330598,
+          "sha256": "b315db8a4be597dc7daa50a4e70d48dd7c990c32085629e6ccd8c926beaa80b5"
+        },
+        "sources/train/knowledge/arc/ARC-Easy/validation-00000-of-00001.parquet": {
+          "bytes": 86080,
+          "sha256": "ed890ff1e4cef7a7140d3a30dcea3ed2c9d467c6458f447ad9ef0176d8dcbb74"
+        }
+      },
+      "source": "hf://datasets/allenai/ai2_arc@210d026faf9955653af8916fad021475a3f00453",
+      "use": "trainable"
+    },
+    "raw-new/knowledge/commonsenseqa": {
+      "files": {
+        "sources/train/knowledge/commonsenseqa/data/test-00000-of-00001.parquet": {
+          "bytes": 151227,
+          "sha256": "19efe93223d1712397aaa44b3adc07f4fa50349206a611ca4f33afbec661fa5e"
+        },
+        "sources/train/knowledge/commonsenseqa/data/train-00000-of-00001.parquet": {
+          "bytes": 1247103,
+          "sha256": "b0449767ed986bfc2ca52b1244a46ef12f732756727f3cb0a4ab69ac8b3d282b"
+        },
+        "sources/train/knowledge/commonsenseqa/data/validation-00000-of-00001.parquet": {
+          "bytes": 160240,
+          "sha256": "bdbd9bf9cc4d2349b24901038b2ab2f58e10e4e507ad2fd425dca55cd3cb6660"
+        }
+      },
+      "source": "hf://datasets/tau/commonsense_qa@94630fe30dad47192a8546eb75f094926d47e155",
+      "use": "trainable"
+    },
+    "raw-new/knowledge/openbookqa": {
+      "files": {
+        "sources/train/knowledge/openbookqa/main/test-00000-of-00001.parquet": {
+          "bytes": 55535,
+          "sha256": "cd5483e366daa230c1c87bbdc512d8b7229f14f6dd04d19fc8b1a3855aaaa8a3"
+        },
+        "sources/train/knowledge/openbookqa/main/train-00000-of-00001.parquet": {
+          "bytes": 495845,
+          "sha256": "98148f8a54e62eb862346a75192d5fb824d6cbb68f2f59aecd793d39ecb5cd8b"
+        },
+        "sources/train/knowledge/openbookqa/main/validation-00000-of-00001.parquet": {
+          "bytes": 58233,
+          "sha256": "35370b9cfee8c1ff325ccc74adc434d12c47ca0ac3244aa87f3fa77069285206"
+        }
+      },
+      "source": "hf://datasets/allenai/openbookqa@388097ea7776314e93a529163e0fea805b8a6454",
+      "use": "trainable"
+    },
+    "raw-new/knowledge/qasc": {
+      "files": {
+        "sources/train/knowledge/qasc/data/test-00000-of-00001.parquet": {
+          "bytes": 158241,
+          "sha256": "495cfbd17abc1720b54785cdce68825104aaf60d7b8bdb2acac62157a31eb517"
+        },
+        "sources/train/knowledge/qasc/data/train-00000-of-00001.parquet": {
+          "bytes": 1967904,
+          "sha256": "b9a297b5ab55f1605c7682ffbb7042c26d7ecb9ff1e1aa5a820d4e791c8302d1"
+        },
+        "sources/train/knowledge/qasc/data/validation-00000-of-00001.parquet": {
+          "bytes": 223553,
+          "sha256": "d1ae34ae13c5fce2c55305372c203c6cdb789728d0d7e5ea2956d55bc33f40ae"
+        }
+      },
+      "source": "hf://datasets/allenai/qasc@a34ba204eb9a33b919c10cc08f4f1c8dae5ec070",
+      "use": "trainable"
+    },
+    "raw-new/tools/glaive-function-calling": {
+      "files": {
+        "sources/train/tools/glaive-function-calling/glaive-function-calling-v2.json": {
+          "bytes": 271190065,
+          "sha256": "e9b5d671812b5ca2fbd7b625a37d5c99a19576c37252cdc806defe256aea6dad"
+        }
+      },
+      "source": "hf://datasets/glaiveai/glaive-function-calling-v2@e7f4b6456019f5d8bcb991ef0dd67d8ff23221ac",
+      "use": "trainable"
+    }
+  },
+  "root": "data"
+}

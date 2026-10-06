@@ -1,0 +1,275 @@
+{
+  "entries": {
+    "suites/core/calibration": {
+      "files": {
+        "calibration/core.jsonl": {
+          "bytes": 1449835,
+          "sha256": "12c2029a07d24828f5f8cc48f09f572c81457de96f3d5d16180be4c090abd5ca"
+        }
+      },
+      "source": "hf://datasets/jaredpalmer/kev-suites@cc4bac803e73112689ec327ffa481c519cbc7a05",
+      "use": "calibration"
+    },
+    "suites/core/dev": {
+      "files": {
+        "dev/core.jsonl": {
+          "bytes": 1763325,
+          "sha256": "8d5765d7aec4d08c61854f4664ca79ec2ba44ed092e9b967eaf61ed86c496d9c"
+        }
+      },
+      "source": "hf://datasets/jaredpalmer/kev-suites@cc4bac803e73112689ec327ffa481c519cbc7a05",
+      "use": "development"
+    },
+    "suites/core/manifests": {
+      "files": {
+        "manifests/core.json": {
+          "bytes": 7234,
+          "sha256": "a8f50e481b7d90b97da049e0ff6a01cee2f1ed204aed61a8265af0edbb5514d2"
+        }
+      },
+      "source": "hf://datasets/jaredpalmer/kev-suites@cc4bac803e73112689ec327ffa481c519cbc7a05",
+      "use": "metadata"
+    },
+    "suites/core/test": {
+      "files": {
+        "test/core.jsonl": {
+          "bytes": 1705815,
+          "sha256": "cd7d129a84232e0c7a4e92b4840a6dfe14c8bb93c5d1904b526fa8c085325d2d"
+        }
+      },
+      "source": "hf://datasets/jaredpalmer/kev-suites@cc4bac803e73112689ec327ffa481c519cbc7a05",
+      "use": "test"
+    },
+    "suites/core/train": {
+      "files": {
+        "train/core.jsonl": {
+          "bytes": 18679889,
+          "sha256": "7ed5254b5cb5291baefaceb09edf7e13110258211518c8038f4a12c11bd628ad"
+        }
+      },
+      "source": "hf://datasets/jaredpalmer/kev-suites@cc4bac803e73112689ec327ffa481c519cbc7a05",
+      "use": "train"
+    },
+    "suites/dates-unknowable/manifests": {
+      "files": {
+        "manifests/dates-unknowable.json": {
+          "bytes": 1091,
+          "sha256": "520b5d95e877fa972ac24d5c137c6b1e602fec709b935913dab86e40c83a34d1"
+        }
+      },
+      "source": "https://raw.githubusercontent.com/jaredpalmer/kev/fe64b1274ea7f80d4095866df90666abb03e9cf6/evals/night2/manifest.json",
+      "use": "metadata"
+    },
+    "suites/dates-unknowable/train": {
+      "files": {
+        "train/dates-unknowable.jsonl": {
+          "bytes": 1785762,
+          "sha256": "afd8502d162163605ac446439e32c7b9083302dd78a6bfdc5e30075619e98437"
+        }
+      },
+      "source": "https://raw.githubusercontent.com/jaredpalmer/kev/fe64b1274ea7f80d4095866df90666abb03e9cf6/evals/night2/dates_unknowable.jsonl",
+      "use": "train"
+    },
+    "suites/devtools/dev": {
+      "files": {
+        "dev/devtools.jsonl": {
+          "bytes": 1731002,
+          "sha256": "3df3aa83890c43db65ac73b5bb6e4fbb1466362fc1a25dbd383d4d2edd0a1fe6"
+        }
+      },
+      "source": "https://raw.githubusercontent.com/jaredpalmer/kev/fe64b1274ea7f80d4095866df90666abb03e9cf6/evals/devtools-v1/development.jsonl",
+      "use": "development"
+    },
+    "suites/devtools/manifests": {
+      "files": {
+        "manifests/devtools.json": {
+          "bytes": 23983,
+          "sha256": "d0f7cf40cec3284684f8b2fe8f440a5f0cc40fe4a78db108eca47a5fbd141b0f"
+        }
+      },
+      "source": "https://raw.githubusercontent.com/jaredpalmer/kev/fe64b1274ea7f80d4095866df90666abb03e9cf6/evals/devtools-v1/manifest.json",
+      "use": "metadata"
+    },
+    "suites/devtools/test": {
+      "files": {
+        "test/devtools.jsonl": {
+          "bytes": 1686530,
+          "sha256": "2fb7c2a239fef923bcb62c0eee9d6884a608ce30e5e74a4e6b9082787679767f"
+        }
+      },
+      "source": "https://raw.githubusercontent.com/jaredpalmer/kev/fe64b1274ea7f80d4095866df90666abb03e9cf6/evals/devtools-v1/test.jsonl",
+      "use": "test"
+    },
+    "suites/devtools/train": {
+      "files": {
+        "train/devtools.jsonl": {
+          "bytes": 8924680,
+          "sha256": "587682c145cbbc0c8c990e9d649da7b972853a9eaaef71e9b7b0fa18163b962c"
+        }
+      },
+      "source": "https://raw.githubusercontent.com/jaredpalmer/kev/fe64b1274ea7f80d4095866df90666abb03e9cf6/evals/devtools-v1/train.jsonl",
+      "use": "train"
+    },
+    "suites/documents/dev": {
+      "files": {
+        "dev/documents.jsonl": {
+          "bytes": 2646569,
+          "sha256": "bfca7b41b0d8553b03f9781f48c942dfea368ce19b8508794316e555de8280f5"
+        }
+      },
+      "source": "https://raw.githubusercontent.com/jaredpalmer/kev/fe64b1274ea7f80d4095866df90666abb03e9cf6/evals/documents-v1/development.jsonl",
+      "use": "development"
+    },
+    "suites/documents/manifests": {
+      "files": {
+        "manifests/documents.json": {
+          "bytes": 9206,
+          "sha256": "711903d1241cadbfb9e0a20c93d978762123dcbec0108de9c539a60a753cf8d2"
+        }
+      },
+      "source": "https://raw.githubusercontent.com/jaredpalmer/kev/fe64b1274ea7f80d4095866df90666abb03e9cf6/evals/documents-v1/manifest.json",
+      "use": "metadata"
+    },
+    "suites/documents/test": {
+      "files": {
+        "test/documents.jsonl": {
+          "bytes": 2533323,
+          "sha256": "742d04a1abc2207bd3e4f24b281f483cdc69238e4da747cbbc3774e836f2e557"
+        }
+      },
+      "source": "https://raw.githubusercontent.com/jaredpalmer/kev/fe64b1274ea7f80d4095866df90666abb03e9cf6/evals/documents-v1/test.jsonl",
+      "use": "test"
+    },
+    "suites/documents/train": {
+      "files": {
+        "train/documents.jsonl": {
+          "bytes": 23268481,
+          "sha256": "2d7e4c4360d642a382d55425d7f34ffa2f46d00ca39a9bae31acaf82b178ee69"
+        }
+      },
+      "source": "hf://datasets/jaredpalmer/kev-suites@cc4bac803e73112689ec327ffa481c519cbc7a05",
+      "use": "train"
+    },
+    "suites/heldout/calibration": {
+      "files": {
+        "calibration/heldout.jsonl": {
+          "bytes": 645558,
+          "sha256": "cd7e41d744476a231424bcb4883ecb011aa51c23318862f4641e86f3c4b83c28"
+        }
+      },
+      "source": "hf://datasets/jaredpalmer/kev-suites@cc4bac803e73112689ec327ffa481c519cbc7a05",
+      "use": "calibration"
+    },
+    "suites/heldout/manifests": {
+      "files": {
+        "manifests/heldout.json": {
+          "bytes": 13439,
+          "sha256": "5da4db16af3f1eac93c24443e3aa039e375af0764d7f401da303de24a67f19f0"
+        }
+      },
+      "source": "hf://datasets/jaredpalmer/kev-suites@cc4bac803e73112689ec327ffa481c519cbc7a05",
+      "use": "metadata"
+    },
+    "suites/probes/dev": {
+      "files": {
+        "dev/probes.jsonl": {
+          "bytes": 1424590,
+          "sha256": "53872ba045564315cf3c3dd8fb656e76441c6c514b1a7ff985ff0db3955710cf"
+        }
+      },
+      "source": "hf://datasets/jaredpalmer/kev-suites@cc4bac803e73112689ec327ffa481c519cbc7a05",
+      "use": "development"
+    },
+    "suites/probes/manifests": {
+      "files": {
+        "manifests/probes.json": {
+          "bytes": 5433,
+          "sha256": "3c4f0be94509a3612678bfd3a30fd99a8d0ca3c47ddfe7318075d95b2fa365e4"
+        }
+      },
+      "source": "hf://datasets/jaredpalmer/kev-suites@cc4bac803e73112689ec327ffa481c519cbc7a05",
+      "use": "metadata"
+    },
+    "suites/probes/test": {
+      "files": {
+        "test/probes.jsonl": {
+          "bytes": 1428328,
+          "sha256": "048abea5e12c73c3a622ce5836898c00fa43766e0bf48fb2459e77ee9873497f"
+        }
+      },
+      "source": "hf://datasets/jaredpalmer/kev-suites@cc4bac803e73112689ec327ffa481c519cbc7a05",
+      "use": "test"
+    },
+    "suites/skills/dev": {
+      "files": {
+        "dev/skills.jsonl": {
+          "bytes": 2633546,
+          "sha256": "3cdbf12a6b7c3b70c73e8c39f2677127ea61ef32f0ea75b55a43556d884b2d98"
+        }
+      },
+      "source": "https://raw.githubusercontent.com/jaredpalmer/kev/fe64b1274ea7f80d4095866df90666abb03e9cf6/evals/hard-v1/development.jsonl",
+      "use": "development"
+    },
+    "suites/skills/manifests": {
+      "files": {
+        "manifests/skills.json": {
+          "bytes": 28284,
+          "sha256": "9d8dd335f5a73840b144c987ee91bb0513301128c474a7a4cd3f754a130cfa5c"
+        }
+      },
+      "source": "https://raw.githubusercontent.com/jaredpalmer/kev/fe64b1274ea7f80d4095866df90666abb03e9cf6/evals/hard-v1/manifest.json",
+      "use": "metadata"
+    },
+    "suites/skills/test": {
+      "files": {
+        "test/skills.jsonl": {
+          "bytes": 2598306,
+          "sha256": "246ee92234d33f8e3f10ac6e1542651531b128fd7cc66f3a9964589b77dfa22b"
+        }
+      },
+      "source": "https://raw.githubusercontent.com/jaredpalmer/kev/fe64b1274ea7f80d4095866df90666abb03e9cf6/evals/hard-v1/test.jsonl",
+      "use": "test"
+    },
+    "suites/skills/train": {
+      "files": {
+        "train/skills.jsonl": {
+          "bytes": 23118561,
+          "sha256": "a08ca9c5ba5d365967876d7d88753cf876624be8553df5af3dca8973e4a1aa4d"
+        }
+      },
+      "source": "hf://datasets/jaredpalmer/kev-suites@cc4bac803e73112689ec327ffa481c519cbc7a05",
+      "use": "train"
+    },
+    "suites/transfer/dev": {
+      "files": {
+        "dev/transfer.jsonl": {
+          "bytes": 803309,
+          "sha256": "ff374c49c6c9f15f8a56fb274b4a4857d20497eb8dd1ac07ce01560e682a5f2e"
+        }
+      },
+      "source": "hf://datasets/jaredpalmer/kev-suites@cc4bac803e73112689ec327ffa481c519cbc7a05",
+      "use": "development"
+    },
+    "suites/transfer/manifests": {
+      "files": {
+        "manifests/transfer.json": {
+          "bytes": 6421,
+          "sha256": "31677c2256b406222e7d94ffdc0a02a70ce05746b9efe307876024c4e77291d1"
+        }
+      },
+      "source": "hf://datasets/jaredpalmer/kev-suites@cc4bac803e73112689ec327ffa481c519cbc7a05",
+      "use": "metadata"
+    },
+    "suites/transfer/test": {
+      "files": {
+        "test/transfer.jsonl": {
+          "bytes": 803960,
+          "sha256": "c30a91274f9b483aac9e4f02ada5dea953b3f1a2829456e0bc07806c4e73b517"
+        }
+      },
+      "source": "hf://datasets/jaredpalmer/kev-suites@cc4bac803e73112689ec327ffa481c519cbc7a05",
+      "use": "test"
+    }
+  },
+  "root": "data"
+}

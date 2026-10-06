@@ -1,0 +1,185 @@
+{
+  "entries": {
+    "raw-train/intent/banking77": {
+      "files": {
+        "sources/train/intent/banking77/data/test-00000-of-00001.parquet": {
+          "bytes": 93870,
+          "sha256": "318da70fb77a0e01bcfaecc97ef6e3645313aab98c429f0f0630c9d48e703ecc"
+        },
+        "sources/train/intent/banking77/data/train-00000-of-00001.parquet": {
+          "bytes": 298170,
+          "sha256": "3c648a31689f4ab3acbd4f4f4d120944bb521cf6ba57da77aa87c57e8979be81"
+        }
+      },
+      "source": "hf://datasets/legacy-datasets/banking77@f54121560de48f2852f90be299010d1d6dc612ec",
+      "use": "trainable"
+    },
+    "raw-train/reading/boolq": {
+      "files": {
+        "sources/train/reading/boolq/data/train-00000-of-00001.parquet": {
+          "bytes": 3685146,
+          "sha256": "4f028e992c0bd4df30b9f056f4946b64f5c23028034ff0ed5ea467d8538cc623"
+        },
+        "sources/train/reading/boolq/data/validation-00000-of-00001.parquet": {
+          "bytes": 1257630,
+          "sha256": "52355d11524b4b874a9b9dcc278feb10f672d52c4f4eff9872e695ede59820f8"
+        }
+      },
+      "source": "hf://datasets/google/boolq@35b264d03638db9f4ce671b711558bf7ff0f80d5",
+      "use": "trainable"
+    },
+    "raw-train/reading/multinli": {
+      "files": {
+        "sources/train/reading/multinli/data/train-00000-of-00001.parquet": {
+          "bytes": 213961663,
+          "sha256": "1c1de03640b168e410aabfca19e7cc2f3dfcd7f0e126e935674e56fb102c4529"
+        },
+        "sources/train/reading/multinli/data/validation_matched-00000-of-00001.parquet": {
+          "bytes": 4938568,
+          "sha256": "350c26950b55f460b50d36c76aef87d64b49c78812d7abf7bf97e5fede10f186"
+        },
+        "sources/train/reading/multinli/data/validation_mismatched-00000-of-00001.parquet": {
+          "bytes": 5104992,
+          "sha256": "6b0e1231cebedd255000a7d1732af37ad0500902239db625e231ed77c0c8f2f8"
+        }
+      },
+      "source": "hf://datasets/nyu-mll/multi_nli@da70db2af9d09693783c3320c4249840212ee221",
+      "use": "trainable"
+    },
+    "raw-train/safety/aart-filter": {
+      "files": {
+        "sources/train/safety/aart-filter/data/train-00000-of-00001.parquet": {
+          "bytes": 453726,
+          "sha256": "d22e3a35637a129bbffa6055a9ae83df1327f373ea22ef6f3cfa1c2d17eba0f1"
+        }
+      },
+      "source": "hf://datasets/walledai/AART@dd98454c52d34e860f5927625a3989edd5617d78",
+      "use": "metadata"
+    },
+    "raw-train/safety/aegis": {
+      "files": {
+        "sources/train/safety/aegis/test.json": {
+          "bytes": 1731373,
+          "sha256": "b0a6d602260524866053cb34105194f074f2c2906e3691b68d43b9e6e9318f35"
+        },
+        "sources/train/safety/aegis/train.json": {
+          "bytes": 22705956,
+          "sha256": "154fba82c71d9fa73abd2ca5588a198e693ddc816c83444df180a22f613e02f6"
+        },
+        "sources/train/safety/aegis/validation.json": {
+          "bytes": 1137821,
+          "sha256": "a97200e226ad4f6ba6a639982f817f675909bc74513859df3e8fc9a92951dfcd"
+        }
+      },
+      "source": "hf://datasets/nvidia/Aegis-AI-Content-Safety-Dataset-2.0@d86bb8bedff51d25ac834ab7838f1cc61acb7a2c",
+      "use": "trainable"
+    },
+    "raw-train/sentiment/amazon-reviews": {
+      "files": {
+        "sources/train/sentiment/amazon-reviews/test.jsonl": {
+          "bytes": 1180425,
+          "sha256": "64827868be6aeb86959e283bc9ae94f5c515ca2fa334c698c3cb5c4a36395029"
+        },
+        "sources/train/sentiment/amazon-reviews/train.jsonl": {
+          "bytes": 47440116,
+          "sha256": "52543b9175d517ec686ebc5bf76a05e22128fd184068b37c682486f109ca99f0"
+        },
+        "sources/train/sentiment/amazon-reviews/validation.jsonl": {
+          "bytes": 1194341,
+          "sha256": "5b0bf7d2645291d06e0046c09d62a57d59949a48810bc128749f08e80cfd46a4"
+        }
+      },
+      "source": "hf://datasets/SetFit/amazon_reviews_multi_en@ec73b665e4be0f567b69d39425355401cfe0d29b",
+      "use": "trainable"
+    },
+    "raw-train/sentiment/imdb": {
+      "files": {
+        "sources/train/sentiment/imdb/plain_text/test-00000-of-00001.parquet": {
+          "bytes": 20470363,
+          "sha256": "b52e26e2f872d282ffac460bf9770b25ac6f102cda0e6ca7158df98c94e8b3da"
+        },
+        "sources/train/sentiment/imdb/plain_text/train-00000-of-00001.parquet": {
+          "bytes": 20979968,
+          "sha256": "db47d16b5c297cc0dd625e519c81319c24c9149e70e8496de5475f6fa928342c"
+        }
+      },
+      "source": "hf://datasets/stanfordnlp/imdb@e6281661ce1c48d982bc483cf8a173c1bbeb5d31",
+      "use": "trainable"
+    },
+    "raw-train/sentiment/sst5": {
+      "files": {
+        "sources/train/sentiment/sst5/dev.jsonl": {
+          "bytes": 171422,
+          "sha256": "4369df4d4229e736fa734af49b342c7d6002c4d8514d9c206a5aa26edc620b79"
+        },
+        "sources/train/sentiment/sst5/test.jsonl": {
+          "bytes": 342783,
+          "sha256": "1384216112a34f3d70b6fa210762f3399bb080410c0456ac6e54a5cb413f04b2"
+        },
+        "sources/train/sentiment/sst5/train.jsonl": {
+          "bytes": 1323698,
+          "sha256": "46bde4fb5abc93ffbadfa9a9f67de17c08a2f535cfb5756c59188d070434f433"
+        }
+      },
+      "source": "hf://datasets/SetFit/sst5@e51bdcd8cd3a30da231967c1a249ba59361279a3",
+      "use": "trainable"
+    },
+    "raw-train/sentiment/yelp-full": {
+      "files": {
+        "sources/train/sentiment/yelp-full/yelp_review_full/test-00000-of-00001.parquet": {
+          "bytes": 23515519,
+          "sha256": "bf06d5969bff93ecd4a6d4b330643761ce108b42e9b8a894cf82c9df02a08540"
+        },
+        "sources/train/sentiment/yelp-full/yelp_review_full/train-00000-of-00001.parquet": {
+          "bytes": 299436850,
+          "sha256": "da3ca3dcc52b1e2e44195b53668610d645a59010a985dd45aa12e1109cd44601"
+        }
+      },
+      "source": "hf://datasets/Yelp/yelp_review_full@c1f9ee939b7d05667af864ee1cb066393154bf85",
+      "use": "trainable"
+    },
+    "raw-train/topic/ag-news": {
+      "files": {
+        "sources/train/topic/ag-news/data/test-00000-of-00001.parquet": {
+          "bytes": 1234829,
+          "sha256": "71de87ec66bc5737752a2502204dfa6d7fe9856ade3ea444dc6317789a4f13fb"
+        },
+        "sources/train/topic/ag-news/data/train-00000-of-00001.parquet": {
+          "bytes": 18585438,
+          "sha256": "fc508d6d9868594e3da960a8cfeb63ab5a4746598b93428c224397080c1f52ee"
+        }
+      },
+      "source": "hf://datasets/fancyzhx/ag_news@eb185aade064a813bc0b7f42de02595523103ca4",
+      "use": "trainable"
+    },
+    "raw-train/topic/dbpedia14": {
+      "files": {
+        "sources/train/topic/dbpedia14/dbpedia_14/test-00000-of-00001.parquet": {
+          "bytes": 13272475,
+          "sha256": "05fed41640e97f93ffd442757f6a84170348cf0c7500ecbda9e95ddcd928c631"
+        },
+        "sources/train/topic/dbpedia14/dbpedia_14/train-00000-of-00001.parquet": {
+          "bytes": 106151899,
+          "sha256": "0640e4664a99cc94c47db1d7b2e01c14455d5bbecb8183ad1f93bde59f3f28ee"
+        }
+      },
+      "source": "hf://datasets/fancyzhx/dbpedia_14@9abd46cf7fc8b4c64290f26993c540b92aa145ac",
+      "use": "trainable"
+    },
+    "raw-train/topic/trec": {
+      "files": {
+        "sources/train/topic/trec/default/test/0000.parquet": {
+          "bytes": 17084,
+          "sha256": "6aa889b0289e02760644caa22ac9aa833e79e34fb1f1ced69f745a078550c56e"
+        },
+        "sources/train/topic/trec/default/train/0000.parquet": {
+          "bytes": 213208,
+          "sha256": "5ffb07b1cbd45e47b4dd1dd113dadd19e44eb260721114c6147e0ce6c1e47590"
+        }
+      },
+      "source": "hf://datasets/CogComp/trec@65752bf53af25bc935a0dce92fb5b6c930728450",
+      "use": "trainable"
+    }
+  },
+  "root": "data"
+}
