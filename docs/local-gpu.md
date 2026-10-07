@@ -242,6 +242,7 @@ It ends with `local rehearsal passed: qwen3.5-0.8b, 1000 records a file; logs in
 | `uv run` hangs at 0% CPU | another uv process holds the lock: use `.venv/bin/den ...` |
 | a package vanished after a `uv run` | `UV_NO_SYNC=1` wasn't set: `make setup-gpu`, then the `export` in Step 2.2 |
 | `... falling back to its reference PyTorch implementation` | flash-linear-attention is missing (many times slower): send me the log |
+| `causal_conv1d_fn is falling back ...` | expected: no `causal-conv1d` wheel for torch 2.14, and the fallback is cuDNN's conv1d, at most ~10% of a step (measured on this card). Nothing to do |
 | `CUDA out of memory` | `make local-train ARGS="--max-state 4096"`, and tell me |
 | very slow on WSL2 | the repo is under `/mnt/c`: clone it into `~/` instead |
 | `merge: replaced N of M` | the adapter is fine; send me the log |
