@@ -434,6 +434,7 @@ def test_save_merged_folds_lora_into_the_base_layout(tmp_path: Path) -> None:
     save_file(weights, base / "model.safetensors")
     (base / "config.json").write_text(json.dumps({"model_type": "qwen3_5"}))
     (base / "tokenizer.json").write_text("{}")
+    (base / ".gitattributes").write_text("*.safetensors filter=lfs\n")
 
     adapted = peft.get_peft_model(base_model, peft.LoraConfig(r=2, lora_alpha=4, target_modules=["q_proj"]))
     lora: Any
@@ -453,6 +454,7 @@ def test_save_merged_folds_lora_into_the_base_layout(tmp_path: Path) -> None:
     )
     assert json.loads((tmp_path / "merged" / "config.json").read_text()) == {"model_type": "qwen3_5"}
     assert (tmp_path / "merged" / "tokenizer.json").is_file()
+    assert not (tmp_path / "merged" / ".gitattributes").exists()
 
 
 def test_evaluation_perturbations_keep_labels_true() -> None:

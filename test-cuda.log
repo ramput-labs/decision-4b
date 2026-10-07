@@ -12,4 +12,4 @@ tests/test_cuda.py::test_unsloth_qwen_lora_pointer_step
   <frozen abc>:119: FutureWarning: `torch.distributed.reduce_op` is deprecated, please use `torch.distributed.ReduceOp` instead
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-3 passed, 192 deselected, 3 warnings in 121.85s (0:02:01)
+3 passed, 193 deselected, 3 warnings in 233.14s (0:03:53)

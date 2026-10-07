@@ -25,6 +25,7 @@ def run_dir(tmp_path: Path) -> tuple[Path, Path]:
     save_file(weights, base / "model.safetensors")
     (base / "config.json").write_text(json.dumps({"model_type": "qwen3_5", "text_config": {"hidden_size": HIDDEN}}))
     (base / "tokenizer.json").write_text("{}")
+    (base / ".gitattributes").write_text("*.safetensors filter=lfs\n")  # Hub metadata: neither side's files
     shutil.copytree(base, run / "merged")
     merged = {k: v + 0.01 if "q_proj" in k else v for k, v in weights.items()}
     save_file(merged, run / "merged" / "model.safetensors")

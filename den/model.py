@@ -369,7 +369,7 @@ def save_merged(backbone: nn.Module, base: Path, out: Path) -> int:
     prefix = "model.language_model." if any(k.startswith("model.language_model.layers.") for k in names) else "model."
     out.mkdir(parents=True, exist_ok=True)
     for f in base.iterdir():
-        if f.is_file() and f.suffix != ".safetensors":
+        if f.is_file() and f.suffix != ".safetensors" and not f.name.startswith("."):  # not the Hub's .gitattributes
             shutil.copy2(f, out / f.name)
     replaced = 0
     for shard in shards:

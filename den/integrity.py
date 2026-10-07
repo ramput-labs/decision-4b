@@ -29,7 +29,13 @@ MODEL_DIRS = ("merged", "best")
 def model_files(run: Path) -> dict[str, str]:
     """sha256 of every file that makes up the model (not the card, evaluations or bundled data, which change)."""
     found = [run / name for name in MODEL_FILES if (run / name).is_file()]
-    found += [f for d in MODEL_DIRS if (run / d).is_dir() for f in sorted((run / d).rglob("*")) if f.is_file()]
+    found += [
+        f
+        for d in MODEL_DIRS
+        if (run / d).is_dir()
+        for f in sorted((run / d).rglob("*"))
+        if f.is_file() and not f.name.startswith(".")
+    ]
     return {f.relative_to(run).as_posix(): digest(f) for f in found}
 
 
@@ -52,7 +58,7 @@ def _merged(merged: Path, base: Path, modules: int) -> list[tuple[str, bool, str
 
     checks: list[tuple[str, bool, str]] = []
     base_files = {f.name for f in base.iterdir() if f.is_file() and not f.name.startswith(".")}
-    ours = {f.name for f in merged.iterdir() if f.is_file()}
+    ours = {f.name for f in merged.iterdir() if f.is_file() and not f.name.startswith(".")}
     checks.append(("merged has the base's files", base_files == ours, f"missing {sorted(base_files - ours)[:3]}, "
                    f"extra {sorted(ours - base_files)[:3]}"))  # fmt: skip
     copied = sorted(n for n in base_files & ours if not n.endswith(".safetensors"))
