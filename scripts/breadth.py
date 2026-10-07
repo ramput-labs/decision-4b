@@ -3,14 +3,15 @@
 Kev keeps breadth-v1's record files private (several sources forbid redistribution), but publishes the sha256 of both
 partitions and the script that builds them (scripts/build_breadth_v1.py at KEV_COMMIT). This is that script ported: the
 same mappings, seeds, selection and admission check, reading `data/sources/eval/breadth/` (fetched and sha256-checked by
-`make data-raw-eval`) instead of downloading. It writes `data/dev/breadth.jsonl` and `data/test/breadth.jsonl` only when
-both are byte-identical to Kev's, so our breadth numbers sit on exactly the panel Kev-4B was scored on.
+`den data raw-eval`, which `make data-download` runs) instead of downloading. It writes `data/dev/breadth.jsonl` and
+`data/test/breadth.jsonl` only when both are byte-identical to Kev's, so our breadth numbers sit on exactly the panel
+Kev-4B was scored on.
 
 Never trained on: the files sit beside Kev's suites, so `normalize` keeps their texts out of every trainable source.
-Build it before `make normalize`. Keep the logic byte-faithful to Kev's: every seed, sort and key order shows in the
-sha256.
+Build it before `make data-normalize`. Keep the logic byte-faithful to Kev's: every seed, sort and key order shows in
+the sha256.
 
-    uv run python -m scripts.breadth        # ~10 minutes (BM25 over BRIGHT); `make breadth`
+    uv run python -m scripts.breadth        # ~10 minutes (BM25 over BRIGHT); `make data-breadth`
 """
 
 from __future__ import annotations
@@ -1314,24 +1315,24 @@ def verify_raw(raw: Path, lock: Path = Path("locks/raw-eval.json")) -> None:
 
     entries = read_lock(lock)
     if entries is None:
-        raise SystemExit(f"{lock} is missing: make data-raw-eval")
+        raise SystemExit(f"{lock} is missing: make data-download")
     root = Path(entries["root"])
     files = {root / rel: f["sha256"] for e in entries["entries"].values() for rel, f in e["files"].items()}
     pinned = {path: sha for path, sha in files.items() if raw in path.parents}
     if not pinned:
         raise SystemExit(f"no breadth raw files are pinned under {raw} in {lock}")
     if bad := [str(p) for p, sha in sorted(pinned.items()) if not p.is_file() or digest(p) != sha]:
-        raise SystemExit(f"breadth raw files missing or not matching locks/ (make data-raw-eval): {bad[:5]}")
+        raise SystemExit(f"breadth raw files missing or not matching locks/ (make data-download): {bad[:5]}")
 
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="scripts.breadth")
-    p.add_argument("--raw", type=Path, default=RAW, help="the pinned breadth raw files (`make data-raw-eval`)")
+    p.add_argument("--raw", type=Path, default=RAW, help="the pinned breadth raw files (`make data-download`)")
     p.add_argument("--only", help="comma-separated datasets: a dry run that prints counts and writes nothing")
     p.add_argument("--staging", type=Path, default=Path("data/.breadth"), help="where a mismatching build is left")
     args = p.parse_args(argv)
     if not TOKENIZER.is_file():
-        raise SystemExit(f"{TOKENIZER} is missing: make model MODEL=qwen3.5-4b (Kev's admission tokenizer)")
+        raise SystemExit(f"{TOKENIZER} is missing: make data-download fetches it (Kev's admission tokenizer)")
     verify_raw(args.raw)
     only = set(args.only.split(",")) if args.only else None
     parts, report = build(args.raw, Tokenizer.from_file(str(TOKENIZER)), only)

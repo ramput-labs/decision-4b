@@ -140,7 +140,7 @@ def check(
         raise SystemExit(f"{run}: integrity.json is missing or failed (den check-run --run {run})")
     evaluated = _json(run / "eval.json")
     if not any(Path(f.split("+")[0]).parts[0] == "test" for f in evaluated):
-        raise SystemExit(f"{run}: no locked-test results in eval.json (make final-test RUN={run})")
+        raise SystemExit(f"{run}: no locked-test results in eval.json (make eval-test RUN={run})")
     if not parent:
         return {}
     previous = load(parent, root)
@@ -201,7 +201,7 @@ def main(argv: list[str] | None = None) -> int:
     c.add_argument("--run", required=True, type=Path, help="the finished run: merged, integrity-checked, tested once")
     c.add_argument("--repo", required=True, help="<org>/<name> on the Hub; every version is a tag in it")
     c.add_argument("--parent", help="the version this one continues from (its regression gate)")
-    c.add_argument("--data-repo", help="<org>/<name>@<commit> of the `make upload-data` copy it was trained from")
+    c.add_argument("--data-repo", help="<org>/<name>@<commit> of the `make data-upload` copy it was trained from")
     c.add_argument("--accept-regression", dest="accept", help="release despite dev drops above 1 point, and why")
     c.add_argument("--logs", nargs="*", type=Path, default=[])
     c.add_argument("--public", action="store_true")

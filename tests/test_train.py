@@ -243,6 +243,33 @@ def test_sample_is_seeded_and_capped(tmp_path: Path) -> None:
     assert len(sample(path, 500, seed=1)) == 50  # a cap above the file size takes everything
 
 
+@pytest.mark.skipif(not TOKENIZER.is_file(), reason="qwen3.5-4b tokenizer not downloaded")
+def test_limit_caps_every_file_for_a_rehearsal(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    import json
+    import shutil
+
+    from den.train import main
+
+    for rel in ("train/a.jsonl", "train/b.jsonl", "dev/a.jsonl", "calibration/a.jsonl"):
+        path = tmp_path / "data" / "clean" / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        rows = [{"state": f"{rel} {i}", "questions": {"q": {"type": "noul", "instructions": "?", "label": True}}}
+                for i in range(50)]  # fmt: skip
+        path.write_text("".join(json.dumps(r) + "\n" for r in rows))
+    (tmp_path / "models" / "m").mkdir(parents=True)
+    (tmp_path / "models" / "m" / "config.json").write_text("{}")
+    shutil.copy(TOKENIZER, tmp_path / "models" / "m" / "tokenizer.json")
+    monkeypatch.chdir(tmp_path)
+    common = ["--model", "m", "--data", "train/a.jsonl", "--dev", "dev/a.jsonl", "--calibration", "calibration/a.jsonl"]
+    replay = ["--replay", "30", "--replay-from", "train/b.jsonl", "--dry-run"]
+    assert main([*common, *replay]) == 0
+    assert capsys.readouterr().out.split()[:2] == ["train", "80"]  # 50 + 30 replayed
+    assert main([*common, *replay, "--limit", "10"]) == 0
+    assert capsys.readouterr().out.split()[:2] == ["train", "20"]  # 10 from each file, replay capped too
+
+
 def _choice(n: int = 5, label: str = "c") -> Record:
     keys = "abcdefgh"[:n]
     return parse(

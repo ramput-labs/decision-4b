@@ -3,6 +3,7 @@ imported (Unsloth is only imported, to check it, on a CUDA machine).
 
     den doctor                      # report; MLX on a Mac, CUDA on Linux
     den doctor --require cuda       # exit 1 unless CUDA training will work: GPU, BF16, driver, Unsloth, kernels
+    den doctor --require cuda --model qwen3.5-0.8b --min-disk 30    # the local 8 GB card (make local-doctor)
     den doctor --verify             # also re-hash the model's weight shards against locks/models.json
 """
 
@@ -25,6 +26,7 @@ PACKAGES = (
 )  # fmt: skip
 MIN_DRIVER = 580  # the locked torch is the CUDA 13 build
 MIN_TRANSFORMERS = (5, 17)
+HEADROOM_GB = 2.0  # beyond the bf16 weights: LoRA, optimizer state, activations of one checkpointed batch
 
 
 def _version(name: str) -> str | None:
@@ -84,6 +86,7 @@ def _model(key: str, verify: bool) -> dict[str, Any]:
     info: dict[str, Any] = {"key": key}
     if key in MODELS:
         info["pinned"] = f"{MODELS[key].source.repo}@{MODELS[key].source.revision}"
+        info["gb"] = round(MODELS[key].bytes / 2**30, 1)
     path = Path("models") / key
     info["local"] = str(path) if (path / "config.json").is_file() else None
     lock = Path("locks/models.json")
@@ -134,7 +137,7 @@ def _driver_ok(driver: object) -> bool:
     return bool(driver) and int(str(driver).split(".")[0]) >= MIN_DRIVER
 
 
-def checks(info: dict[str, Any], require: str | None) -> list[tuple[str, bool, str]]:
+def checks(info: dict[str, Any], require: str | None, min_disk: float = 80) -> list[tuple[str, bool, str]]:
     """(name, ok, detail) for what the required platform needs."""
     out: list[tuple[str, bool, str]] = []
     packages, cuda, model = info["packages"], info["cuda"], info["model"]
@@ -159,8 +162,12 @@ def checks(info: dict[str, Any], require: str | None) -> list[tuple[str, bool, s
             ("Unsloth imports", str(info.get("unsloth_import", "")).startswith("ok"), str(info.get("unsloth_import"))),
             ("flash-linear-attention installed", bool(packages["flash-linear-attention"]), "DeltaNet kernels"),
             ("UV_NO_SYNC=1", info["env"]["UV_NO_SYNC"] == "1", "a plain `uv run` would undo the Unsloth install"),
-            ("disk >= 80 GB free", info["disk_free_gb"] >= 80, f"{info['disk_free_gb']} GB"),
+            (f"disk >= {min_disk:g} GB free", info["disk_free_gb"] >= min_disk, f"{info['disk_free_gb']} GB"),
         ]  # fmt: skip
+        if model.get("gb") and cuda.get("memory_gb"):
+            need = model["gb"] + HEADROOM_GB
+            out.append((f"GPU memory fits {model['key']} in bf16 (~{need:g} GB)", cuda["memory_gb"] >= need,
+                        f"{cuda['memory_gb']} GB: train a smaller MODEL here (8 GB: qwen3.5-0.8b)"))  # fmt: skip
     elif require == "mlx":
         out += [("MLX installed", bool(packages["mlx"] and packages["mlx-lm"]), str(packages["mlx"]))]
     return out
@@ -171,10 +178,11 @@ def doctor_main(argv: list[str] | None = None) -> int:
     p.add_argument("--model", default=os.environ.get("DEN_MODEL", "qwen3.5-4b"))
     p.add_argument("--require", choices=("cuda", "mlx"), help="fail unless this platform is ready to train/serve")
     p.add_argument("--verify", action="store_true", help="re-hash the weight shards (slow: ~9 GB)")
+    p.add_argument("--min-disk", type=float, default=80, help="GB free that --require cuda needs (H100 box: 80)")
     p.add_argument("--json", action="store_true")
     args = p.parse_args(argv)
     info = report(args.model, args.verify)
-    results = checks(info, args.require)
+    results = checks(info, args.require, args.min_disk)
     info["checks"] = [{"check": n, "ok": ok, "detail": d} for n, ok, d in results]
     if args.json:
         print(json.dumps(info, indent=2))

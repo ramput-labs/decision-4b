@@ -1,4 +1,4 @@
-"""Runbook phase 1: is this the environment we validated? torch with CUDA, and, after `make train-setup`, Unsloth on
+"""Runbook phase 1: is this the environment we validated? torch with CUDA, and, after `make setup-gpu`, Unsloth on
 top without having replaced torch or transformers.
 
     uv run python -m scripts.check_env              # before Unsloth: torch, CUDA, the GPU
