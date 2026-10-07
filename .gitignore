@@ -7,8 +7,8 @@ __pycache__/
 models/
 *.part
 
-# data/ stays out of git: `make data` (+ data-raw-*, normalize, clean-data) rebuilds it from locks/, and
-# `make download-data` fetches the uploaded copy (`make upload-data`). Every pinned file is sha256-checked.
+# data/ stays out of git: `make data-download` fetches the uploaded copy (`make data-upload`) and rebuilds what the
+# licences left out from locks/. Every file is sha256-checked.
 data/
 
 # training outputs: adapters, head.pt, configs
@@ -16,3 +16,8 @@ data/
 /runs/
 .unsloth-pins.txt
 unsloth_compiled_cache/
+
+# GPU logs written at the repo root by the runbook (`den publish --logs` bundles them); the H100 check is in reports/gpu/
+/*.log
+/overfit-lora.json
+.DS_Store

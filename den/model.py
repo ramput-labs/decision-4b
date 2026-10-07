@@ -287,13 +287,13 @@ def load_backbone(path: Path, lora: LoraConfig, max_seq: int, seed: int, engine:
     """The base in bf16, with fresh LoRA adapters unless `lora.rank` is 0. Tokenization is ours (`prompt.encode` on
     the checkpoint's tokenizer.json), so the engine's tokenizer, a processor for Qwen3.5, isn't kept.
 
-    `unsloth` needs Linux + an NVIDIA GPU (`make train-setup`) and is what training uses. `peft` loads the same
+    `unsloth` needs Linux + an NVIDIA GPU (`make setup-gpu`) and is what training uses. `peft` loads the same
     adapters with plain transformers + PEFT, on any device, to check the wiring without a GPU."""
     if engine == "unsloth":
         try:
             unsloth = importlib.import_module("unsloth")  # before transformers and peft, so its patches apply
         except ImportError as e:
-            raise SystemExit("unsloth is not installed: it needs Linux with an NVIDIA GPU (`make train-setup`)") from e
+            raise SystemExit("unsloth is not installed: it needs Linux with an NVIDIA GPU (`make setup-gpu`)") from e
         model, _ = unsloth.FastLanguageModel.from_pretrained(
             model_name=str(path),
             max_seq_length=max_seq,

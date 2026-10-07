@@ -447,8 +447,8 @@ Share-alike sources (CC-BY-SA) require derived data to keep their licence. Cite 
 
 ## Not in this copy
 
-Files whose sources may not be redistributed (or have no stated licence, in a public copy) were left out; rebuild them
-from the pinned originals with `make data data-raw-train data-raw-new data-raw-eval breadth normalize clean-data`:
+Files whose sources may not be redistributed (or have no stated licence, in a public copy) were left out;
+`make data-download` downloads this copy and rebuilds them from the pinned originals:
 
 {gone}
 

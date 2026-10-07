@@ -5,7 +5,7 @@ time. You will **validate the setup, train Qwen3.5-4B in two rounds, pick the be
 upload the model with its adapters, data and logs to the Hugging Face Hub, and prove that the uploaded model answers
 over HTTP**. The person then downloads it, tests it against Kev, and decides whether it goes to production.
 
-- **Round 1** is Kev-4B's own four-stage recipe (`make train-kev`).
+- **Round 1** is Kev-4B's own four-stage recipe (`make train-round1`).
 - **Round 2** continues from round 1 on 17 public datasets Kev-4B never trained on, replaying all of Kev's suites so
   nothing is forgotten (`make train-round2`). It aims past Kev on breadth.
 
@@ -13,7 +13,8 @@ Follow the phases in order. Every phase ends in a **gate**. If a gate fails, sto
 not move on until it passes. Don't improvise new hyperparameters or "quick experiments". They cost money, and the
 recipe is fixed.
 
-Read `CLAUDE.md` in the repo before starting. Its hard rules apply here too: never train or tune on `test/`, fit the
+The pipeline has already passed the local rehearsal (`docs/local-gpu.md`, `make local` on qwen3.5-0.8b): this run
+changes only the model size and the amount of data. Read `CLAUDE.md` in the repo before starting. Its hard rules apply here too: never train or tune on `test/`, fit the
 temperature only on `calibration/`, choose between runs on `dev/` only, and never edit pinned data or `locks/`.
 
 ## Inputs the person gives you
@@ -25,6 +26,7 @@ temperature only on `calibration/`, choose between runs on `dev/` only, and neve
 | `HF_TOKEN` | Hugging Face token with **write** access | |
 | `HF_REPO` | where the model goes (created **private**) | `ramput-labs/den-qwen3.5-4b` |
 | `BUDGET_HOURS` | hard ceiling for the whole session | `5` |
+| `DATA_REPO` | the `make data-upload` copy of `data/` (optional; default `a1i6ek/den-datasets`) | `a1i6ek/den-datasets@data-v1` |
 
 If any input is missing, ask for it before renting time.
 
@@ -37,7 +39,7 @@ If the session dies, the next agent starts from that log.
 |---|---|---|
 | 0 | machine checks | 2 min |
 | 1 | code, environment, Unsloth | 10 min |
-| 2 | model, Kev's suites, public sources (download and normalize) | 15–20 min |
+| 2 | model, `data/` (download, rebuild what the licences left out) | 15–25 min |
 | 3 | overfit gates, then the timing run: both rounds, 20 steps per stage | 25 min |
 | 4 | round 1: Kev-4B's four stages (23.3M tokens) | measured in phase 3; expect 1.6–2.5 h |
 | 5 | upload round 1 (safety copy) | 5–10 min |
@@ -76,18 +78,14 @@ tmux new -s s1          # reattach later with: tmux attach -t s1
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh && source ~/.local/bin/env
 git clone --branch "$BRANCH" "$REPO_URL" den && cd den   # private repo: https://$GITHUB_TOKEN@github.com/...
-make setup                      # uv sync: Python 3.12, torch 2.14.1 (CUDA 13), transformers 5.x, flash-linear-attention
-uv run python -m scripts.check_env      # torch, CUDA and the GPU; exits 1 without CUDA
+make setup-gpu                  # uv sync (torch 2.14.1 CUDA 13, transformers 5.x, flash-linear-attention), check_env,
+                                # then Unsloth on top, check_env --unsloth; exits 1 without CUDA
 make check                      # ruff, mypy, unit tests: must pass before any GPU time is spent
-```
-
-Install Unsloth **without letting it replace torch or transformers**. `make train-setup` freezes what the lockfile
-installed into `.unsloth-pins.txt` and installs Unsloth under that constraint:
-
-```bash
-make train-setup
 cat .unsloth-pins.txt
 ```
+
+`make setup-gpu` installs Unsloth **without letting it replace torch or transformers**: it freezes what the lockfile
+installed into `.unsloth-pins.txt` and installs Unsloth under that constraint.
 
 - If the resolver refuses (for example, Unsloth caps `transformers` below what we need), install it without its
   dependency resolution, then add whatever imports fail, one by one, still under the same constraint:
@@ -97,50 +95,40 @@ cat .unsloth-pins.txt
 - From here on, **never let uv re-sync**, because a plain `uv run` puts the lockfile back and can undo the install:
 
 ```bash
-export UV_NO_SYNC=1             # every `uv run` and `make` target now uses the venv as is
+export UV_NO_SYNC=1             # make targets already skip the sync once .unsloth-pins.txt exists; this covers uv run
 echo 'export UV_NO_SYNC=1' >> ~/.bashrc
 ```
 
-```bash
-uv run python -m scripts.check_env --unsloth   # + unsloth, transformers (>= 5.17), peft, BF16; exits 1 on a problem
-```
-
-```bash
-make doctor ARGS="--require cuda"        # versions, GPU, BF16, driver, Unsloth import, kernels, model files, disk
-```
-
 **Gate 1:**
-- `make doctor ARGS="--require cuda"` exits 0: every check prints `ok`. Save its output to `~/progress.log`.
+- `make setup-gpu` ends without a `BAD` line, and `bf16 True` is printed.
 - `make check` passes.
 - torch is still `2.14.1` with CUDA `13.x`, and `cuda.is_available()` is True.
 - transformers is **≥ 5.17** (Qwen3.5 needs transformers v5).
-- `import unsloth` works, and `bf16 True` is printed.
+- `import unsloth` works.
 
 If transformers was downgraded, restore it with `uv pip install "transformers==<version in .unsloth-pins.txt>"` and
 rerun the gate. If Unsloth then refuses to import, stop and report both versions. Do not try more combinations.
 
-## Phase 2: model and data (15–20 min)
+## Phase 2: model and data (15–25 min)
 
 ```bash
 uvx hf auth login --token "$HF_TOKEN"     # faster, rate-limit-free downloads; also used by `den publish`
-make model MODEL=qwen3.5-4b               # 9.3 GB, every shard sha256-checked against locks/
-make data                                 # Kev's suites (data/ is not in git; ~100 MB, sha256-checked)
-make data-raw-train data-raw-new data-raw-eval   # public sources for round 2 (~1.7 GB, sha256-checked)
-make breadth                              # Kev's breadth-v1 eval panel, rebuilt byte for byte (~10 min); before normalize
-make normalize                            # raw sources -> leakage-free train/dev/test records (~2 min, deterministic)
-make clean-data                           # data/clean/: Kev's suites and the normalized sources
-make train-check                          # tokenizes round 1's data; no GPU
-uv run den train --dry-run --data --sources-cap 1500 --replay 1500 \
-  --replay-from train/core.jsonl train/dates-unknowable.jsonl train/documents.jsonl train/skills.jsonl train/devtools.jsonl
+make h100-setup DATA_REPO="${DATA_REPO:-a1i6ek/den-datasets}" 2>&1 | tee ~/setup.log
 ```
 
-If the person gave a `DATA_REPO` (a `make upload-data` copy), replace the `make data` through `make clean-data` lines
-with `make download-data DATA_REPO="$DATA_REPO"` (after `make model`: breadth needs its tokenizer): the same `data/`,
-every file checked against the copy's manifest and the pinned ones against `locks/`. The files the licences keep out
-of the copy (Kev's `core` suite, Yelp, Amazon, ...) are rebuilt from their pinned originals in the same command
-(~20 min). It must end with `ok, every file matches`.
+`make h100-setup` reruns `setup-gpu` (a no-op when nothing changed), downloads `qwen3.5-4b` (9.3 GB, every shard
+sha256-checked against `locks/`), runs `make data-download` and prints both rounds' data shapes (`make data-check`,
+no GPU) for the gate below. Last it runs `make h100-doctor` (versions, GPU, BF16, driver ≥ 580, Unsloth import,
+kernels, VRAM for qwen3.5-4b, model files, disk ≥ 80 GB), which saves `doctor.log`.
 
-**Gate 2:** `make train-check` prints exactly:
+`make data-download` downloads the copy (~3.6 GB) and checks every file against its manifest and every pinned file
+against `locks/`. The files the licences keep out of the copy (Kev's `core` suite, Yelp, Amazon, breadth, ...) are
+rebuilt from their pinned originals in the same command, running only the steps whose files are missing (fetch,
+breadth, normalize, clean; ~20 min on a fresh box) and checking them against the uploader's sha256 where the manifest
+has it. It must end with `ok, every file matches`. If it stops, rerun it: finished files are kept and re-verified.
+
+**Gate 2:** `h100-doctor` printed `ok` on every line (add `doctor.log` to `~/progress.log`), and the first
+`data-check` (round 1's data) prints exactly:
 
 ```
 train      40352 records    40352 questions  tokens median 176 p99 4455 max 7390 total 17.6M  skipped 0
@@ -148,13 +136,13 @@ dev         1468 records     1468 questions  tokens median 111 p99 788 max 858 t
 calib       1148 records     1148 questions  tokens median 120 p99 774 max 815 total 0.2M  skipped 0
 ```
 
-and the round-2 dry run's first line is
+and the second's (round 2's) first line is
 `train      37459 records    37459 questions  tokens median 118 p99 2481 max 6058 total 8.8M  skipped 0`.
 Any other count means the code or data differs from what was validated. Stop and report the difference.
 
 ## The recipe
 
-**Round 1: Kev-4B's four stages** (`make train-kev`, from Kev-4B's model card and Kev's `kev/train.py` and
+**Round 1: Kev-4B's four stages** (`make train-round1`, from Kev-4B's model card and Kev's `kev/train.py` and
 `kev/data.py`). Each stage continues from the previous one's adapter and head (`--init-from`) and replays `core`:
 
 | Stage | Data | Epochs | lr | Batch | Replay | Tokens |
@@ -190,13 +178,12 @@ Run both rounds for 20 optimizer steps per stage. This tests every failure point
 (stages 3 and 4 hold the longest states; the length-grouped sampler puts each stage's longest batch first), speed,
 validation, calibration, the stage handoffs, the source sampling and both merges.
 
-First the **CUDA smoke test**, the real training path for one step, in about 2 minutes:
-
 ```bash
-make test-cuda 2>&1 | tee test-cuda.log
+make h100-gates                 # CUDA smoke test, both overfit gates; test-cuda.log, overfit-lora.json, overfit-train.log
 ```
 
-It must show **3 passed**:
+First the **CUDA smoke test** (`make test-cuda`), the real training path for one step, in about 2 minutes. It must
+show **3 passed**:
 1. variable-K padding on CUDA under BF16 autocast;
 2. a toy LoRA + head step on CUDA;
 3. `test_unsloth_qwen_lora_pointer_step`: Unsloth loads Qwen3.5-4B with the base in bf16, LoRA on exactly 248 text
@@ -206,13 +193,9 @@ It must show **3 passed**:
 A failure here is the cheapest one to have: stop and report it.
 
 Then the two **overfit gates**. A model that can't fit 100 examples has a bug (positions, labels, masking, loss,
-gradients), and more training won't fix it. They take about 5–10 minutes:
-
-```bash
-uv run den overfit --n 100 --steps 300 --out overfit-lora.json      # on CUDA: Qwen + LoRA + head, backward through Qwen
-uv run den train --data train/core.jsonl --overfit 100 --epochs 25 --lr 2e-4 --head-lr 1e-3 --batch 4 --accum 1 \
-  --out runs/overfit 2>&1 | tee overfit-train.log          # the same through the real Trainer loop: ~3 min
-```
+gradients), and more training won't fix it. They take about 5–10 minutes: `den overfit --n 100 --steps 300` (on CUDA:
+Qwen + LoRA + head, backward through Qwen), then `den train --overfit 100 --epochs 25` (the same through the real
+Trainer loop, ~3 min).
 
 - `den overfit` on CUDA runs `path: lora` (Unsloth) and first prints `lora   engine unsloth ... modules 248` and
   `step 1 gradients: finite, LoRA-B and head nonzero, frozen base untouched`. It must end with `PASS`: train
@@ -221,15 +204,17 @@ uv run den train --data train/core.jsonl --overfit 100 --epochs 25 --lr 2e-4 --h
   and `replacement_lowers_probability`. Near 1.0 means the head reads option content. Near chance means it scores
   positions, so report it and stop.
 - `den train --overfit 100`: the last `epoch dev` line (dev here *is* the 100 training rows) must show acc ≥ 0.95,
-  and `loss` must fall steadily. If not, stop and report the log. Then `rm -rf runs/overfit`.
+  and `loss` must fall steadily. If not, stop and report the log. (`h100-gates` deletes `runs/overfit` at the end.)
 
-Then the timing run:
+Then the timing run, with the minutes spent so far (phases 0–3):
 
 ```bash
-make train-kev RUNS=runs/timing ARGS="--max-steps 20" 2>&1 | tee runs-timing.log
-make train-round2 RUNS=runs/timing ROUND2=runs/timing/round2 ARGS="--max-steps 20" 2>&1 | tee -a runs-timing.log
+make h100-timing BUDGET_HOURS="$BUDGET_HOURS" SPENT=<minutes spent so far>     # log: runs-timing.log
 nvidia-smi --query-gpu=memory.used,memory.total --format=csv    # from a second tmux pane, during stages 3 and 4
 ```
+
+It trains both rounds for 20 steps per stage into `runs/timing`, checks both merges (`scripts.check_merged`), runs
+`den predict` on round 2, prints `scripts.estimate_time`'s estimate and decision, and deletes `runs/timing`.
 
 **Gate 3:**
 - Every stage prints a `setup` line: `engine unsloth  dtype bf16  device NVIDIA H100 ...  lora_modules 248 ...
@@ -240,30 +225,19 @@ nvidia-smi --query-gpu=memory.used,memory.total --format=csv    # from a second 
 - No CUDA out-of-memory error. If a stage runs out of memory, halve its `--batch` and double its `--accum` on that
   stage's line in the `Makefile` (the effective batch stays 8), rerun, and keep the edit for the real run. Report it.
 - The logged `loss` is finite (not `nan`) in every stage.
-- Both rounds end with `saved .../merged  (248 merged weights)`, and
-  `uv run python -m scripts.check_merged runs/timing/4-skills runs/timing/round2` prints `ok` for both (`qwen3_5`).
-- `uv run den predict --run runs/timing/round2 < /dev/null` exits without error.
-- Estimate both rounds from the measured `tokens_per_second` in each stage's `run.json`:
-
-```bash
-uv run python -m scripts.estimate_time --budget-hours "$BUDGET_HOURS" --spent-minutes <minutes spent so far>
-```
-
-  It prints both rounds' minutes (2 per stage for loading, validation and saving included) and the decision below.
+- Both rounds end with `saved .../merged  (248 merged weights)`, and `check_merged` prints `ok` for both (`qwen3_5`).
+- `den predict --run runs/timing/round2` exits without error.
+- The estimate comes from the measured `tokens_per_second` in each stage's `run.json`. It prints both rounds' minutes (2 per stage for loading, validation and saving included) and the decision below.
 
   The estimate runs high, because 20 steps include kernel compilation and the longest batch. Then decide:
   - round 1 + round 2 + about 80 min (phases 0–3 already spent, 5, 7, 8, 9) **within** `BUDGET_HOURS`: run both.
   - only round 1 + 80 min fits: run round 1, skip phase 6, and say so in the report.
   - not even that: **stop and report the estimate**. Don't drop stages or data on your own.
 
-```bash
-rm -rf runs/timing
-```
-
 ## Phase 4: round 1
 
 ```bash
-make train-kev ARGS="--max-minutes 100 --save-steps 500" 2>&1 | tee runs-train.log
+make h100-round1                # train-round1 with --max-minutes 100 --save-steps 500; log: runs-train.log
 ```
 
 `--save-steps 500` writes `checkpoint-*` folders in each stage's directory. Each holds the adapter and head
@@ -305,7 +279,7 @@ history and under round 2's `stages/`.
 ## Phase 6: round 2 (skip if phase 3 said so)
 
 ```bash
-make train-round2 ARGS="--max-minutes 90 --save-steps 500" 2>&1 | tee runs-round2.log
+make h100-round2                # train-round2 with --max-minutes 90 --save-steps 500; log: runs-round2.log
 ```
 
 **Gate 6:** it ends with `epoch dev ...`, `calibration  T ...` (0.5 < T < 3), `dev at T ...`,
@@ -314,7 +288,11 @@ make train-round2 ARGS="--max-minutes 90 --save-steps 500" 2>&1 | tee runs-round
 
 ## Phase 7: evaluate both rounds on dev, choose one (20 min)
 
-This loads each run's `merged/` through the same backbone code that serving uses, question by question:
+```bash
+make h100-eval                  # all of the below, both rounds (round 1 alone if 2 was skipped); log: eval-rounds.log
+```
+
+It loads each run's `merged/` through the same backbone code that serving uses, question by question. By hand:
 
 ```bash
 DEV="dev/core.jsonl dev/documents.jsonl dev/skills.jsonl dev/devtools.jsonl dev/transfer.jsonl dev/probes.jsonl dev/breadth.jsonl dev/binding.jsonl dev/semif.jsonl"
@@ -370,7 +348,7 @@ regression on Kev's own tasks. `dev/transfer` and the eval-only sources (`dev/so
 other `dev/sources` files are in-distribution for round 2 only. `probes` is left out of the choice: it is mostly
 unknowable items. Call the shipped run `$SHIP`.
 
-`make post-train RUN=<run>` runs `den check-run` and the dev and augmentation evaluations above in one go.
+`make eval-dev RUN=<run>` runs `den check-run` and the dev and augmentation evaluations above in one go.
 
 **Gate 7:** both runs have `eval.json` and an `integrity.json` with `"ok": true`, `compare` printed `ship: ...`, and you wrote the table to `~/progress.log`.
 
@@ -381,16 +359,18 @@ Read the locked test set **once**, for the shipped run only. Never repeat it, an
 ```bash
 TEST="test/core.jsonl test/documents.jsonl test/skills.jsonl test/devtools.jsonl test/transfer.jsonl test/probes.jsonl test/breadth.jsonl"
 SRC_TEST=$(cd data/clean && ls test/sources/*/*.jsonl | tr '\n' ' ')
-uv run den evaluate --final --run "$SHIP" $TEST                       # or: make final-test RUN=$SHIP
+uv run den evaluate --final --run "$SHIP" $TEST                       # or: make eval-test RUN=$SHIP
 uv run den evaluate --final --run "$SHIP" --limit 1000 $SRC_TEST     # 1,000 sampled records per source file
-make release VERSION=v1 RUN="$SHIP" REPO="$HF_REPO" ARGS="--logs runs-timing.log runs-train.log runs-round2.log"
+DATA_PIN=$(grep -oP '^data commit: \K\S+' ~/setup.log)       # the <repo>@<commit> phase 2 downloaded
+make release VERSION=v1 RUN="$SHIP" REPO="$HF_REPO" DATA_REPO="$DATA_PIN" \
+  ARGS="--logs runs-timing.log runs-train.log runs-round2.log"
 ```
 
 `make release` runs `den publish`, tags that Hub commit `v1`, and writes `releases/v1.json` (lineage, data hashes,
 dev and test results, file hashes, and the paired comparison with its parent). Commit it with `reports/runs/`
 (every evaluation's report and per-question rows) and push: the next version continues from `release:v1`, and its
-release is compared with v1 question by question from that evidence.
-If the data was uploaded with `make upload-data`, add `DATA_REPO=<org>/<name>@<commit or tag>` so v1 records it.
+release is compared with v1 question by question from that evidence. `DATA_REPO` records the exact data copy:
+`make data-download` printed it as `data commit: <repo>@<commit>` in phase 2.
 
 What the Hub repo then holds (`den publish` bundles it):
 
@@ -522,6 +502,6 @@ Then remind the person to **shut the instance down**. Don't leave it idle.
 | a package disappeared after `uv run` | `UV_NO_SYNC=1` was not set; reinstall Unsloth as in phase 1 and export it |
 | `... falling back to its reference PyTorch implementation` | flash-linear-attention is missing; `uv sync` installs it on Linux. Without it, training is many times slower: fix this before phase 3 |
 | CUDA OOM at a stage's first step | halve that stage's `--batch` and double its `--accum` in the `Makefile` (the effective batch stays 8) |
-| `train/sources is missing` from round 2 | phase 2's `make data-raw-* normalize clean-data` didn't run or failed |
+| `train/sources is missing` from round 2 | phase 2's `make data-download` didn't run or failed: rerun it |
 | `merge: replaced N of 248` | the adapter is fine; `uvx hf upload "$HF_REPO" <run>` without `merged/`, and report it. Don't retrain |
 | upload interrupted | rerun the same `den publish` command; it resumes |

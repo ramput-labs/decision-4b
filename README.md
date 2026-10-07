@@ -42,22 +42,29 @@ Optionally run `uvx hf auth login` to avoid Hub rate limits.
 make setup          # Python 3.12 + this platform's runtime (MLX on Apple Silicon, PyTorch + CUDA on Linux)
 make check          # ruff, mypy --strict, unit tests
 make model          # the default backbone, qwen3.5-4b; or MODEL=qwen3-0.6b, MODEL=qwen3.5-9b, ...
-make data           # the suites: train / calibration / dev / test (~100 MB, sha256-verified)
-make verify         # re-hash everything against locks/
-make normalize      # raw sources -> canonical, leakage-free train / dev / test (needs data-raw-train, -new, -eval)
-make clean-data     # cleaned, deduplicated copies of every suite and source under data/clean/ (pinned files untouched)
-make audit          # check every record is fit to train and evaluate on
+make data-download  # data/: the Hub copy, plus a rebuild of what licences keep out of it (every file sha256-checked)
+make data-verify    # re-hash everything against locks/
+make data-normalize # raw sources -> canonical, leakage-free train / dev / test (after changing normalize.py)
+make data-clean     # cleaned, deduplicated copies of every suite and source under data/clean/ (pinned files untouched)
+make data-audit     # check every record is fit to train and evaluate on
 make smoke          # run MODEL once on this machine's backend
 ```
 
 ## Fine-tuning (Unsloth + LoRA)
 
-For a rented H100, follow [`instructions.md`](instructions.md): a phase-by-phase runbook with a gate after each phase,
-from an empty machine to an uploaded model checked over HTTP.
+Two GPU machines, one pipeline (`make help` groups the targets):
+
+- **Local RTX 3070 (8 GB):** [`docs/local-gpu.md`](docs/local-gpu.md). `make local-setup`, then `make local` runs the
+  whole pipeline (CUDA tests, overfit gates, both rounds, merge, integrity, evaluation, a served request) on
+  qwen3.5-0.8b with at most 1,000 records a file (`--limit`). Rehearse here before paying for an H100.
+- **Cloud H100:** [`docs/h100-runbook.md`](docs/h100-runbook.md), a phase-by-phase runbook with a gate after each phase,
+  from an empty machine to an uploaded model checked over HTTP ([`docs/h100-guide.md`](docs/h100-guide.md) is the
+  same plan for a person). Each phase is one `h100-*` target: `h100-setup`, `h100-gates`, `h100-timing`,
+  `h100-round1`, `h100-round2`, `h100-eval`.
 
 Training runs in two rounds, each a chain of stages where every stage continues from the last (`--init-from`):
 
-- **Round 1, `make train-kev`:** Kev-4B's own recipe, from its model card and code. It has four stages: `core` ×2 at
+- **Round 1, `make train-round1`:** Kev-4B's own recipe, from its model card and code. It has four stages: `core` ×2 at
   5e-5 with 25% none-of-the-above minimal pairs, then dates, then documents, then skills+devtools, at 2e-5 with
   2k/2k/4k `core` records replayed.
 - **Round 2, `make train-round2`:** continues from round 1 on 17 public sources Kev-4B never trained on (`CAP`
@@ -72,10 +79,10 @@ adapters to check the wiring. This follows [Unsloth's Qwen3.5 guide](https://uns
 which advises against QLoRA on Qwen3.5.
 
 ```bash
-make clean-data && make train-check          # data/clean/, then tokenize and report sizes (no GPU)
-make train-setup                             # on the GPU box: Unsloth, keeping the locked torch/transformers
-make train-kev                               # round 1 -> runs/kev-recipe/4-skills
-make train-round2 CAP=1500                   # round 2 -> runs/round2 (needs data-raw-* + normalize)
+make data-check                              # tokenize data/clean and report sizes (no GPU)
+make setup-gpu                               # on the GPU box: Unsloth, keeping the locked torch/transformers
+make train-round1                            # round 1 -> runs/kev-recipe/4-skills
+make train-round2 CAP=1500                   # round 2 -> runs/round2 (needs the sources make data-download brings)
 uv run den evaluate --run runs/round2 dev/core.jsonl dev/documents.jsonl        # acc, NLL, ECE; test needs --final
 uv run den compare runs/kev-recipe/4-skills runs/round2                         # which one to ship, judged on dev
 uv run den publish --run runs/round2 --repo <org>/<name> --logs runs-train.log  # private Hub model, stages, data, logs
@@ -89,7 +96,7 @@ make train ARGS="--lora 0 --head-lr 1e-3"    # baseline: frozen Qwen, pointer he
 | A zero-shot Qwen (its own answer-letter probabilities) | `den train --head-kind letters --lora 0 --epochs 0` |
 | B Qwen + LoRA, answering with the letter | `den train --head-kind letters` |
 | C frozen Qwen + pointer head | `den train --lora 0 --head-lr 1e-3` |
-| D Qwen + LoRA + pointer head (the release recipe) | `make train-kev`, `make train-round2` |
+| D Qwen + LoRA + pointer head (the release recipe) | `make train-round1`, `make train-round2` |
 
 Ablations: `--lora-targets all|attention-mlp|attention`, `--option-rep end|marker|mean|attn`, `--head-proj
 linear|mlp`, `--head-kind set|pointer`, `--ordinal-weight`. Gates: `den overfit` (the head must fit 100 real
@@ -143,10 +150,7 @@ Optional:
 
 ```bash
 make model MODEL=kev-4b   # the Kev checkpoint to beat at your size (kev-0.8b, kev-9b, kev-27b)
-make data-raw-eval   # eval-only raw sources (rebuilds Kev's private breadth-v1 panel)
-make data-raw-new    # new trainable sources aimed at Kev's weak spots
-make data-raw-train  # raw sources Kev trained from, at Kev's pins (to regenerate or scale the suites)
-make data-raw-bulk   # CFPB, CommitPackFT, CodeReviewer, FlakeFlagger raws (~5 GB)
+uv run den data raw-bulk   # CFPB, CommitPackFT, CodeReviewer, FlakeFlagger raws (~5 GB; not in the Hub copy)
 make models          # print every backbone and reference checkpoint
 make list            # print every dataset
 make env             # show which backend this machine uses
@@ -156,9 +160,9 @@ make test-model      # MLX vs PyTorch parity on the downloaded qwen3.5-4b
 Tools that aren't part of the library live in `scripts/` (`uv run python -m scripts.<name>`): the breadth-v1
 builder, the data mirror, and the runbook's environment and timing checks.
 
-Eval-only extras beside Kev's suites: `make breadth` rebuilds Kev's breadth-v1 panel (14 public datasets) from the
+Eval-only extras beside Kev's suites: `make data-breadth` rebuilds Kev's breadth-v1 panel (14 public datasets) from the
 pinned raws, byte for byte against Kev's published sha256, into `data/{dev,test}/breadth.jsonl`; `binding` and
-`semif` (Kev's role-binding diagnostic and SemIf's authored decisions) come with `make data`. `den evaluate` reports
+`semif` (Kev's role-binding diagnostic and SemIf's authored decisions) come with Kev's suites. `den evaluate` reports
 Kev's robustness checks (option-order flips, contrastive pair flips, confidence on unknowable items) where a file
 carries them, and `--augment permute` measures option-order sensitivity on any file.
 
@@ -173,19 +177,20 @@ probabilities, and where they came from), and `den compare --paired A B` says wh
 by question with 95% intervals. Numbers printed in the docs are listed in `reports/claims.json` and checked against
 that evidence by `make check`.
 
-Every source's licence is recorded with its evidence in `den/licences.py`. `make licences` writes them into `data/`
+Every source's licence is recorded with its evidence in `den/licences.py`. `make data-licences` writes them into `data/`
 (`README.md` as the dataset card, `LICENSES.md` with each file's sources, `LICENSES/` with per-source terms, licence
 texts and the licence files shipped with the data), and a `SOURCE-LICENSE.md` beside every dataset saying what each
-of its files holds, under which licence, and whether the uploaded copy has it. `make upload-data` never uploads sources whose terms forbid
+of its files holds, under which licence, and whether the uploaded copy has it. `make data-upload` never uploads sources whose terms forbid
 redistribution (Yelp, Amazon reviews, the raw HellaSwag and RouterBench files), and keeps unlicensed ones out of
-public copies; Kev's `core` suite holds Yelp and Amazon reviews, so `make download-data` rebuilds it, and every
+public copies; Kev's `core` suite holds Yelp and Amazon reviews, so `make data-download` rebuilds it, and every
 other left-out file, from its pinned original (`NO_REBUILD=1` skips that).
 
-`data/` and `models/` are gitignored. `make data` (Kev's suites and manifests), `make data-raw-*`, `make normalize` and
-`make clean-data` rebuild `data/` from `locks/`, which is committed with `reports/`. To skip the rebuild, `make
-upload-data DATA_REPO=<org>/<name>` puts the whole `data/` (about 6 GB) in a private Hub dataset with a sha256 manifest,
-and `make download-data DATA_REPO=<org>/<name>[@commit]` restores it, checking every file against that manifest and
-every pinned file against `locks/`.
+`data/` and `models/` are gitignored. `make data-download [DATA_REPO=<org>/<name>[@commit]]` (default
+`a1i6ek/den-datasets`) is the one way to get `data/`: it downloads the copy `make data-upload DATA_REPO=<org>/<name>`
+made, checks every file against its sha256 manifest and every pinned file against `locks/` (committed with
+`reports/`), then rebuilds only the left-out files whose step has work to do (fetch, breadth, normalize, clean),
+checking them against the uploader's hashes. A rerun skips what is already there and verified. The underlying
+fetches stay available as `uv run den data <set>` (`den list` shows the sets) for work on the data pipeline itself.
 
 ## Backends
 
@@ -205,7 +210,7 @@ speeds up the DeltaNet convolutions.
 
 ## Data audit
 
-`make audit` parses every record against the `/v1/systemone` schema, then checks it for training. It cross-checks
+`make data-audit` parses every record against the `/v1/systemone` schema, then checks it for training. It cross-checks
 the counts against Kev's manifests, then looks for duplicates, conflicting labels and leakage across train,
 calibration, dev and test. It also measures label balance and token lengths, and opens every raw source file.
 The full report is in `reports/data-audit.json`. It covers the Kev suites and all 69 normalized files.
@@ -227,10 +232,10 @@ Current result: **0 errors**. None of the normalized training files overlaps any
 
 ## Normalized sources
 
-`make normalize` turns every trainable and eval-only raw source (17 trainable, 9 eval-only) into the same canonical
+`make data-normalize` turns every trainable and eval-only raw source (17 trainable, 9 eval-only) into the same canonical
 record format as Kev's suites, in about 2 minutes. The output is deterministic: the same inputs always give
 byte-identical files. Each output's counts, label distribution and sha256 go to `reports/normalize.json`, which
-`make audit` checks.
+`make data-audit` checks.
 
 - **Text:** NFC Unicode and tidy whitespace. Literal `\n` and `\"` escapes are undone (Yelp, AG News), HTML
   entities are decoded, including AG News' broken `#39;` and `quot;`, and `<br />` tags become newlines (IMDB,
@@ -272,7 +277,7 @@ data/
 ├── calibration/            fit the temperature only
 │   ├── core.jsonl              in-distribution
 │   └── heldout.jsonl           held-out sources (the honest choice)
-│   └── sources/<skill>/<ds>.jsonl  normalized from sources/train (make normalize)
+│   └── sources/<skill>/<ds>.jsonl  normalized from sources/train (make data-normalize)
 ├── dev/                    model selection: core, documents, skills, devtools, transfer, probes
 │   └── sources/…               normalized dev splits, trainable and eval-only sources
 ├── test/                   locked, read once per release candidate: same suites as dev/
@@ -302,13 +307,15 @@ data/
 
 ### Download sets
 
-| Set | Target | Size | Lands in |
-|---|---|---|---|
-| `suites` | `make data` | ~100 MB | `train/ calibration/ dev/ test/ manifests/` |
-| `raw-train` | `make data-raw-train` | ~0.8 GB | `sources/train/{intent,topic,reading,sentiment,safety}` |
-| `raw-new` | `make data-raw-new` | ~0.3 GB | `sources/train/{knowledge,intent,tools}` |
-| `raw-eval` | `make data-raw-eval` | ~0.6 GB | `sources/eval/` |
-| `raw-bulk` | `make data-raw-bulk` | ~5 GB | `sources/train/{documents,devtools}` |
+`make data-download` brings every set but `raw-bulk`; `uv run den data <set>` fetches one from its pinned origin.
+
+| Set | Size | Lands in |
+|---|---|---|
+| `suites` | ~100 MB | `train/ calibration/ dev/ test/ manifests/` |
+| `raw-train` | ~0.8 GB | `sources/train/{intent,topic,reading,sentiment,safety}` |
+| `raw-new` | ~0.3 GB | `sources/train/{knowledge,intent,tools}` |
+| `raw-eval` | ~0.6 GB | `sources/eval/` |
+| `raw-bulk` | ~5 GB | `sources/train/{documents,devtools}` |
 
 ### Names → Kev's names
 
@@ -359,9 +366,9 @@ den/                  the package, one module per concern (flat, like kev/)
 ├── fetch.py                  verified downloads and lock files
 ├── sources.py                per-source mappings from raw rows to records
 ├── text.py                   text repair shared by normalize and clean (NFC, escapes, entities)
-├── normalize.py              raw sources -> canonical, leakage-free records (`make normalize`)
-├── clean.py                  cleaned, deduplicated training copies in data/clean/ (`make clean-data`)
-├── audit.py                  dataset checks (`make audit`)
+├── normalize.py              raw sources -> canonical, leakage-free records (`make data-normalize`)
+├── clean.py                  cleaned, deduplicated training copies in data/clean/ (`make data-clean`)
+├── audit.py                  dataset checks (`make data-audit`)
 ├── prompt.py                 records -> token ids and pointer positions, option shuffling
 ├── model.py                  LoRA backbone (Unsloth, or PEFT for checks) and the pointer head
 ├── calibrate.py              temperature fit on the calibration split

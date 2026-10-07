@@ -1,10 +1,13 @@
-"""CUDA checks, run on the GPU box: `make test-cuda` (`pytest -m cuda`). Skipped where torch sees no CUDA device.
+"""CUDA checks, run on a GPU box: `make test-cuda` (`pytest -m cuda`). Skipped where torch sees no CUDA device.
 
 The toy tests check devices, dtypes, autocast and padding on CUDA in seconds; the `model`-marked one loads the real
-Qwen3.5-4B through Unsloth, exactly as training does, and runs one forward/backward step of LoRA + pointer head."""
+backbone ($DEN_MODEL, default Qwen3.5-4B; `make local-gates` uses qwen3.5-0.8b on an 8 GB card) through Unsloth,
+exactly as training does, and runs one forward/backward step of LoRA + pointer head."""
 
 from __future__ import annotations
 
+import json
+import os
 from pathlib import Path
 
 import pytest
@@ -16,7 +19,7 @@ pytestmark = [
     pytest.mark.cuda,
     pytest.mark.skipif(not torch.cuda.is_available(), reason="needs a CUDA device"),
 ]
-MODEL = Path("models/qwen3.5-4b")
+MODEL = Path("models") / os.environ.get("DEN_MODEL", "qwen3.5-4b")
 
 
 def test_variable_k_padding_on_cuda() -> None:
@@ -59,11 +62,11 @@ def test_toy_lora_and_head_train_on_cuda() -> None:
 
 
 @pytest.mark.model
-@pytest.mark.skipif(not (MODEL / "config.json").is_file(), reason="qwen3.5-4b not downloaded")
+@pytest.mark.skipif(not (MODEL / "config.json").is_file(), reason=f"{MODEL} not downloaded")
 def test_unsloth_qwen_lora_pointer_step() -> None:
-    """The real training path on the GPU: Unsloth loads Qwen3.5-4B in bf16, LoRA on all 248 text projections in fp32,
-    the head on CUDA; one forward/backward over rows with 2, 3 and 5 options gives finite logits and loss, nonzero
-    LoRA-B and head gradients, no gradient on the frozen base, and an optimizer step that moves both."""
+    """The real training path on the GPU: Unsloth loads Qwen3.5 in bf16, LoRA on every text projection (248 on the 4B)
+    in fp32, the head on CUDA; one forward/backward over rows with 2, 3 and 5 options gives finite logits and loss,
+    nonzero LoRA-B and head gradients, no gradient on the frozen base, and an optimizer step that moves both."""
     from tokenizers import Tokenizer
 
     from den.api import parse
@@ -72,9 +75,11 @@ def test_unsloth_qwen_lora_pointer_step() -> None:
 
     backbone = load_backbone(MODEL, LoraConfig(), 1024, 0, engine="unsloth")
     modules = adapted(backbone)
-    assert len(modules) == 248 and not any(".visual." in n for n in modules)
+    assert len(modules) == (248 if MODEL.name == "qwen3.5-4b" else len(modules)) > 0
+    assert not any(".visual." in n for n in modules)
     assert type(text_tower(backbone)).__name__ == "Qwen3_5TextModel"
-    model = SystemOne(backbone, PointerHead(2560, HeadConfig())).cuda()
+    config = json.loads((MODEL / "config.json").read_text())
+    model = SystemOne(backbone, PointerHead(config.get("text_config", config)["hidden_size"], HeadConfig())).cuda()
     trainable = {n: p for n, p in model.named_parameters() if p.requires_grad}
     assert {p.dtype for p in trainable.values()} == {torch.float32}
     assert all(not p.requires_grad for n, p in backbone.named_parameters() if "lora_" not in n)

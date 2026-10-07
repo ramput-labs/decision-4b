@@ -694,6 +694,12 @@ def parser() -> argparse.ArgumentParser:
         help="continue from a run (its adapter and head; same base, rank, head): a run directory, "
         "hf:<org>/<name>@<rev>, or release:<version> (den release)",
     )
+    p.add_argument(
+        "--limit",
+        type=int,
+        default=0,
+        help="at most this many records from any one file (--data, --replay, --sources-cap; seeded): a small rehearsal",
+    )
     p.add_argument("--max-steps", type=int, default=0, help="stop after this many optimizer steps (a timing run)")
     p.add_argument(
         "--max-minutes", type=float, default=0, help="end training after this many minutes, then calibrate and save"
@@ -725,17 +731,22 @@ def main(argv: list[str] | None = None) -> int:
             raise SystemExit(f"--init-from {args.init_spec}: no head.json there")
 
     model_dir = Path("models") / args.model
-    if not (model_dir / "tokenizer.json").is_file():
+    if not (model_dir / "config.json").is_file() or not (model_dir / "tokenizer.json").is_file():
         raise SystemExit(f"{model_dir} is not downloaded: make model MODEL={args.model}")
     every = [*args.data, *args.dev, *args.calibration, *(args.replay_from if args.replay else [])]
     if missing := [d for d in every if not (CLEAN / d).is_file()]:
-        raise SystemExit(f"missing under {CLEAN}: {missing} (make clean-data)")
+        raise SystemExit(f"missing under {CLEAN}: {missing} (make data-download)")
     tokenizer = Tokenizer.from_file(str(model_dir / "tokenizer.json"))
-    records = load([CLEAN / d for d in args.data])
-    data_used: list[dict[str, object]] = [{"path": d, "sha256": digest(CLEAN / d), "lines": "all"} for d in args.data]
+    data_used: list[dict[str, object]] = []
+    if args.limit:  # a rehearsal (the local GPU): a seeded slice of every file, its lines recorded like replay's
+        args.replay, args.sources_cap = min(args.replay, args.limit), min(args.sources_cap, args.limit)
+        records = [r for d in args.data for r in sample(CLEAN / d, args.limit, args.seed, data_used)]
+    else:
+        records = load([CLEAN / d for d in args.data])
+        data_used += [{"path": d, "sha256": digest(CLEAN / d), "lines": "all"} for d in args.data]
     if args.sources_cap:
         if not (CLEAN / "train" / "sources").is_dir():
-            raise SystemExit(f"{CLEAN}/train/sources is missing: make data-raw-train data-raw-new normalize clean-data")
+            raise SystemExit(f"{CLEAN}/train/sources is missing: make data-download")
         records += sources(args.sources_cap, args.seed, records, data_used)
     for replayed in args.replay_from if args.replay else []:
         records += sample(CLEAN / replayed, args.replay, args.seed, data_used)
@@ -757,7 +768,7 @@ def main(argv: list[str] | None = None) -> int:
     if not args.dry_run:
         train(args, model_dir, data, dev, calibration, data_used)
         # Everything is saved. Skip interpreter teardown: native libraries (torch, tokenizers, triton) have crashed
-        # there with SIGSEGV after a finished run, and a nonzero exit would stop `make train-kev` between stages.
+        # there with SIGSEGV after a finished run, and a nonzero exit would stop `make train-round1` between stages.
         sys.stdout.flush()
         sys.stderr.flush()
         os._exit(0)

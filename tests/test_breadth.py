@@ -161,7 +161,7 @@ def test_jsonl_is_kevs_write_jsonl() -> None:
 @pytest.mark.parametrize("split", ["development", "test"])
 def test_built_breadth_files_are_kevs(split: str) -> None:
     if not OUT[split].is_file():
-        pytest.skip("breadth-v1 not built here (make breadth)")
+        pytest.skip("breadth-v1 not built here (make data-breadth)")
     assert hashlib.sha256(OUT[split].read_bytes()).hexdigest() == EXPECTED[split]
 
 
