@@ -80,6 +80,9 @@ One flat package, `den/`, at the repo root (plus `scripts/` for tools, below), l
   the base's layout and files with exactly the adapted weights changed, sha256 of every model file -> `integrity.json`.
 - `publish.py`: `den publish` bundles `stages/`, `data/` (exact training data + every scored file, sha256
   manifest) and `logs/` into the run, writes the card, uploads it as a private Hub model (resumable), checks the listing. `predict`/`evaluate` accept `--run hf:<org>/<name>`.
+  Hard rule 4 holds here too: `bundle` copies only what `licences.allowed` permits (Kev's `core` suites hold Yelp
+  and Amazon rows, so they never go up) and lists the rest in `MANIFEST.json` by hash and lines; a repo that is
+  already public gets the public rules.
 - `device.py`, `mlx_model.py`, `torch_model.py`: MLX (Apple Silicon) and PyTorch (CUDA/CPU) inference backbones,
   which must return the same hidden states.
 
@@ -158,7 +161,12 @@ import `scripts` from `den`. ruff and mypy cover it like `den/`.
   next-token logits for " A".." Z" (tied embedding rows stored in the head), over the `A) option` prompt: at most
   26 options. `tests/test_wiring.py` proves the four modes train different parameter sets.
 - Ablations: `--lora-targets all|attention-mlp|attention` (248/128/32 modules), `--option-rep end|marker|mean|attn`,
-  `--head-proj linear|mlp`, `--head-kind set|pointer`, `--ordinal-weight`. Defaults reproduce the main run.
+  `--head-proj linear|mlp`, `--head-kind set|pointer`, `--ordinal-weight`, `--lora-alpha N` (default 2 x rank),
+  `--rslora` (PEFT's alpha / sqrt(rank) scaling). Defaults reproduce the main run. `--init-from` refuses a different
+  LoRA scale (alpha, rsLoRA), not only a different rank.
+- `--max-licence <class>` trains only on records whose `_meta` sources are at most that class (`licences.record_kind`;
+  a record naming no source is `unspecified`); `run.json` `licences` counts trained records per class and the model
+  card states them. `--report-to trackio|wandb|tensorboard` hands metrics to the Trainer's own trackers.
 - Gates before any long run: `den overfit` (head fits 100 real rows on cached hidden states; then determinism,
   option-permutation content agreement, option-replacement sensitivity) and `den train --overfit N` (LoRA + head
   through the real loop, dev = the same N rows). Never weaken a gate to make it pass.

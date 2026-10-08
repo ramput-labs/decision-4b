@@ -24,7 +24,7 @@ import shutil
 import tarfile
 import zipfile
 from collections import defaultdict
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from fnmatch import fnmatch
 from pathlib import Path
@@ -249,18 +249,30 @@ def _raw_items() -> list[tuple[str, str]]:
     return sorted(pairs, key=lambda p: -len(p[0]))
 
 
+def record_keys(record: Mapping[str, object]) -> set[str]:
+    """The sources one record holds, from its `_meta`."""
+    meta = record.get("_meta")
+    keys = set()
+    for field in ("source", "parent_source"):
+        if isinstance(meta, dict) and (name := meta.get(field)):
+            if field == "source" and name == "buried":  # a probe whose text is all its parent dataset's
+                continue
+            keys.add(source_key(str(name)))
+    return keys
+
+
+def record_kind(record: Mapping[str, object]) -> Kind:
+    """One record's licence class; a record that names no source is `unspecified`, never assumed open."""
+    keys = record_keys(record)
+    return kind(keys) if keys else "unspecified"
+
+
 def _record_keys(path: Path) -> set[str]:
     keys = set()
     with path.open(encoding="utf-8") as f:
         for line in f:
-            if not line.strip():
-                continue
-            meta = json.loads(line).get("_meta") or {}
-            for field in ("source", "parent_source"):
-                if name := meta.get(field):
-                    if field == "source" and name == "buried":  # a probe whose text is all its parent dataset's
-                        continue
-                    keys.add(source_key(str(name)))
+            if line.strip():
+                keys |= record_keys(json.loads(line))
     return keys
 
 

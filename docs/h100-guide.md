@@ -39,10 +39,18 @@ The GPU box gets the code from GitHub (`ramput-labs/den`), so everything must be
 
 ```bash
 cd ~/ramput-labs/den
+git checkout main && git pull   # the box must get every merged fix (e.g. the merged/ integrity check)
 make check                     # must end with "... passed" and "claims: 0 of 0 trace to their evidence"
-git checkout -b h100-v1        # or the branch the local rehearsal ran
+git checkout -b h100-v1
 git add -A && git commit -m "Prepare v1 training"
 git push -u origin h100-v1
+```
+
+If `data/` was regenerated since the last upload (a change to `sources.py`, `normalize.py` or `clean.py`), upload it
+before renting the box. Otherwise the box downloads the old copy and trains on it:
+
+```bash
+make data-upload DATA_REPO=a1i6ek/den-datasets TAG=data-v1
 ```
 
 ### A.2 Tokens and names

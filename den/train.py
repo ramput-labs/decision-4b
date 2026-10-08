@@ -41,6 +41,7 @@ from tokenizers import Tokenizer
 from .api import Record, read
 from .device import hidden_size
 from .fetch import digest
+from .licences import RANK, Kind, record_kind
 from .prompt import LETTERS, MAX_STATE_TOKENS, Example, Style, augment, encode, none_pair, shuffle_options, split
 
 CLEAN = Path("data/clean")
@@ -51,11 +52,37 @@ def load(paths: Sequence[Path]) -> list[Record]:
     return [record for path in paths for record in read(path)]
 
 
-def sample(path: Path, cap: int, seed: int, used: list[dict[str, object]] | None = None) -> list[Record]:
-    """Up to `cap` records of one file, the same ones for the same seed; only the chosen lines are parsed. The file
-    and its chosen line numbers are appended to `used`, the run's data manifest."""
+def kinds(path: Path) -> dict[int, Kind]:
+    """Each non-empty line's licence class (`licences.record_kind`), by 1-based line number."""
     with path.open(encoding="utf-8") as f:
-        numbered = [n for n, line in enumerate(f, 1) if line.strip()]
+        return {n: record_kind(json.loads(line)) for n, line in enumerate(f, 1) if line.strip()}
+
+
+def licensed(path: Path, worst: Kind | None) -> list[int]:
+    """The non-empty lines of `path` whose sources are no more restrictive than `worst` (all of them if None)."""
+    if worst is None:
+        with path.open(encoding="utf-8") as f:
+            return [n for n, line in enumerate(f, 1) if line.strip()]
+    return [n for n, k in kinds(path).items() if RANK[k] <= RANK[worst]]
+
+
+def licence_counts(used: Sequence[dict[str, object]]) -> dict[str, int]:
+    """How many trained records fall in each licence class, over the run's data manifest: what the card states."""
+    counts: dict[str, int] = {}
+    for entry in used:
+        lines, classes = entry["lines"], kinds(CLEAN / str(entry["path"]))
+        for n in lines if isinstance(lines, list) else classes:
+            counts[classes[n]] = counts.get(classes[n], 0) + 1
+    return {k: counts[k] for k in RANK if k in counts}
+
+
+def sample(
+    path: Path, cap: int, seed: int, used: list[dict[str, object]] | None = None, worst: Kind | None = None
+) -> list[Record]:
+    """Up to `cap` records of one file, the same ones for the same seed; only the chosen lines are parsed. The file
+    and its chosen line numbers are appended to `used`, the run's data manifest. With `worst`, only records whose
+    sources are no more restrictive than that licence class are eligible."""
+    numbered = licensed(path, worst)
     rng = random.Random(f"{seed}:{path.as_posix()}")
     lines = sorted(rng.sample(numbered, min(cap, len(numbered))))
     if used is not None:
@@ -64,7 +91,11 @@ def sample(path: Path, cap: int, seed: int, used: list[dict[str, object]] | None
 
 
 def sources(
-    cap: int, seed: int, known: Sequence[Record] = (), used: list[dict[str, object]] | None = None
+    cap: int,
+    seed: int,
+    known: Sequence[Record] = (),
+    used: list[dict[str, object]] | None = None,
+    worst: Kind | None = None,
 ) -> list[Record]:
     """A balanced slice of every normalized trainable source: at most `cap` records each, so yelp's 644k records do
     not drown banking77's 9k. Records whose source text is already in `known` are left out: Kev's core holds 1,000
@@ -74,7 +105,7 @@ def sources(
     return [
         r
         for path in sorted((CLEAN / "train" / "sources").rglob("*.jsonl"))
-        for r in sample(path, cap, seed, used)
+        for r in sample(path, cap, seed, used, worst)
         if r.provenance not in seen and r.fingerprint not in seen
     ]
 
@@ -254,7 +285,12 @@ def train(
 ) -> None:
     from .model import LORA_PRESETS, HeadConfig, LoraConfig, load_backbone, make_head
 
-    lora = LoraConfig(rank=args.lora, alpha=2 * args.lora, targets=LORA_PRESETS[args.lora_targets])
+    lora = LoraConfig(
+        rank=args.lora,
+        alpha=args.lora_alpha or 2 * args.lora,
+        targets=LORA_PRESETS[args.lora_targets],
+        rslora=args.rslora,
+    )
     config = HeadConfig(
         args.head_kind, args.head_dim, args.head_layers, args.head_heads, rep=args.option_rep, proj=args.head_proj
     )
@@ -419,7 +455,8 @@ def train(
                 save_strategy="steps" if args.save_steps else "no",
                 save_steps=args.save_steps or 500,
                 save_total_limit=2,
-                report_to="none",
+                report_to=args.report_to,  # the Trainer's own trackers; run.json is written either way
+                run_name=Path(args.out).name,
                 remove_unused_columns=False,  # the head needs every example's positions
                 dataloader_pin_memory=cuda,
                 tf32=cuda,  # the head and the softmaxes run in fp32: TF32 tensor cores on H100
@@ -505,7 +542,13 @@ def train(
     dev_at_t = {"nll": report["after"]["nll"], "accuracy": report["after"]["accuracy"]} if dev else {}
 
     out.mkdir(parents=True, exist_ok=True)
-    meta = {"base": args.model, "lora": lora.rank, "engine": args.engine}
+    meta = {
+        "base": args.model,
+        "lora": lora.rank,
+        "lora_alpha": lora.alpha,
+        "rslora": lora.rslora,
+        "engine": args.engine,
+    }
     if lora.rank:
         backbone.save_pretrained(out)
     save_head(out, model.head, **meta, temperature=temperature, temperatures=temperatures)
@@ -558,6 +601,7 @@ def train(
         "lora": {
             "rank": lora.rank,
             "alpha": lora.alpha,
+            "rslora": lora.rslora,
             "dropout": lora.dropout,
             "targets": list(lora.targets),
             "modules": len(adapted(backbone)),
@@ -585,6 +629,8 @@ def train(
         "best": selection,
         "dev_files": args.dev,
         "data_used": data_used,
+        "max_licence": args.max_licence,
+        "licences": licence_counts(data_used),  # trained records per licence class
         "versions": versions(),
         "commit": commit(),
         "finished": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -647,7 +693,21 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--head-lr", type=float, default=0, help="the pointer head's peak learning rate; 0: same as --lr")
     p.add_argument("--warmup", type=float, default=0.1, help="share of steps spent warming up (Kev: 0.1)")
     p.add_argument("--weight-decay", type=float, default=0.01)
-    p.add_argument("--lora", type=int, default=16, help="LoRA rank; alpha is twice this; 0 trains the head alone")
+    p.add_argument("--lora", type=int, default=16, help="LoRA rank; 0 trains the head alone")
+    p.add_argument("--lora-alpha", type=int, default=0, help="LoRA alpha; 0: twice the rank (Kev-4B)")
+    p.add_argument("--rslora", action="store_true", help="rsLoRA: scale by alpha / sqrt(rank), for higher ranks")
+    p.add_argument(
+        "--max-licence",
+        choices=tuple(RANK),
+        help="train only on records whose sources are at most this licence class (licences.py), e.g. share-alike "
+        "for a model whose training data allows commercial use; default: everything",
+    )
+    p.add_argument(
+        "--report-to",
+        nargs="+",
+        default=["none"],
+        help="Trainer experiment trackers, e.g. trackio, wandb, tensorboard (each needs its package installed)",
+    )
     p.add_argument(
         "--engine",
         choices=("unsloth", "peft"),
@@ -738,18 +798,21 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit(f"missing under {CLEAN}: {missing} (make data-download)")
     tokenizer = Tokenizer.from_file(str(model_dir / "tokenizer.json"))
     data_used: list[dict[str, object]] = []
+    worst: Kind | None = args.max_licence
     if args.limit:  # a rehearsal (the local GPU): a seeded slice of every file, its lines recorded like replay's
         args.replay, args.sources_cap = min(args.replay, args.limit), min(args.sources_cap, args.limit)
-        records = [r for d in args.data for r in sample(CLEAN / d, args.limit, args.seed, data_used)]
+        records = [r for d in args.data for r in sample(CLEAN / d, args.limit, args.seed, data_used, worst)]
+    elif worst:  # every record the licence allows, its lines recorded (sampling all of them keeps every one)
+        records = [r for d in args.data for r in sample(CLEAN / d, 1 << 62, args.seed, data_used, worst)]
     else:
         records = load([CLEAN / d for d in args.data])
         data_used += [{"path": d, "sha256": digest(CLEAN / d), "lines": "all"} for d in args.data]
     if args.sources_cap:
         if not (CLEAN / "train" / "sources").is_dir():
             raise SystemExit(f"{CLEAN}/train/sources is missing: make data-download")
-        records += sources(args.sources_cap, args.seed, records, data_used)
+        records += sources(args.sources_cap, args.seed, records, data_used, worst)
     for replayed in args.replay_from if args.replay else []:
-        records += sample(CLEAN / replayed, args.replay, args.seed, data_used)
+        records += sample(CLEAN / replayed, args.replay, args.seed, data_used, worst)
     records = [one for r in records for one in split(r)]  # one row per question, as served
     style: Style = "letters" if args.head_kind == "letters" else "dash"
     if args.overfit:  # a fixed slice, unaugmented, scored on itself: a model that can't fit it can't learn

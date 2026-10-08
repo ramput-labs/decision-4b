@@ -15,6 +15,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
+from .licences import RANK, Kind, allowed, classify
 from .pins import MODELS
 
 NEEDED = ("head.safetensors", "head.json", "run.json", "merged/config.json", "merged/tokenizer.json")
@@ -38,6 +39,8 @@ def stages(run: Path) -> list[tuple[Path, dict[str, Any]]]:
 
 
 def card(run: Path, repo: str) -> str:
+    from huggingface_hub import ModelCardData
+
     """The model card: what the model is, its measured numbers, and how to use it."""
     trained, evaluated = _json(run / "run.json"), _json(run / "eval.json")
     history = "\n".join(
@@ -54,11 +57,17 @@ def card(run: Path, repo: str) -> str:
         for name, m in sorted(evaluated.items())
     )
     versions = ", ".join(f"{k} {v}" for k, v in trained.get("versions", {}).items())
-    details = "\n".join(p for p in (calibrated(trained), behavior(evaluated), compared(run), checked(run)) if p)
+    sections = (calibrated(trained), behavior(evaluated), compared(run), checked(run), trained_on(run))
+    details = "\n".join(p for p in sections if p)
+    metadata = ModelCardData(
+        license=base_licence(run),
+        base_model=base,
+        base_model_relation="finetune",  # merged/ is the base with the LoRA folded in
+        library_name="peft",
+        tags=["den", "pointer-head", "lora", "unsloth", "calibrated", "multiple-choice"],
+    )
     return f"""---
-base_model: {base}
-library_name: peft
-tags: [den, pointer-head, lora, unsloth, calibrated, multiple-choice]
+{metadata.to_yaml()}
 ---
 
 # {repo.rsplit("/", 1)[-1]}
@@ -104,7 +113,9 @@ on confidence, not accuracy.
 - `integrity.json`: the merged run's checks and every model file's sha256; `baselines.json`: the mode comparison.
 - `stages/`: every earlier training stage (adapter, head, its run.json), to continue or compare from.
 - `data/`: the exact training data of every stage (sampled files hold only the lines used), the dev, calibration and
-  test files it was scored on, and `data/MANIFEST.json` with their sha256.
+  test files it was scored on, and `data/MANIFEST.json` with their sha256. Files whose licences forbid
+  redistribution are left out; the manifest lists them by hash and line numbers, so a `make data-download` copy
+  rebuilds them exactly.
 - `logs/`: the training logs.
 
 ## Training
@@ -118,6 +129,38 @@ Each stage continued from the one before it (Kev-4B's recipe, with Kev's none-of
 
 Code {trained.get("commit", "?")}; {versions}.
 """
+
+
+def base_licence(run: Path) -> str | None:
+    """The base model's licence, from the card `merged/` copies from it: the weights keep their base's licence."""
+    from huggingface_hub import ModelCard
+
+    readme = run / "merged" / "README.md"
+    found = ModelCard.load(readme).data.license if readme.is_file() else None
+    return str(found) if found else None
+
+
+def trained_on(run: Path) -> str:
+    """The training records' licence classes over every stage (`run.json` `licences`), and what that means for use."""
+    counts: dict[str, int] = {}
+    for _, record in stages(run):
+        for k, n in (record.get("licences") or {}).items():
+            counts[k] = counts.get(k, 0) + n
+    if not counts:
+        return ""
+    rows = "\n".join(f"| {k} | {counts[k]} |" for k in RANK if k in counts)
+    limit = _json(run / "run.json").get("max_licence")
+    beyond = [k for k in counts if RANK[k] > RANK["share-alike"]]  # type: ignore[index]
+    note = (
+        f"Some training records come from sources whose terms limit their use ({', '.join(beyond)}; see "
+        "`data/LICENSES.md` in the data repo). The weights carry the base model's licence; whether those data terms "
+        "reach a model trained on them is a legal question this card does not settle. `den train --max-licence "
+        "share-alike` trains only on data whose terms allow commercial use."
+        if beyond
+        else "Every training record comes from a source whose terms allow commercial use (open or share-alike)."
+    )
+    cap = f" Trained with `--max-licence {limit}`." if limit else ""
+    return f"## Training data licences\n\n| class | records |\n|---|---|\n{rows}\n\n{note}{cap}\n"
 
 
 def calibrated(trained: dict[str, Any]) -> str:
@@ -192,12 +235,18 @@ STAGE_FILES = (
 CLEAN = Path("data/clean")
 
 
-def bundle(run: Path, logs: Sequence[Path] = ()) -> dict[str, Any]:
+def licence(rel: str) -> tuple[Kind, list[str]]:
+    """A data/clean file's licence class and sources, read as `den licences` and the data mirror read them."""
+    return classify(CLEAN.parent, [f"clean/{rel}"])[f"clean/{rel}"]
+
+
+def bundle(run: Path, logs: Sequence[Path] = (), public: bool = False) -> dict[str, Any]:
     """Gather everything worth keeping into the run directory, beside the model, so one upload carries it:
 
     - `stages/<name>/`: every earlier stage of the chain (adapter, head, run.json; no merged weights)
     - `data/`: the exact training data of every stage (whole files, or only the sampled lines), the dev and calibration
-      files, and every file in eval.json (test included: it was read for this run), with `data/MANIFEST.json`
+      files, and every file in eval.json (test included: it was read for this run), with `data/MANIFEST.json`;
+      a file the licences keep off this copy (`licences.allowed`) is listed there by hash and lines, never copied
     - `logs/`: the given log files
 
     Returns the manifest."""
@@ -228,6 +277,11 @@ def bundle(run: Path, logs: Sequence[Path] = ()) -> dict[str, Any]:
         if not source.is_file():
             manifest[rel] = {"missing": True}
             continue
+        k, keys = licence(rel)
+        if not allowed(k, public):
+            target.unlink(missing_ok=True)  # an earlier bundle may have copied it
+            manifest[rel] = {"excluded": f"{k}: {', '.join(keys)}", "source_sha256": digest(source), "lines": lines}
+            continue
         target.parent.mkdir(parents=True, exist_ok=True)
         if lines == "all":
             shutil.copy2(source, target)
@@ -253,16 +307,23 @@ def verify(run: Path) -> None:
 
 
 def publish(run: Path, repo: str, private: bool = True, logs: Sequence[Path] = ()) -> list[str]:
-    from huggingface_hub import create_repo, list_repo_files, upload_large_folder
+    from huggingface_hub import HfApi, create_repo, list_repo_files, upload_large_folder
 
     if missing := [f for f in NEEDED if not (run / f).is_file()]:
         raise SystemExit(f"{run} is missing {missing}: train with --merge first")
     verify(run)
-    bundle(run, logs)
+    api = HfApi()
+    public = not private or (api.repo_exists(repo) and not api.model_info(repo).private)  # public rules if it is
+    manifest = bundle(run, logs, public=public)
+    excluded = sorted(f"data/{rel}" for rel, entry in manifest.items() if "excluded" in entry)
     (run / "README.md").write_text(card(run, repo), encoding="utf-8")
-    create_repo(repo, private=private, repo_type="model", exist_ok=True)
-    upload_large_folder(repo, run, repo_type="model", private=private, ignore_patterns=list(SKIP))
+    create_repo(repo, private=not public, repo_type="model", exist_ok=True)
+    if stale := sorted(set(list_repo_files(repo)) & set(excluded)):  # an earlier upload carried them
+        api.delete_files(repo, delete_patterns=stale, commit_message="den: remove data the licences exclude")
+    upload_large_folder(repo, run, repo_type="model", private=not public, ignore_patterns=[*SKIP, *excluded])
     files = list_repo_files(repo)
+    if leaked := sorted(set(files) & set(excluded)):
+        raise SystemExit(f"{repo} holds data the licences exclude: {leaked}")
     if absent := [f for f in (*NEEDED, "README.md", "data/MANIFEST.json") if f not in files]:
         raise SystemExit(f"uploaded, but {repo} lacks {absent}: run the same command again")
     return files
@@ -280,7 +341,7 @@ def publish_main(argv: list[str] | None = None) -> int:
     args = p.parse_args(argv)
     if args.local:
         verify(args.run)
-        manifest = bundle(args.run, args.logs)
+        manifest = bundle(args.run, args.logs, public=args.public)
         (args.run / "README.md").write_text(card(args.run, args.repo), encoding="utf-8")
         print(f"bundled {args.run}: {len(manifest)} data files, {len(stages(args.run)) - 1} earlier stages")
         return 0

@@ -59,6 +59,22 @@ def test_model_card_reports_the_measured_numbers(tmp_path: Path) -> None:
     assert "T = 1.230" in text and "hf:org/systemone-test" in text and "| 1883 | 71.5 | 1.230 |" in text
 
 
+def test_model_card_states_the_licences(tmp_path: Path) -> None:
+    from den.publish import card
+
+    (tmp_path / "merged").mkdir()
+    (tmp_path / "merged" / "README.md").write_text("---\nlicense: apache-2.0\n---\n# Qwen\n")
+    run = {"base": "qwen3.5-4b", "licences": {"open": 90, "restricted": 10}}
+    (tmp_path / "run.json").write_text(json.dumps(run))
+    text = card(tmp_path, "org/den")
+    assert "license: apache-2.0" in text and "base_model_relation: finetune" in text
+    assert "| open | 90 |\n| restricted | 10 |" in text and "terms limit their use (restricted" in text
+    (tmp_path / "run.json").write_text(json.dumps({**run, "licences": {"open": 90}, "max_licence": "share-alike"}))
+    assert "allow commercial use (open or share-alike). Trained with `--max-licence share-alike`." in card(
+        tmp_path, "org/den"
+    )
+
+
 def test_model_card_lists_every_stage(tmp_path: Path) -> None:
     from den.publish import card
 
@@ -120,6 +136,7 @@ def test_bundle_collects_stages_and_exact_data(tmp_path: Path, monkeypatch: pyte
     (clean / "train" / "big.jsonl").write_text("1\n2\n3\n4\n5\n")
     (clean / "dev" / "core.jsonl").write_text("dev\n")
     monkeypatch.setattr(publish, "CLEAN", clean)
+    monkeypatch.setattr(publish, "licence", lambda rel: ("open", []))
     first, last = tmp_path / "runs" / "1-base", tmp_path / "runs" / "2-more"
     for run, used, previous in (
         (first, [{"path": "train/core.jsonl", "sha256": "x", "lines": "all"}], None),
@@ -136,6 +153,80 @@ def test_bundle_collects_stages_and_exact_data(tmp_path: Path, monkeypatch: pyte
     assert (last / "data" / "train" / "big.jsonl").read_text() == "2\n5\n"  # only the sampled lines
     assert manifest["train/big.jsonl"]["lines"] == 2 and manifest["dev/core.jsonl"]["lines"] == "all"
     assert json.loads((last / "data" / "MANIFEST.json").read_text()) == manifest
+
+
+def _licensed_run(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """A run trained on an open file and a sample of a restricted one, scored on a dev file with no stated licence."""
+    from den import publish
+
+    clean = tmp_path / "clean"
+    for rel, text in (("train/open.jsonl", "o\n"), ("train/yelp.jsonl", "1\n2\n3\n"), ("dev/trec.jsonl", "d\n")):
+        (clean / rel).parent.mkdir(parents=True, exist_ok=True)
+        (clean / rel).write_text(text)
+    classes = {"train/open.jsonl": "open", "train/yelp.jsonl": "restricted", "dev/trec.jsonl": "unspecified"}
+    monkeypatch.setattr(publish, "CLEAN", clean)
+    monkeypatch.setattr(publish, "licence", lambda rel: (classes[rel], [rel]))
+    run = tmp_path / "run"
+    run.mkdir()
+    used = [{"path": "train/open.jsonl", "lines": "all"}, {"path": "train/yelp.jsonl", "lines": [1, 3]}]
+    (run / "run.json").write_text(json.dumps({"data_used": used, "dev_files": ["dev/trec.jsonl"]}))
+    return run
+
+
+def test_bundle_leaves_out_what_the_licences_forbid(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from den import publish
+
+    run = _licensed_run(tmp_path, monkeypatch)
+    manifest = publish.bundle(run)
+    assert (run / "data/train/open.jsonl").is_file() and (run / "data/dev/trec.jsonl").is_file()
+    assert not (run / "data/train/yelp.jsonl").exists()
+    assert manifest["train/yelp.jsonl"]["excluded"].startswith("restricted") and manifest["train/yelp.jsonl"][
+        "lines"
+    ] == [1, 3]
+    public = publish.bundle(run, public=True)  # stricter: no stated licence stays private, and the earlier copy goes
+    assert "excluded" in public["dev/trec.jsonl"] and not (run / "data/dev/trec.jsonl").exists()
+
+
+def test_publish_never_uploads_excluded_data(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import huggingface_hub
+
+    from den import publish
+
+    run = _licensed_run(tmp_path, monkeypatch)
+    for f in set(publish.NEEDED) - {"run.json"}:
+        (run / f).parent.mkdir(parents=True, exist_ok=True)
+        (run / f).write_text("{}")
+    on_hub = {*publish.NEEDED, "README.md", "data/MANIFEST.json", "data/train/yelp.jsonl", "data/dev/trec.jsonl"}
+    calls: dict[str, list[str]] = {}
+    private: list[bool] = []
+
+    class Api:
+        def repo_exists(self, repo: str) -> bool:
+            return True
+
+        def model_info(self, repo: str) -> object:
+            return type("Info", (), {"private": False})()  # already public: public rules apply
+
+        def delete_files(self, repo: str, delete_patterns: list[str], commit_message: str) -> None:
+            on_hub.difference_update(delete_patterns)
+            calls["deleted"] = delete_patterns
+
+    def upload(repo: str, folder: Path, repo_type: str, ignore_patterns: list[str], **kw: bool) -> None:
+        private.append(kw["private"])
+        calls["ignored"] = ignore_patterns
+
+    monkeypatch.setattr(publish, "verify", lambda run: None)
+    monkeypatch.setattr(huggingface_hub, "HfApi", Api)
+    monkeypatch.setattr(huggingface_hub, "create_repo", lambda *a, **k: None)
+    monkeypatch.setattr(huggingface_hub, "upload_large_folder", upload)
+    monkeypatch.setattr(huggingface_hub, "list_repo_files", lambda repo: sorted(on_hub))
+    publish.publish(run, "org/den", private=True)
+    assert calls["deleted"] == ["data/dev/trec.jsonl", "data/train/yelp.jsonl"] and private == [False]
+    assert {"data/dev/trec.jsonl", "data/train/yelp.jsonl"} <= set(calls["ignored"])
+    on_hub.add("data/train/yelp.jsonl")  # a copy that slipped through is caught after the upload
+    monkeypatch.setattr(Api, "delete_files", lambda self, repo, delete_patterns, commit_message: None)
+    with pytest.raises(SystemExit, match="licences exclude"):
+        publish.publish(run, "org/den", private=True)
 
 
 def test_metrics_brier_coverage_and_score_error() -> None:

@@ -367,6 +367,17 @@ def test_warm_start_refuses_a_different_shape(tmp_path: Path) -> None:
     assert all(torch.equal(a, b) for a, b in zip(fresh.state_dict().values(), head.state_dict().values(), strict=True))
     with pytest.raises(SystemExit, match="lora rank"):
         warm_start(None, fresh, tmp_path, "qwen3.5-4b", LoraConfig(rank=16))
+    save_head(tmp_path, head, base="qwen3.5-4b", lora=16, temperature=1.5)  # an older head: no alpha, no rsLoRA
+    for other in (LoraConfig(rank=16, alpha=16), LoraConfig(rank=16, rslora=True)):
+        with pytest.raises(SystemExit, match="lora scale"):
+            warm_start(None, fresh, tmp_path, "qwen3.5-4b", other)
+
+
+def test_lora_scale_follows_alpha_and_rslora() -> None:
+    from den.model import LoraConfig
+
+    assert LoraConfig(rank=16, alpha=32).scale == 2.0 and LoraConfig(rank=16, alpha=32, rslora=True).scale == 8.0
+    assert LoraConfig(rank=0).scale == 0.0
 
 
 def test_head_saves_as_safetensors_and_checks_the_backbone(tmp_path: Path) -> None:
@@ -632,3 +643,36 @@ def test_run_metadata_helpers() -> None:
     assert pinned("qwen3.5-4b") == {"key": "qwen3.5-4b", "repo": "Qwen/Qwen3.5-4B-Base",
                                     "revision": "1001bb4d826a52d1f399e183466143f4da7b741b"}  # fmt: skip
     assert {"platform", "python", "cuda", "cudnn", "driver", "gpu_count"} <= set(runtime())
+
+
+def test_max_licence_keeps_only_records_the_licence_allows(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import json
+
+    from den import train
+
+    question = {"answer": {"type": "noul", "instructions": "Ok?", "label": True}}
+    rows = [{"state": f"s{i}", "questions": question, "_meta": {"source": s}} for i, s in enumerate(
+        ("banking77", "yelp", "dbpedia14", "agnews")
+    )] + [{"state": "no source", "questions": question}]  # fmt: skip
+    path = tmp_path / "train" / "mixed.jsonl"
+    path.parent.mkdir()
+    path.write_text("".join(json.dumps(r) + "\n" for r in rows))
+    monkeypatch.setattr(train, "CLEAN", tmp_path)
+    assert train.licensed(path, None) == [1, 2, 3, 4, 5]
+    assert train.licensed(path, "open") == [1]
+    assert train.licensed(path, "share-alike") == [1, 3]
+    assert train.licensed(path, "restricted") == [1, 2, 3, 4, 5]  # a record naming no source counts as unspecified
+    used: list[dict[str, object]] = []
+    kept = train.sample(path, 99, 0, used, "non-commercial")
+    assert [r.state for r in kept] == ["s0", "s2", "s3"] and used[0]["lines"] == [1, 3, 4]
+    assert train.licence_counts(used) == {"open": 1, "share-alike": 1, "non-commercial": 1}
+    assert train.licence_counts([{"path": "train/mixed.jsonl", "lines": "all"}]) == {
+        "open": 1, "share-alike": 1, "non-commercial": 1, "unspecified": 1, "restricted": 1
+    }  # fmt: skip
+
+
+def test_new_training_flags_default_to_kevs_recipe() -> None:
+    from den.train import parser
+
+    args = parser().parse_args([])
+    assert (args.lora, args.lora_alpha, args.rslora, args.max_licence, args.report_to) == (16, 0, False, None, ["none"])
