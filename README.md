@@ -99,7 +99,10 @@ make train ARGS="--lora 0 --head-lr 1e-3"    # baseline: frozen Qwen, pointer he
 | D Qwen + LoRA + pointer head (the release recipe) | `make train-round1`, `make train-round2` |
 
 Ablations: `--lora-targets all|attention-mlp|attention`, `--option-rep end|marker|mean|attn`, `--head-proj
-linear|mlp`, `--head-kind set|pointer`, `--ordinal-weight`. Gates: `den overfit` (the head must fit 100 real
+linear|mlp`, `--head-kind set|pointer`, `--ordinal-weight`, `--lora-alpha`, `--rslora`. For a model whose
+training data all allows commercial use, `--max-licence share-alike` keeps only open and share-alike records (the
+card lists the classes trained on); `--report-to trackio` (or `wandb`, `tensorboard`) logs to an experiment tracker.
+Gates: `den overfit` (the head must fit 100 real
 examples; then determinism, option-permutation and option-replacement checks) and `den train --overfit 100` (the
 same through LoRA and the real training loop). `den probe` compares modes A and C quickly on frozen-backbone features (also on a Mac). `den evaluate --augment pairs|none-replace|none-add|distract` measures
 Kev's augmentations, with `pair_accuracy` for minimal pairs.

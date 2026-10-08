@@ -28,7 +28,7 @@ use and speed, which the H100's timing run measures. `make local-doctor` refuses
 | 1 | Prepare the machine: Linux or WSL2, driver, packages | 10–30 min, once |
 | 2 | Install the code, Unsloth, the model and the data | 30–40 min, once |
 | 3 | Gates: CUDA tests, overfit tests | ~15 min |
-| 4 | Train both rounds at small scale | ~1 h |
+| 4 | Train both rounds at small scale | ~2 h (1 h 50 min measured) |
 | 5 | Evaluate, choose, answer a request | ~10 min |
 | 6 | Read the results; go to the H100 | 5 min |
 
@@ -136,7 +136,7 @@ send me the log.
 
 ---
 
-## Step 4: train both rounds at small scale (~1 h)
+## Step 4: train both rounds at small scale (~2 h)
 
 ```bash
 make local-train

@@ -54,6 +54,11 @@ class LoraConfig:
     alpha: int = 32
     dropout: float = 0.0  # Unsloth's fast LoRA path needs 0
     targets: tuple[str, ...] = LORA_TARGETS
+    rslora: bool = False  # scale by alpha / sqrt(rank), not alpha / rank (rsLoRA): steadier at higher ranks
+
+    @property
+    def scale(self) -> float:
+        return self.alpha / (math.sqrt(self.rank) if self.rslora else self.rank) if self.rank else 0.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -309,6 +314,7 @@ def load_backbone(path: Path, lora: LoraConfig, max_seq: int, seed: int, engine:
                 lora_dropout=lora.dropout,
                 target_modules=list(lora.targets),
                 bias="none",
+                use_rslora=lora.rslora,
                 use_gradient_checkpointing="unsloth",
                 random_state=seed,
                 max_seq_length=max_seq,
@@ -329,6 +335,7 @@ def load_backbone(path: Path, lora: LoraConfig, max_seq: int, seed: int, engine:
                 lora_dropout=lora.dropout,
                 target_modules=list(lora.targets),
                 bias="none",
+                use_rslora=lora.rslora,
             )
             model = peft.get_peft_model(model, config)
     if not lora.rank:
@@ -421,11 +428,14 @@ def warm_start(backbone: Any, head: nn.Module, run: Path, base: str, lora: LoraC
     """Load a finished run's adapter and pointer head into fresh ones of the same shape, to continue training from it
     (Kev's `--init_from`, used for every stage after the first). Returns the run's temperature, for the record."""
     previous, meta = load_head(run, int(head.hidden))  # type: ignore[arg-type]
+    rank = int(meta.get("lora") or 0)  # heads saved before alpha and rsLoRA were options: alpha 2 x rank, no rsLoRA
+    theirs = LoraConfig(rank, int(meta.get("lora_alpha", 2 * rank)), rslora=bool(meta.get("rslora", False)))
     mismatch = [
         f"{name} {theirs!r} != {ours!r}"
         for name, theirs, ours in (
             ("base", meta.get("base"), base),
             ("lora rank", meta.get("lora"), lora.rank),
+            ("lora scale (alpha, rsLoRA)", theirs.scale, lora.scale),  # the adapter would act at another strength
             ("head", _shape(previous.config), _shape(head.config)),  # type: ignore[arg-type]
         )
         if theirs != ours
