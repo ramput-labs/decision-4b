@@ -179,10 +179,10 @@
     "problems_after": {}
   },
   "train/sources/tools/glaive-function-calling.jsonl": {
-    "records": 30024,
+    "records": 28617,
     "rewritten": 0,
     "duplicates_dropped": 0,
-    "written": 30024,
+    "written": 28617,
     "problems_before": {},
     "problems_after": {}
   },
@@ -476,10 +476,10 @@
     "problems_after": {}
   },
   "dev/sources/tools/glaive-function-calling.jsonl": {
-    "records": 3850,
+    "records": 3666,
     "rewritten": 0,
     "duplicates_dropped": 0,
-    "written": 3850,
+    "written": 3666,
     "problems_before": {},
     "problems_after": {}
   },
@@ -792,10 +792,10 @@
     "problems_after": {}
   },
   "test/sources/tools/glaive-function-calling.jsonl": {
-    "records": 3763,
+    "records": 3586,
     "rewritten": 0,
     "duplicates_dropped": 0,
-    "written": 3763,
+    "written": 3586,
     "problems_before": {},
     "problems_after": {}
   },

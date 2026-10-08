@@ -305,38 +305,128 @@ def _functions(system: str) -> list[dict[str, Json]] | None:
     return found or None
 
 
-def glaive(row: Row, labels: Labels) -> Json | None:
-    system, chat = _str(row, "system"), _str(row, "chat")
-    if system is None or chat is None or not chat.startswith("USER:") or "ASSISTANT:" not in chat:
+_TURN = re.compile(r"(?:^|\n)\s*(USER|ASSISTANT|FUNCTION RESPONSE):")
+_CALL = re.compile(r'<functioncall>\s*\{\s*"name"\s*:\s*"([^"]+)"')
+_REFUSAL = re.compile(
+    r"\b(?:sorry|unable|can't|cannot|can not|not able|don't have the (?:ability|capability)|beyond my|limited to)\b",
+    re.I,
+)
+
+
+def _glaive_decision(chat: str) -> tuple[str, str | None, bool | None] | None:
+    """(request, function called for it, whether the request already held its arguments), or None if ambiguous.
+
+    Glaive's assistant often asks for missing arguments first and calls a turn later; that request still fits the
+    function, so only a conversation that never calls one is a "no". A call any later, or after a refusal (the user
+    then asks for something else), can't be tied to the first request and is left out."""
+    parts = _TURN.split(chat)
+    if parts[0].strip():
         return None
-    functions = _functions(system)
-    if functions is None:
+    turns = [(parts[i], parts[i + 1].strip()) for i in range(1, len(parts) - 1, 2)]
+    if len(turns) < 2 or turns[0][0] != "USER" or turns[1][0] != "ASSISTANT":
         return None
-    request, _, rest = chat.removeprefix("USER:").partition("ASSISTANT:")
-    reply = re.split(r"\n\s*(?:USER|FUNCTION RESPONSE):", rest, maxsplit=1)[0].strip()
-    called = re.match(r'<functioncall>\s*\{\s*"name"\s*:\s*"([^"]+)"', reply)
-    request_text = clean(request)
-    functions = [functions[i] for i in _seeded_order(request_text, [str(f["name"]) for f in functions])]
-    names = [str(f["name"]) for f in functions]
-    if len(set(names)) != len(names) or (called and called.group(1) not in names):
+    request, reply = turns[0][1], turns[1][1]
+    if called := _CALL.match(reply):
+        return request, called.group(1), True
+    if "<functioncall>" not in chat:
+        return request, None, None
+    if len(turns) < 4 or turns[2][0] != "USER" or turns[3][0] != "ASSISTANT" or _REFUSAL.search(reply):
         return None
-    catalog: list[Json] = []
-    for f in functions:
-        params = f.get("parameters")
-        props = params.get("properties") if isinstance(params, dict) else None
-        entry: dict[str, Json] = {"name": str(f["name"]), "description": clean(str(f.get("description", "")))}
-        if isinstance(props, dict) and props:
-            entry["parameters"] = ", ".join(props)
-        catalog.append(entry)
-    questions: dict[str, Json] = {
-        "call": _noul("Should the assistant call one of the available functions for this request?", called is not None)
-    }
-    if len(names) > 1:
-        options: dict[str, Json] = {**dict.fromkeys(names), "none": "No function fits this request"}
-        questions["function"] = _choice(
-            "Which function should handle this request?", options, called.group(1) if called else "none"
-        )
-    return _request({"functions": catalog, "request": request_text}, **questions)
+    called = _CALL.match(turns[3][1])
+    return (request, called.group(1), False) if called else None
+
+
+GLAIVE_SWAP = 0.25  # share of answered requests re-asked against an unrelated conversation's functions, as a "no"
+GLAIVE_RAW = "sources/train/tools/glaive-function-calling/glaive-function-calling-v2.json"
+_GENERIC = frozenset(
+    (
+        "about", "amount", "based", "calculate", "certain", "check", "convert", "create", "current", "data", "details",
+        "find", "from", "generate", "given", "information", "into", "list", "name", "number", "provide", "random",
+        "search", "send", "specific", "specified", "that", "the", "this", "user", "using", "value", "which", "with",
+    )
+)  # fmt: skip
+
+
+def _fraction(key: str) -> float:
+    return int(hashlib.sha256(key.encode()).hexdigest()[:16], 16) / 2**64
+
+
+def _words(f: Mapping[str, Json]) -> frozenset[str]:
+    text = f"{f.get('name', '')} {f.get('description', '')}".lower()
+    return frozenset(w for w in re.findall(r"[a-z]+", text) if len(w) > 2) - _GENERIC
+
+
+@cache
+def _glaive_catalogs(root: Path) -> tuple[tuple[dict[str, Json], ...], ...]:
+    """Every distinct function list in Glaive, in a fixed order: the pool unrelated catalogs are drawn from."""
+    found: dict[str, tuple[dict[str, Json], ...]] = {}
+    for row in json.loads((root / GLAIVE_RAW).read_text(encoding="utf-8")):
+        if isinstance(system := row.get("system"), str) and (functions := _functions(system)):
+            found.setdefault(json.dumps(functions, sort_keys=True), tuple(functions))
+    return tuple(found[key] for key in sorted(found))
+
+
+def _unrelated(
+    pool: Sequence[Sequence[dict[str, Json]]], seed: str, request: str, called: Mapping[str, Json]
+) -> list[dict[str, Json]] | None:
+    """A catalog none of whose functions shares a content word with the request or the function that answered it."""
+    words, start = _words(called), int(_fraction(seed) * len(pool))
+    if not words:
+        return None
+    words |= _words({"description": request})
+    for k in range(min(len(pool), 64)):
+        catalog = pool[(start + k) % len(pool)]
+        if not any(words & _words(f) for f in catalog):
+            return list(catalog)
+    return None
+
+
+def glaive(root: Path) -> Converter:
+    """Glaive's first request against its functions. Of the answered ones, a seeded GLAIVE_SWAP share is asked
+    against another conversation's unrelated functions instead, so "no function fits" isn't only pizza and flights."""
+
+    def convert(row: Row, labels: Labels) -> Json | None:
+        system, chat = _str(row, "system"), _str(row, "chat")
+        if system is None or chat is None or (decision := _glaive_decision(chat)) is None:
+            return None
+        functions = _functions(system)
+        if functions is None:
+            return None
+        request, called, ready = decision
+        request_text = clean(request)
+        seed = f"{system}\x1f{request_text}"
+        if called is not None and _fraction(f"glaive-swap:{seed}") < GLAIVE_SWAP:
+            spec = next((f for f in functions if f["name"] == called), None)
+            swapped = _unrelated(_glaive_catalogs(root), seed, request_text, spec) if spec else None
+            if swapped is not None:
+                functions, called, ready = swapped, None, None
+        functions = [functions[i] for i in _seeded_order(request_text, [str(f["name"]) for f in functions])]
+        names = [str(f["name"]) for f in functions]
+        if len(set(names)) != len(names) or (called and called not in names):
+            return None
+        catalog: list[Json] = []
+        for f in functions:
+            params = f.get("parameters")
+            props = params.get("properties") if isinstance(params, dict) else None
+            entry: dict[str, Json] = {"name": str(f["name"]), "description": clean(str(f.get("description", "")))}
+            if isinstance(props, dict) and props:
+                entry["parameters"] = ", ".join(props)
+            catalog.append(entry)
+        questions: dict[str, Json] = {
+            "call": _noul(
+                "Should the assistant call one of the available functions for this request?", called is not None
+            )
+        }
+        if ready is not None:
+            criteria = {"true": "Call the function now", "false": "Ask the user for the missing details first"}
+            instructions = "Does the request already give everything the function needs, so it can be called now?"
+            questions["ready"] = _noul(instructions, ready, criteria)
+        if len(names) > 1:
+            options: dict[str, Json] = {**dict.fromkeys(names), "none": "No function fits this request"}
+            questions["function"] = _choice("Which function should handle this request?", options, called or "none")
+        return _request({"functions": catalog, "request": request_text}, **questions)
+
+    return convert
 
 
 def qnli(row: Row, labels: Labels) -> Json | None:
@@ -504,7 +594,7 @@ def specs(root: Path) -> tuple[Spec, ...]:
             "tools/glaive-function-calling",
             {"train": ("glaive-function-calling-v2.json",)},
             {"train": ("train",), "dev": (), "test": ()},
-            glaive,
+            glaive(root),
         ),
         Spec(
             "transfer/qnli",

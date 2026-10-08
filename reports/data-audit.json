@@ -316,20 +316,20 @@
     },
     {
       "path": "train/sources/tools/glaive-function-calling.jsonl",
-      "records": 30024,
-      "questions": 41212,
+      "records": 28617,
+      "questions": 57160,
       "types": {
-        "noul": 30024,
-        "choice": 11188
+        "noul": 46515,
+        "choice": 10645
       },
-      "noul_true_rate": 0.5,
-      "first_option_rate": 0.353,
+      "noul_true_rate": 0.652,
+      "first_option_rate": 0.391,
       "soft_targets": 0,
       "duplicates": 0,
       "state_tokens": {
-        "median": 61,
+        "median": 59,
         "p99": 106,
-        "max": 214
+        "max": 204
       }
     },
     {
@@ -823,19 +823,19 @@
     },
     {
       "path": "dev/sources/tools/glaive-function-calling.jsonl",
-      "records": 3850,
-      "questions": 5304,
+      "records": 3666,
+      "questions": 7396,
       "types": {
-        "noul": 3850,
-        "choice": 1454
+        "noul": 5991,
+        "choice": 1405
       },
-      "noul_true_rate": 0.515,
-      "first_option_rate": 0.367,
+      "noul_true_rate": 0.664,
+      "first_option_rate": 0.403,
       "soft_targets": 0,
       "duplicates": 0,
       "state_tokens": {
-        "median": 61,
-        "p99": 107,
+        "median": 60,
+        "p99": 106,
         "max": 157
       }
     },
@@ -1396,20 +1396,20 @@
     },
     {
       "path": "test/sources/tools/glaive-function-calling.jsonl",
-      "records": 3763,
-      "questions": 5167,
+      "records": 3586,
+      "questions": 7093,
       "types": {
-        "noul": 3763,
-        "choice": 1404
+        "noul": 5776,
+        "choice": 1317
       },
-      "noul_true_rate": 0.508,
-      "first_option_rate": 0.364,
+      "noul_true_rate": 0.647,
+      "first_option_rate": 0.399,
       "soft_targets": 0,
       "duplicates": 0,
       "state_tokens": {
-        "median": 61,
+        "median": 59,
         "p99": 107,
-        "max": 134
+        "max": 132
       }
     },
     {
