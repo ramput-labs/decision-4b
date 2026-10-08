@@ -143,6 +143,9 @@ import `scripts` from `den`. ruff and mypy cover it like `den/`.
   documents dev/test accuracy as-is.
 - Weaker shortcuts: in OpenBookQA the longest option is correct 40% of the time (chance is 25%), and in `when2call`
   option 1 is correct 35% of the time.
+- Glaive's assistant often asks for missing arguments and calls a turn later: that request is `call` true, `ready`
+  false, not a "no". Only a conversation that never calls is a "no", plus a seeded `GLAIVE_SWAP` (25%) of answered
+  requests asked against an unrelated catalog (no shared content word), so negatives aren't only pizza and flights.
 - `train/core` has 420 exact duplicates from Kev's generator. `clean.py` drops them in `data/clean` only.
 - Identical questions with different labels in `probes`, `calibration/heldout` and `train/dates-unknowable` are
   deliberate *unknowable* items with uniform soft targets. Don't "fix" them.
