@@ -51,6 +51,18 @@ def resolve(spec: str, root: Path | None = None) -> str:
     return f"hf:{record['hub']['repo']}@{record['version']}"
 
 
+def locate(run: str, files: list[str] | None = None) -> Path:
+    """A run directory: a local path, or `hf:<org>/<name>[@<revision>]` / `release:<version>` downloaded once into the
+    Hub cache (only `files`, when given: continuing from a run needs its adapter and head, not its merged weights)."""
+    run = resolve(run)
+    if not run.startswith("hf:"):
+        return Path(run)
+    from huggingface_hub import snapshot_download
+
+    repo, _, revision = run.removeprefix("hf:").partition("@")
+    return Path(snapshot_download(repo, revision=revision or None, allow_patterns=files))
+
+
 def regressions(parent: dict[str, Any], child: dict[str, Any], max_drop: float = MAX_DROP) -> dict[str, float]:
     """Dev files (both evaluated, never test) where the child's accuracy fell over `max_drop` below the parent's."""
     shared = sorted(f for f in set(parent) & set(child) if Path(f.split("+")[0]).parts[0] != "test" and "+" not in f)

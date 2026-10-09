@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 
 def load(run: str, backend: str | None = None) -> Model:
     """A trained run, from a directory or `hf:<org>/<name>[@<revision>]`, ready to `.predict(request)`."""
-    from .evaluate import Model, locate
+    from .evaluate import Model
+    from .release import locate
 
     return Model(locate(run), backend)

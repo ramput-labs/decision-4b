@@ -43,6 +43,11 @@ uv run pytest -q tests/test_train.py   # one file
 One flat package, `den/`, at the repo root (plus `scripts/` for tools, below), like kev's `kev/`. One module per concern, no subpackages, and
 `tests/test_<module>.py` beside it. Keep it flat: add a module rather than a subpackage.
 
+- `cli.py`: `den <command>`. A command with its own flags is one line in `DELEGATED` (`"module:function"`, and whether
+  it exits without interpreter teardown, where native libraries have crashed after finished runs) plus one in the
+  docstring; `tests/test_cli.py` checks both. Library `main`s return their code; they never call `os._exit`.
+- `paths.py`: `DATA`, `CLEAN`, `MODELS`, `LOCKS`, `REPORTS`, `model_dir(key)`. Import these; don't write `Path("data/...")`.
+  `release.locate(run, files)` is the one way to turn a run spec (path, `hf:`, `release:`) into a directory.
 - `api.py`: the record schema (`/v1/systemone` request plus labels). `render` must match Kev's `api.render` byte for
   byte.
 - `pins.py`, `catalog.py`, `fetch.py`: every dataset/model pinned to a commit and a sha256, and the role of every path.

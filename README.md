@@ -380,10 +380,11 @@ den/                  the package, one module per concern (flat, like kev/)
 ├── evaluate.py               load a run; `den evaluate` and `den predict`
 ├── publish.py                `den publish`: model card, stages, data, logs -> private Hub upload
 ├── serve.py                  `den serve`: POST /v1/systemone (Kev's API)
+├── paths.py                  where data/, models/, locks/ and reports/ live: one place to change the layout
 ├── device.py                 backend choice (mlx | cuda | cpu) and the backbone interface
 ├── mlx_model.py              MLX backbone (Apple Silicon)
 ├── torch_model.py            PyTorch backbone (CUDA, CPU)
-└── cli.py                    `den models | model | list | data | verify | normalize | clean | audit | train | env | smoke`
+└── cli.py                    `den <command>`: built-ins, plus every module's own CLI in one `DELEGATED` table
 tests/                      one test file per module it covers
 data/                       suites and normalized sources, by role (see Data layout)
 locks/                      sha256 of every placed file

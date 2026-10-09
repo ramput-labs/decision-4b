@@ -19,6 +19,7 @@ from typing import Any
 import torch
 
 from .fetch import digest
+from .paths import model_dir
 
 REPORT = "integrity.json"
 MODEL_FILES = ("adapter_model.safetensors", "adapter_config.json", "head.safetensors", "head.json", "run.json",
@@ -147,7 +148,7 @@ def write(run: Path, base: Path | None = None) -> dict[str, Any]:
 def base_of(run: Path) -> Path | None:
     """The base checkpoint a run was merged from, when it is here (`models/<key>`)."""
     key = json.loads((run / "run.json").read_text(encoding="utf-8")).get("base")
-    local = Path("models") / str(key)
+    local = model_dir(str(key))
     return local if (local / "config.json").is_file() else None
 
 

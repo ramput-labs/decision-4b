@@ -148,7 +148,7 @@ def test_init_from_a_release_downloads_only_the_adapter_and_head(
         return str(tmp_path / "cache")
 
     monkeypatch.setattr(huggingface_hub, "snapshot_download", snapshot)
-    assert train.continued("runs/v1") == Path("runs/v1")
-    assert train.continued("release:v1") == tmp_path / "cache"
+    assert release.locate("runs/v1", train.CONTINUE_FILES) == Path("runs/v1")
+    assert release.locate("release:v1", train.CONTINUE_FILES) == tmp_path / "cache"
     assert seen["repo"] == "org/den" and seen["revision"] == "v1"
     assert "adapter_model.safetensors" in seen["allow"] and not any("merged" in a for a in seen["allow"])

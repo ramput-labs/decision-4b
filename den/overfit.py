@@ -33,8 +33,9 @@ from .catalog import record_path, role
 from .evaluate import base_weights
 from .metrics import Answer, summarize
 from .model import HeadConfig, make_head, question_loss
+from .paths import CLEAN
 from .prompt import Example, encode, split
-from .train import CLEAN, load
+from .train import load
 
 UNRELATED = "A recipe for pancakes with blueberries"
 

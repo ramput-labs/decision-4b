@@ -24,15 +24,12 @@ import argparse
 import importlib
 import json
 import math
-import os
 import random
 import shutil
 import statistics
 import subprocess
-import sys
 import time
 from collections.abc import Sequence
-from importlib import metadata
 from pathlib import Path
 from typing import Any
 
@@ -43,6 +40,8 @@ from .catalog import record_path, role
 from .device import hidden_size
 from .fetch import digest
 from .licences import RANK, Kind, record_kind
+from .paths import CLEAN, LOCKS
+from .paths import model_dir as model_dir_of
 from .prompt import (
     DISTRACTORS,
     LETTERS,
@@ -57,7 +56,6 @@ from .prompt import (
     split,
 )
 
-CLEAN = Path("data/clean")
 KEV_TRAIN = ("core", "dates-unknowable", "documents", "skills", "devtools")  # Kev's stages 1-4
 
 
@@ -166,7 +164,7 @@ def pinned(model: str) -> dict[str, str | None]:
 
 def base_files(model: str) -> dict[str, str]:
     """The base checkpoint's files and sha256, as `den model` placed and locked them (empty if it isn't locked)."""
-    lock = Path("locks/models.json")
+    lock = LOCKS / "models.json"
     entries = json.loads(lock.read_text(encoding="utf-8"))["entries"] if lock.is_file() else {}
     files = entries.get(model, {}).get("files", {})
     return {path: f["sha256"] for path, f in sorted(files.items())}
@@ -178,7 +176,7 @@ def runtime() -> dict[str, Any]:
 
     import torch
 
-    from .doctor import _driver
+    from .doctor import driver
 
     info: dict[str, Any] = {
         "platform": f"{platform.system()} {platform.machine()}",
@@ -189,7 +187,7 @@ def runtime() -> dict[str, Any]:
         "gpu_count": 0,
     }
     if torch.cuda.is_available():
-        info |= {"cudnn": torch.backends.cudnn.version(), "driver": _driver(), "gpu_count": torch.cuda.device_count()}  # type: ignore[no-untyped-call]
+        info |= {"cudnn": torch.backends.cudnn.version(), "driver": driver(), "gpu_count": torch.cuda.device_count()}  # type: ignore[no-untyped-call]
         info |= {
             "gpu": torch.cuda.get_device_name(0),
             "gpu_memory_gb": round(torch.cuda.get_device_properties(0).total_memory / 2**30, 1),
@@ -206,16 +204,10 @@ def dataset_hash(used: list[dict[str, object]]) -> str:
 
 
 def versions() -> dict[str, str]:
-    """The packages that decide the result, as installed."""
-    found = {}
-    names = ("torch", "transformers", "peft", "accelerate", "tokenizers", "unsloth", "unsloth_zoo",
-             "flash-linear-attention", "causal-conv1d", "den")  # fmt: skip
-    for name in names:
-        try:
-            found[name] = metadata.version(name)
-        except metadata.PackageNotFoundError:
-            continue
-    return found
+    """The packages that decide the result, as installed (`den doctor`'s list, and den itself)."""
+    from .doctor import PACKAGES, package_version
+
+    return {name: v for name in (*PACKAGES, "den") if (v := package_version(name))}
 
 
 def commit() -> str:
@@ -337,7 +329,7 @@ def train(
 
     from .calibrate import fit_temperature
     from .metrics import Answer, summarize
-    from .model import SystemOne, adapted, collate, question_loss, save_head, save_merged
+    from .model import SystemOne, adapted, collate, save_head, save_merged
     from .trainer import TRAINABLE, PointerTrainer, restore, save_trainable, trainable_state
 
     head = make_head(hidden_size(model_dir), config)
@@ -396,14 +388,14 @@ def train(
         return scores, labels, targets
 
     def evaluate(rows: list[Example], temperature: float = 1.0) -> tuple[float, float]:
-        """NLL and accuracy over hard-labelled questions; soft-target (unknowable) questions have no right answer."""
-        nll = hits = n = 0.0
-        for s, label, target in zip(*predict(rows), strict=True):
-            if target is None:
-                nll += float(question_loss(s / temperature, label, None))
-                hits += int(s.argmax()) == label
-                n += 1
-        return nll / max(n, 1), hits / max(n, 1)
+        """NLL and accuracy (`metrics.summarize`: hard-labelled questions only, unknowable ones have no answer)."""
+        got = summarize(
+            [
+                Answer((s / temperature).softmax(-1).tolist(), y, target=t)
+                for s, y, t in zip(*predict(rows), strict=True)
+            ]
+        )
+        return got["nll"], got["accuracy"]
 
     every = args.eval_steps
     probe = random.Random(args.seed).sample(dev, min(args.eval_max, len(dev))) if every else []
@@ -696,18 +688,7 @@ def train_history(log: Sequence[dict[str, Any]]) -> list[dict[str, Any]]:
     ]
 
 
-def continued(spec: str) -> Path:
-    """The run directory `--init-from` names: a local run, or a published one (hf:<repo>@<rev>, release:<version>)
-    downloaded once into the Hub cache, so a later version can continue from one trained on another machine."""
-    if not spec.startswith(("hf:", "release:")):
-        return Path(spec)
-    from huggingface_hub import snapshot_download
-
-    from .release import resolve
-
-    repo, _, revision = resolve(spec).removeprefix("hf:").partition("@")
-    keep = ["adapter_model.safetensors", "adapter_config.json", "head.safetensors", "head.json", "run.json"]
-    return Path(snapshot_download(repo, revision=revision or None, allow_patterns=keep))  # no merged weights needed
+CONTINUE_FILES = ["adapter_model.safetensors", "adapter_config.json", "head.safetensors", "head.json", "run.json"]
 
 
 def gather(args: argparse.Namespace, data_used: list[dict[str, object]]) -> list[Record]:
@@ -854,11 +835,13 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit("--replay-from takes train/ files only")
     args.init_spec = args.init_from  # as given: a path, hf:<repo>@<rev> or release:<version>; recorded in run.json
     if args.init_from and not args.dry_run:
-        args.init_from = continued(args.init_from)
+        from .release import locate
+
+        args.init_from = locate(args.init_from, CONTINUE_FILES)  # a published run: once, into the Hub cache
         if not (args.init_from / "head.json").is_file():
             raise SystemExit(f"--init-from {args.init_spec}: no head.json there")
 
-    model_dir = Path("models") / args.model
+    model_dir = model_dir_of(args.model)
     if not (model_dir / "config.json").is_file() or not (model_dir / "tokenizer.json").is_file():
         raise SystemExit(f"{model_dir} is not downloaded: make model MODEL={args.model}")
     every = [*args.data, *args.dev, *args.calibration, *(args.replay_from if args.replay else [])]
@@ -883,9 +866,4 @@ def main(argv: list[str] | None = None) -> int:
         print(describe(name, [len(e.ids) for e in rows], sum(len(e.labels) for e in rows), skipped))
     if not args.dry_run:
         train(args, model_dir, data, dev, calibration, data_used)
-        # Everything is saved. Skip interpreter teardown: native libraries (torch, tokenizers, triton) have crashed
-        # there with SIGSEGV after a finished run, and a nonzero exit would stop `make train-round1` between stages.
-        sys.stdout.flush()
-        sys.stderr.flush()
-        os._exit(0)
-    return 0
+    return 0  # `den train` then exits without interpreter teardown (cli.DELEGATED)

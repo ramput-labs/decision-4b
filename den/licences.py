@@ -31,6 +31,7 @@ from pathlib import Path
 from typing import Literal
 
 from .catalog import NOTICE_FILE
+from .paths import DATA
 from .pins import ITEMS
 
 type Kind = Literal["open", "share-alike", "non-commercial", "unspecified", "restricted"]
@@ -488,7 +489,7 @@ def notices(
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="den licences")
-    p.add_argument("--root", type=Path, default=Path("data"))
+    p.add_argument("--root", type=Path, default=DATA)
     p.add_argument("--public", action="store_true", help="list what a public copy would leave out")
     args = p.parse_args(argv)
     classified, excluded = notices(args.root, args.public)

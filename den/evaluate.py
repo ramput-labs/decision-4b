@@ -32,30 +32,16 @@ from .device import load
 from .fetch import digest
 from .metrics import Answer, Row, robustness, summarize
 from .model import load_head
+from .paths import CLEAN, model_dir
 from .prompt import LETTERS, Style, encode, none_pair, perturb, rotate_options, split
+from .release import locate
 from .train import sample
-
-CLEAN = Path("data/clean")
-
-
-def locate(run: str) -> Path:
-    """A run directory: a local path, `hf:<org>/<name>[@<revision>]` or `release:<version>`, downloaded once into the
-    Hub cache."""
-    from .release import resolve
-
-    run = resolve(run)  # release:<version> -> hf:<repo>@<version>
-    if not run.startswith("hf:"):
-        return Path(run)
-    from huggingface_hub import snapshot_download
-
-    repo, _, revision = run.removeprefix("hf:").partition("@")
-    return Path(snapshot_download(repo, revision=revision or None))
 
 
 def base_weights(key: str) -> Path:
     """A base backbone by its pinned key: `models/<key>` when downloaded, else the pinned Hub revision (cached), so a
     head-only run loads on a clean machine too."""
-    local = Path("models") / key
+    local = model_dir(key)
     if (local / "config.json").is_file():
         return local
     from huggingface_hub import snapshot_download

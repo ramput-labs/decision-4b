@@ -70,11 +70,8 @@ def entry(use: str, source: str, placed: list[Placed]) -> LockedEntry:
 
 
 def digest(path: Path) -> Sha256:
-    h = hashlib.sha256()
     with path.open("rb") as f:
-        while chunk := f.read(CHUNK):
-            h.update(chunk)
-    return Sha256(h.hexdigest())
+        return Sha256(hashlib.file_digest(f, "sha256").hexdigest())
 
 
 def _mismatch(what: object, actual: str, expected: Sha256) -> IntegrityError:
