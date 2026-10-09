@@ -11,18 +11,11 @@ import pytest
 import torch
 from torch import nn
 
-from den.model import (
-    HeadConfig,
-    LetterHead,
-    PointerHead,
-    SystemOne,
-    collate,
-    make_head,
-    param_groups,
-    question_loss,
-    text_tower,
-)
+from den.head import HeadConfig, LetterHead, PointerHead, make_head, question_loss
+from den.lora import text_tower
+from den.model import SystemOne, collate
 from den.prompt import Example
+from den.trainer import param_groups
 
 HIDDEN = 16
 
@@ -277,7 +270,7 @@ def test_a_run_saves_its_best_checkpoint_loss_log_and_calibration(tmp_path: Any,
 
     from safetensors.torch import load_file
 
-    from den import model as den_model
+    from den import lora as den_model
     from den import train as den_train
 
     torch.manual_seed(0)
@@ -308,3 +301,36 @@ def test_a_run_saves_its_best_checkpoint_loss_log_and_calibration(tmp_path: Any,
     assert run["train_history"][-1]["step"] == 6 and "train_loss" in run["train_history"][-1]
     split = run["calibration_report"]["calibration_split"]
     assert split["after"]["nll"] <= split["before"]["nll"] + 1e-9  # T fitted on it can only lower its NLL
+
+
+def test_a_run_trains_on_teacher_targets_and_fits_one_temperature_per_type(tmp_path: Any, monkeypatch: Any) -> None:  # noqa: ANN401
+    """Teacher distributions train through the soft loss, still count toward accuracy, and report their KL; with
+    --calibrate-by-type each question type with enough calibration questions gets its own T."""
+    import json
+    from dataclasses import replace
+
+    from den import lora as den_model
+    from den import train as den_train
+
+    def taught(n: int, label: int, offset: int, kind: str) -> Example:
+        spread = tuple(0.6 if i == label else 0.4 / (n - 1) for i in range(n))
+        return replace(example(n, label, offset), targets=(spread,), kinds=(kind,), teachers=(True,))
+
+    torch.manual_seed(0)
+    backbone = peft.get_peft_model(Causal(), peft.LoraConfig(r=4, lora_alpha=8, target_modules=["q_proj", "up_proj"]))
+    monkeypatch.setattr(den_model, "load_backbone", lambda *a, **k: backbone)
+    monkeypatch.setattr(den_train, "hidden_size", lambda path: HIDDEN)
+    data = [taught(k, k - 1, i, "choice") for i, k in enumerate([2, 3, 4, 5, 3, 2, 4, 5])]
+    calibration = [taught(3, i % 3, i, "choice") for i in range(60)] + [taught(2, i % 2, i, "noul") for i in range(10)]
+    args = den_train.parser().parse_args(
+        ["--engine", "peft", "--lora", "4", "--head-dim", "8", "--head-heads", "2", "--max-steps", "3", "--batch",
+         "2", "--accum", "1", "--calibrate-by-type", "--out", str(tmp_path / "run")]
+    )  # fmt: skip
+    den_train.train(args, tmp_path, Rows(data), data, calibration, [])  # type: ignore[arg-type]
+
+    run = json.loads((tmp_path / "run" / "run.json").read_text())
+    after = run["calibration_report"]["after"]
+    assert after["questions"] == len(data) and after["kl_to_target"] >= 0  # graded, not skipped as unknowable
+    assert set(run["calibration_report"]["temperatures"]) == {"choice"}  # noul has fewer than 50 questions
+    head = json.loads((tmp_path / "run" / "head.json").read_text())
+    assert set(head["temperatures"]) == {"choice"}

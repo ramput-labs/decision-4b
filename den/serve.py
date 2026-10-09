@@ -1,11 +1,11 @@
-"""`POST /v1/systemone`: a trained run behind Kev's (and TypeSafe's) System One API, so existing clients work unchanged.
+"""`den serve`: a trained run behind Kev's `POST /v1/systemone`, so existing clients work unchanged; and `den predict`,
+the same responses for request lines. Standard library only.
 
-    den serve --run runs/kev-recipe/4-skills          # or --run hf:<org>/<name>; listens on 127.0.0.1:8009
+    den serve --run runs/round2               # or --run hf:<org>/<name>; listens on 127.0.0.1:8009
     curl -s localhost:8009/v1/systemone -H 'content-type: application/json' -d '{"state": "...", "questions": {...}}'
+    den predict --run runs/round2 requests.jsonl
 
-The response matches Kev's: per question, `choice` (the most likely option), `score` (the expected level) or `noul`
-(the probability of true), with `confidence` = (p_max - 1/K) / (1 - 1/K) and every option's probability. Each question
-is read with the state alone. Set DEN_API_KEY to require `Authorization: Bearer <key>` on /v1/*. Standard library only.
+Set DEN_API_KEY to require `Authorization: Bearer <key>` on /v1/*.
 """
 
 from __future__ import annotations
@@ -14,49 +14,16 @@ import argparse
 import contextlib
 import json
 import os
+import sys
 import threading
-import time
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from pathlib import Path
 from typing import Any
 
-from .api import Json, Question, RecordError
-from .evaluate import Model, request
-from .release import locate
-
-DEFAULT_NAME = "den-latest"
-
-
-def answer(q: Question, p: list[float]) -> dict[str, Any]:
-    """One question's answer in Kev's response shape."""
-    if q.type == "noul":
-        return {"type": "noul", "noul": round(p[1], 4)}
-    k, top = len(p), max(range(len(p)), key=p.__getitem__)
-    confidence = round((p[top] - 1 / k) / (1 - 1 / k), 4) if k > 1 else 1.0
-    probabilities = {key: round(x, 4) for key, x in zip(q.keys, p, strict=True)}
-    if q.type == "choice":
-        return {"type": "choice", "choice": q.keys[top], "confidence": confidence, "probabilities": probabilities}
-    return {
-        "type": "score",
-        "score": round(sum(i * x for i, x in enumerate(p)), 4),
-        "confidence": confidence,
-        "legend": dict(zip(q.keys, q.options, strict=True)),
-        "probabilities": probabilities,
-    }
-
-
-def respond(model: Model, raw: dict[str, Json], name: str = DEFAULT_NAME) -> dict[str, Any]:
-    """The /v1/systemone response body for one request."""
-    started = time.perf_counter()
-    record = request(raw)
-    scores, tokens = model.read(record)
-    answers = {q.id: answer(q, s.softmax(-1).tolist()) for q, s in zip(record.questions, scores, strict=True)}
-    return {
-        "model": str(raw.get("model") or name),
-        "answers": answers,
-        "usage": {"input_tokens": tokens, "output_tokens": 0},
-        "latency_ms": round(1000 * (time.perf_counter() - started)),
-    }
+from .api import RecordError
+from .paths import locate
+from .runtime import DEFAULT_NAME, Model, respond
 
 
 def handler(model: Model, name: str, key: str | None) -> type[BaseHTTPRequestHandler]:
@@ -128,10 +95,22 @@ def serve_main(argv: list[str] | None = None) -> int:
     p.add_argument("--backend")
     args = p.parse_args(argv)
     model = Model(locate(args.run), args.backend)
-    # One thread: inference runs on the thread that loaded the model. MLX's GPU stream belongs to that thread (a
-    # request on another one fails with "no Stream(gpu) in current thread"), and requests are serialized anyway.
+    # one thread: MLX's GPU stream belongs to the thread that loaded the model
     server = HTTPServer((args.host, args.port), handler(model, args.name, os.environ.get("DEN_API_KEY")))
     print(f"den serving {args.run} as {args.name} on http://{args.host}:{args.port}/v1/systemone", flush=True)
     with contextlib.suppress(KeyboardInterrupt):
         server.serve_forever()
+    return 0
+
+
+def predict_main(argv: list[str] | None = None) -> int:
+    p = argparse.ArgumentParser(prog="den predict")
+    p.add_argument("--run", required=True, help="a run directory, or hf:<org>/<name>[@<revision>]")
+    p.add_argument("requests", nargs="?", default="-", help="JSONL of /v1/systemone requests; - reads stdin")
+    p.add_argument("--backend")
+    args = p.parse_args(argv)
+    model = Model(locate(args.run), args.backend)
+    text = sys.stdin.read() if args.requests == "-" else Path(args.requests).read_text(encoding="utf-8")
+    for line in filter(str.strip, text.splitlines()):
+        print(json.dumps(respond(model, json.loads(line))), flush=True)
     return 0

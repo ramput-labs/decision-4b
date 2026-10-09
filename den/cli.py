@@ -1,31 +1,22 @@
-"""den: fetch, verify and check everything a den model trains on.
+"""den: fetch the data, train, evaluate, serve and release System One decision models.
 
-den models                  list the backbones (any size) and reference checkpoints
-den model [MODEL ...]       download models: a key from `den models`, or hf:<org>/<name>@<commit>
-den list [SET ...]          show the dataset catalog
-den data [SET ...]          download dataset sets (default: suites; all = every set except raw-bulk)
-den verify                  re-hash every downloaded file against locks/
-den normalize               raw sources -> canonical train / dev / test records under data/*/sources/
-den clean                   write cleaned, deduplicated training copies under data/clean/
-den train [--dry-run] ...   LoRA + pointer-head fine-tune of the model with Unsloth (CUDA)
-den evaluate --run R FILES  accuracy, NLL and calibration of a trained run
-den predict --run R [JSONL] /v1/systemone responses for request lines (R may be hf:<org>/<name>)
-den serve --run R [--port P]    POST /v1/systemone over HTTP (Kev's API)
-den compare RUN RUN ...         pick the run to ship from dev results
-den baselines D=RUN A=RUN ...   modes A/B/C/D side by side on the same files (baselines.json)
-den check-run --run R           integrity of a finished run: head, adapter, merged vs base, sha256 (integrity.json)
-den overfit [--n 100]           gate: the head must fit 100 real examples; behavioral checks after
-den probe --dev F [--train F]   modes A (zero-shot letters) and C (frozen backbone + head) on cached features
-den publish --run R --repo O/N  upload a run as a private Hub model with a generated card
-den release create|list|show    versioned releases: publish, tag v1/v2/... on the Hub, record in releases/
-den licences [--public]         whose data is in data/, under what terms: writes the licence files and card
-den audit [--model M]       check every record and source is fit to train and evaluate on
-den env                     show the backend this machine uses
-den doctor [--require cuda]       versions, GPU, BF16, driver, Unsloth, model revision; a readiness gate
-den smoke [--model M] [--backend B]
-                                  run a downloaded model once on this machine
+data       den models | model [MODEL ...] | list [SET ...] | data [SET ...] | verify | normalize | clean | audit
+           den licences [--public]              whose data is in data/, under what terms
+train      den train [--dry-run] ...            LoRA + pointer-head fine-tune (Unsloth on CUDA)
+           den overfit [--n 100]                gate: the head must fit 100 real rows
+           den probe --dev F [--train F]        modes A and C on cached frozen features
+evaluate   den evaluate --run R FILES           accuracy, NLL and calibration of a trained run
+           den compare RUN RUN ...              pick the run to ship from dev results (--paired: per question)
+           den baselines D=RUN A=RUN ...        modes A/B/C/D side by side (baselines.json)
+serve      den predict --run R [JSONL]          /v1/systemone responses for request lines
+           den serve --run R [--port P]         POST /v1/systemone over HTTP (Kev's API)
+release    den check-run --run R                integrity of a finished run (integrity.json)
+           den publish --run R --repo O/N       upload a run as a private Hub model with a generated card
+           den release create|list|show         versioned releases, tagged on the Hub, recorded in releases/
+machine    den env | den smoke [--model M]      this machine's backend; run a downloaded model once
+           den doctor [--require cuda]          versions, GPU, driver, Unsloth: the readiness gate
 
-MODEL defaults to $DEN_MODEL, else qwen3.5-4b.
+R is a run directory, hf:<org>/<name>[@<rev>] or release:<version>. MODEL defaults to $DEN_MODEL, else qwen3.5-4b.
 """
 
 from __future__ import annotations
@@ -219,19 +210,18 @@ def cmd_smoke(model: str, backend: str | None) -> int:
     return 0 if hidden.shape == (len(ids), backbone.hidden_size) and np.isfinite(hidden).all() else 1
 
 
-# Commands that parse their own flags: name -> ("module:function", exit hard). Adding a command is one line here
-# (and one in the docstring above). "Exit hard" skips interpreter teardown once results are written: native libraries
-# (torch, tokenizers, triton) have crashed there with SIGSEGV after a finished run, and that nonzero exit would fail
-# a pipeline that had succeeded (`make train-round1` between stages).
+# Commands that parse their own flags: name -> ("module:function", exit hard). Exiting hard skips interpreter
+# teardown once results are written: native libraries (torch, tokenizers, triton) have crashed there after a finished
+# run, and that exit code would fail a pipeline that had succeeded.
 DELEGATED: dict[str, tuple[str, bool]] = {
     "train": ("train:main", True),
     "evaluate": ("evaluate:evaluate_main", True),
-    "predict": ("evaluate:predict_main", True),
-    "compare": ("evaluate:compare_main", True),
-    "baselines": ("evaluate:baselines_main", True),
+    "predict": ("serve:predict_main", True),
+    "compare": ("compare:compare_main", True),
+    "baselines": ("compare:baselines_main", True),
     "check-run": ("integrity:check_main", True),
     "overfit": ("overfit:overfit_main", True),
-    "probe": ("overfit:probe_main", True),
+    "probe": ("probe:probe_main", True),
     "serve": ("serve:serve_main", False),
     "doctor": ("doctor:doctor_main", False),
     "publish": ("publish:publish_main", False),
@@ -255,7 +245,7 @@ def delegate(name: str, argv: list[str]) -> int:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="den", description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
     sub = parser.add_subparsers(dest="cmd", required=True)
-    for name in DELEGATED:  # no help of their own: `den train --help` reaches den.train's parser
+    for name in DELEGATED:  # no help of their own: `den train --help` reaches the command's own parser
         sub.add_parser(name, add_help=False)
     sub.add_parser("models")
     sub.add_parser("model").add_argument("models", nargs="*")

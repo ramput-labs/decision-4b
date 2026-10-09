@@ -88,20 +88,20 @@ def test_committed_evidence_locks_the_test_set_even_for_hub_runs(
 def test_compare_paired_prints_and_saves(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    from den import evaluate
+    from den import compare
 
     monkeypatch.setattr(evidence, "EVIDENCE", tmp_path)
     rows = [_row(f"r{i}", 0, [0.9, 0.1]) for i in range(20)]
     for run in ("runs/a", "runs/b"):
         evidence.write(run, "dev/core.jsonl", {}, rows, tmp_path)
         evidence.write(run, "test/core.jsonl", {}, rows, tmp_path)
-    evaluate.compare_main(["--paired", "runs/a", "runs/b"])
+    compare.compare_main(["--paired", "runs/a", "runs/b"])
     out = capsys.readouterr().out
     assert "dev/core.jsonl" in out and "test/core.jsonl" not in out and "no clear difference" in out
     saved = json.loads((tmp_path / "b" / "comparison-vs-a.json").read_text())
     assert set(saved["files"]) == {"dev/core.jsonl"} and saved["files"]["dev/core.jsonl"]["accuracy"]["diff"] == 0
     with pytest.raises(SystemExit, match="exactly two"):
-        evaluate.compare_main(["--paired", "runs/a"])
+        compare.compare_main(["--paired", "runs/a"])
 
 
 def test_a_release_records_its_paired_comparison_with_the_parent(

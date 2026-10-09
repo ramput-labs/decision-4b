@@ -1,9 +1,7 @@
-"""Temperature scaling: one T for the whole model, fitted on the calibration split, never on dev or test.
+"""Temperature scaling, fitted on the calibration split only (never dev or test).
 
-T is bounded to [1/20, 20]: an unbounded fit on a tiny or badly wrong calibration set runs to T -> infinity, which
-turns every answer into the uniform distribution. The fit is a bounded one-dimensional search over log T (a grid,
-then golden-section refinement): deterministic, and it can't fail the way a gradient line search does when the loss
-goes flat at the bound (torch's LBFGS strong-Wolfe step divides by zero there)."""
+T is bounded to [1/20, 20] (an unbounded fit on a small or badly wrong set runs to infinity) and found by a grid over
+log T then golden-section refinement: deterministic, with no line search to fail where the loss goes flat."""
 
 from __future__ import annotations
 

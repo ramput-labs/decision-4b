@@ -143,3 +143,50 @@ def test_clean_drops_zero_width_but_keeps_emoji_joiners() -> None:
     assert clean("French​ pronunciation﻿") == "French pronunciation"
     assert clean("\U0001f937‍♀️") == "\U0001f937‍♀️"
     assert clean("Tom &amp; Jerry &lt;br&gt; end", markup=True) == "Tom & Jerry\nend"
+
+
+def test_typed_decisions_cases_become_labelled_requests() -> None:
+    import json
+
+    from den.api import parse
+    from den.sources import typed_decisions
+
+    questions = {
+        "team": {"type": "choice", "instructions": "Which team?", "criteria": {"billing": "Pay", "tech": "Bugs"}},
+        "urgent": {"type": "noul", "instructions": "Urgent?", "criteria": {"true": "Now", "false": "Later"}},
+        "risk": {"type": "score", "instructions": "How risky?", "criteria": ["Low", "Mid", "High"]},
+    }
+    gold = {"team": {"label": "tech", "probabilities": {"billing": 0.4, "tech": 0.6}},
+            "urgent": {"label": "false", "probabilities": {"false": 0.7, "true": 0.3}},
+            "risk": {"label": "2", "probabilities": {"0": 0.0, "1": 0.25, "2": 0.75}}}  # fmt: skip
+    row = {"state": json.dumps({"ticket": "App crashes"}), "questions": json.dumps(questions), "gold": json.dumps(gold)}
+    record = parse(typed_decisions(row, {}), "case")
+    assert record.state == "ticket: App crashes"
+    assert [(q.id, q.type, q.keys[q.label]) for q in record.questions] == [
+        ("team", "choice", "tech"), ("urgent", "noul", "false"), ("risk", "score", "2")
+    ]  # fmt: skip
+    assert [q.target for q in record.questions] == [(0.4, 0.6), (0.7, 0.3), (0.0, 0.25, 0.75)]
+    assert all(q.teacher and not q.unknowable for q in record.questions)  # trained on the spread, graded on the label
+    assert typed_decisions({**row, "gold": json.dumps({"team": gold["team"]})}, {}) is None  # a question without gold
+
+
+def test_calibration_takes_a_small_seeded_slice_of_train_by_document() -> None:
+    from den import normalize
+    from den.normalize import Entry, Stats
+
+    def entries(n: int) -> list[Entry]:
+        # two records per document: a document must land wholly in one split
+        return [Entry({"i": i}, f"state {i}", f"doc {i // 2}", "train") for i in range(n)]
+
+    small, stats = entries(400), Stats()
+    normalize._calibration(small, stats)
+    taken = [e for e in small if e.split == "calibration"]
+    assert 0 < len(taken) <= normalize.MAX_CAL * 400 * 1.5 and stats.carved["calibration"] == len(taken)
+    by_doc = {e.origin: {x.split for x in small if x.origin == e.origin} for e in small}
+    assert all(len(splits) == 1 for splits in by_doc.values())
+    again = entries(400)
+    normalize._calibration(again, Stats())
+    assert [e.split for e in again] == [e.split for e in small]  # seeded by the document, not the run
+    big = entries(200_000)
+    normalize._calibration(big, Stats())
+    assert abs(sum(e.split == "calibration" for e in big) - 2 * normalize.CAL_CAP) < 150  # ~CAL_CAP documents

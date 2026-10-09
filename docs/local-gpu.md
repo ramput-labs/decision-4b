@@ -183,7 +183,7 @@ If something fails:
 make local-eval
 ```
 Logs: `runs/local/logs/eval.log` and `predict.json`. It runs, for both `4-skills` and `round2`:
-- `check_merged`: `ok  runs/local/...: qwen3_5` for both
+- `den check-run`: `integrity ok` for both rounds
 - `den check-run`: every line `ok`, then `integrity ok`
 - `den evaluate` on 200 records of `dev/core`, `dev/documents`, `dev/skills` and `dev/devtools` (acc, nll, brier,
   ece per file; nothing is written to `reports/`, and the test set is never read)

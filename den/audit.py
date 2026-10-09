@@ -18,6 +18,7 @@ from .api import Record, RecordError, question_key, read
 from .catalog import NOTICE_FILE, ROLES, Hub, Url, Use
 from .fetch import digest
 from .pins import BREADTH, SUITES
+from .prompt import MAX_STATE_TOKENS
 
 HELD_OUT = (
     "dev/transfer.jsonl",
@@ -26,7 +27,6 @@ HELD_OUT = (
     "test/probes.jsonl",
     "calibration/heldout.jsonl",
 )
-MAX_TRAIN_STATE_TOKENS = 7552
 
 type Level = Literal["error", "warning"]
 
@@ -46,7 +46,7 @@ class FileStats:
     types: dict[str, int]
     noul_true_rate: float | None
     first_option_rate: float | None
-    soft_targets: int
+    unknowable: int
     duplicates: int
     state_tokens: dict[str, int]
 
@@ -88,7 +88,7 @@ def _rate(flags: list[bool]) -> float | None:
 
 def _items(record: Record) -> Iterator[tuple[str, int]]:
     for q in record.questions:
-        if q.target is None:
+        if not q.unknowable:
             yield question_key(record.state, q), q.label
 
 
@@ -106,7 +106,7 @@ def _token_lengths(records: list[Record], tokenizer: Tokenizer | None) -> dict[s
 
 def _stats(path: str, records: list[Record], tokenizer: Tokenizer | None) -> FileStats:
     questions = [q for r in records for q in r.questions]
-    hard = [q for q in questions if q.target is None]
+    hard = [q for q in questions if not q.unknowable]
     copies = Counter((r.fingerprint, tuple((q.instructions, q.options, q.label) for q in r.questions)) for r in records)
     return FileStats(
         path=path,
@@ -115,7 +115,7 @@ def _stats(path: str, records: list[Record], tokenizer: Tokenizer | None) -> Fil
         types=dict(Counter(q.type for q in questions)),
         noul_true_rate=_rate([q.label == 1 for q in hard if q.type == "noul"]),
         first_option_rate=_rate([q.label == 0 for q in hard if q.type == "choice"]),
-        soft_targets=len(questions) - len(hard),
+        unknowable=len(questions) - len(hard),
         duplicates=sum(n - 1 for n in copies.values()),
         state_tokens=_token_lengths(records, tokenizer),
     )
@@ -178,13 +178,13 @@ def _check_file(report: Report, stats: FileStats, records: list[Record]) -> None
         report.flag("warning", stats.path, f"{stats.first_option_rate:.0%} of choice labels are the first option")
     if stats.duplicates:
         report.flag("warning", stats.path, f"{stats.duplicates} records repeat another record exactly")
-    if training and stats.state_tokens.get("max", 0) > MAX_TRAIN_STATE_TOKENS:
+    if training and stats.state_tokens.get("max", 0) > MAX_STATE_TOKENS:
         report.flag("warning", stats.path, f"longest state is {stats.state_tokens['max']} tokens; Kev trains at 7,552")
 
     labels: dict[str, set[int]] = defaultdict(set)
     sources: dict[str, str] = {}
     for record in records:
-        for (key, label), q in zip(_items(record), (q for q in record.questions if q.target is None), strict=True):
+        for (key, label), q in zip(_items(record), (q for q in record.questions if not q.unknowable), strict=True):
             labels[key].add(label)
             sources[key] = q.source
     if conflicts := [sources[k] for k, v in labels.items() if len(v) > 1]:

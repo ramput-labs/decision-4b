@@ -213,7 +213,7 @@ make h100-timing BUDGET_HOURS="$BUDGET_HOURS" SPENT=<minutes spent so far>     #
 nvidia-smi --query-gpu=memory.used,memory.total --format=csv    # from a second tmux pane, during stages 3 and 4
 ```
 
-It trains both rounds for 20 steps per stage into `runs/timing`, checks both merges (`scripts.check_merged`), runs
+It trains both rounds for 20 steps per stage into `runs/timing`, checks both merged runs (`den check-run`), runs
 `den predict` on round 2, prints `scripts.estimate_time`'s estimate and decision, and deletes `runs/timing`.
 
 **Gate 3:**
@@ -225,7 +225,7 @@ It trains both rounds for 20 steps per stage into `runs/timing`, checks both mer
 - No CUDA out-of-memory error. If a stage runs out of memory, halve its `--batch` and double its `--accum` on that
   stage's line in the `Makefile` (the effective batch stays 8), rerun, and keep the edit for the real run. Report it.
 - The logged `loss` is finite (not `nan`) in every stage.
-- Both rounds end with `saved .../merged  (248 merged weights)`, and `check_merged` prints `ok` for both (`qwen3_5`).
+- Both rounds end with `saved .../merged  (248 merged weights)`, and `den check-run` prints `integrity ok` for both.
 - `den predict --run runs/timing/round2` exits without error.
 - The estimate comes from the measured `tokens_per_second` in each stage's `run.json`. It prints both rounds' minutes (2 per stage for loading, validation and saving included) and the decision below.
 

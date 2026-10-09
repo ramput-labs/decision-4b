@@ -1,12 +1,6 @@
-"""Is a finished run intact? Checked from its files alone, after the merge and again before every upload.
-
-`save_merged` already refuses a merge that replaced fewer weights than were adapted. This goes further, on what
-landed on disk: the head loads, is finite and fits the merged backbone's hidden size; the adapter is finite and has
-the run's module count; `merged/` has the base's exact layout (same files, same tensor names, shapes and dtypes), the
-base's non-weight files byte for byte, and exactly the adapted text weights changed, all finite, none in the vision
-tower. The report (`integrity.json`) lists every model file's sha256, so a download can be checked against it.
-
-    den check-run --run runs/kev-recipe/4-skills            # writes integrity.json; exit 1 on any failure
+"""`den check-run`: is a finished run intact? Checked from its files after the merge and before every upload: the head
+and adapter load and are finite, and `merged/` has the base's exact layout with exactly the adapted weights changed.
+`integrity.json` also lists every model file's sha256.
 """
 
 from __future__ import annotations
@@ -19,7 +13,7 @@ from typing import Any
 import torch
 
 from .fetch import digest
-from .paths import model_dir
+from .paths import downloaded, model_dir, read_json
 
 REPORT = "integrity.json"
 MODEL_FILES = ("adapter_model.safetensors", "adapter_config.json", "head.safetensors", "head.json", "run.json",
@@ -94,10 +88,8 @@ def check(run: Path, base: Path | None = None) -> dict[str, Any]:
     from; without it, `merged/` is checked on its own (finite, right hidden size), not against the base."""
     from .device import hidden_size
 
-    trained: dict[str, Any] = json.loads((run / "run.json").read_text(encoding="utf-8"))
-    head: dict[str, Any] = json.loads((run / "head.json").read_text(encoding="utf-8"))
-    rank = int(trained.get("lora_rank") or 0)
-    modules = int(trained.get("lora", {}).get("modules") or trained.get("lora_modules") or 0)
+    trained, head = read_json(run / "run.json"), read_json(run / "head.json")
+    rank, modules = int(trained["lora"]["rank"]), int(trained["lora"]["modules"])
     checks: list[tuple[str, bool, str]] = [("head.json is a den head", head.get("format") == "den-pointer-head", "")]
     count, bad = _finite(run / "head.safetensors")
     checks.append(("head weights are finite", not bad, f"{count} tensors, non-finite: {bad[:3]}"))
@@ -147,9 +139,8 @@ def write(run: Path, base: Path | None = None) -> dict[str, Any]:
 
 def base_of(run: Path) -> Path | None:
     """The base checkpoint a run was merged from, when it is here (`models/<key>`)."""
-    key = json.loads((run / "run.json").read_text(encoding="utf-8")).get("base")
-    local = model_dir(str(key))
-    return local if (local / "config.json").is_file() else None
+    key = str(read_json(run / "run.json").get("base"))
+    return model_dir(key) if downloaded(key) else None
 
 
 def check_main(argv: list[str] | None = None) -> int:
@@ -161,7 +152,7 @@ def check_main(argv: list[str] | None = None) -> int:
     report = write(args.run, args.base or base_of(args.run))
     if args.load and report["ok"]:
         from .api import Json
-        from .evaluate import Model
+        from .runtime import Model
 
         team: Json = {"type": "choice", "instructions": "Which team?", "criteria": {"billing": "pay", "tech": "bugs"}}
         request: dict[str, Json] = {"state": "I was charged twice for my order.", "questions": {"team": team}}

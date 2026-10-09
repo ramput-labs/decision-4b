@@ -1,6 +1,10 @@
-"""Leakage rules, matched on rendered state and raw-text provenance across sources and Kev's suites:
-test drops Kev's train/calibration/dev; dev drops Kev's train/calibration and any test;
-train drops any calibration/dev/test."""
+"""Raw sources -> canonical train / calibration / dev / test under data/*/sources/.
+
+Every trainable source gives up a small calibration split (at most `CAL_CAP` records, by hash of the raw document, so
+a document never spans splits), so the temperature can be fitted on the data a model trains on, not only Kev's core.
+Leakage rules, matched on rendered state and raw-text provenance across sources and Kev's suites: test drops Kev's
+train/calibration/dev; dev drops Kev's train/calibration and any test; calibration drops Kev's train/dev and any
+dev/test; train drops any calibration/dev/test."""
 
 from __future__ import annotations
 
@@ -23,7 +27,9 @@ from .text import provenance
 SALT = "normalize/v1"
 CAP = 5000
 MAX_CARVE = 0.1
-PRIORITY: dict[Split, int] = {"test": 0, "dev": 1, "train": 2}
+CAL_CAP = 500  # calibration records carved from each trainable source
+MAX_CAL = 0.05  # and never more than this share of its train
+PRIORITY: dict[Split, int] = {"test": 0, "dev": 1, "calibration": 2, "train": 3}
 
 
 @dataclass(slots=True)
@@ -144,15 +150,28 @@ def _carve(spec: Spec, entries: list[Entry], stats: Stats) -> None:
             index = int(bucket(entry.origin) / share)
             if index < len(missing):
                 entry.split = cast(Split, missing[index])
-    stats.carved = {s: sum(e.split == s for e in entries) for s in missing}
+    stats.carved |= {s: sum(e.split == s for e in entries) for s in missing}
+
+
+def _calibration(entries: list[Entry], stats: Stats) -> None:
+    """Move a seeded slice of train into calibration, by hash bucket of the origin (its own salt, so it is independent
+    of the dev carve)."""
+    origins = {e.origin for e in entries if e.split == "train"}
+    if not origins:
+        return
+    share = min(MAX_CAL, CAL_CAP / len(origins))
+    for entry in entries:
+        if entry.split == "train" and bucket(f"calibration:{entry.origin}") < share:
+            entry.split = "calibration"
+    stats.carved["calibration"] = sum(e.split == "calibration" for e in entries)
 
 
 def _cap(entries: list[Entry], stats: Stats) -> list[Entry]:
     kept = [e for e in entries if e.split == "train"]
-    for split in ("dev", "test"):
+    for split, cap in (("calibration", CAL_CAP), ("dev", CAP), ("test", CAP)):
         part = sorted((e for e in entries if e.split == split), key=lambda e: bucket(json.dumps(e.record["_meta"])))
-        stats.capped[split] = max(0, len(part) - CAP)
-        kept += part[:CAP]
+        stats.capped[split] = max(0, len(part) - cap)
+        kept += part[:cap]
     return kept
 
 
@@ -209,8 +228,9 @@ def run(root: Path) -> dict[str, Any]:
         s = stats[spec.name] = Stats()
         entries = _deduplicate(root, spec, s)
         _carve(spec, entries, s)
+        _calibration(entries, s)
         entries = _cap(entries, s)
-        held[spec.name] = {split: [e for e in entries if e.split == split] for split in ("dev", "test")}
+        held[spec.name] = {split: [e for e in entries if e.split == split] for split in ("calibration", "dev", "test")}
         with _staged(staging, spec).open("w", encoding="utf-8") as f:
             # train is streamed back from disk later, after every source's dev/test is known
             for e in entries:
@@ -227,13 +247,15 @@ def run(root: Path) -> dict[str, Any]:
     tests = kev["test"] | {k for parts in held.values() for e in parts["test"] for k in e.keys}
     for name, parts in held.items():
         parts["dev"] = keep(parts["dev"], kev["train"] | kev["calibration"] | tests, name, "dev")
-    evaluated = (
-        kev["calibration"] | kev["dev"] | tests | {k for parts in held.values() for e in parts["dev"] for k in e.keys}
-    )
+    devs = {k for parts in held.values() for e in parts["dev"] for k in e.keys}
+    for name, parts in held.items():
+        parts["calibration"] = keep(parts["calibration"], kev["train"] | kev["dev"] | tests | devs, name, "calibration")
+    calibrations = {k for parts in held.values() for e in parts["calibration"] for k in e.keys}
+    evaluated = kev["calibration"] | kev["dev"] | tests | devs | calibrations
 
     for spec in all_specs:
         parts = held[spec.name]
-        for split in ("dev", "test"):
+        for split in ("calibration", "dev", "test"):
             if parts[split]:
                 out = root / split / "sources" / f"{spec.name}.jsonl"
                 stats[spec.name].splits[split] = _write(out, (e.record for e in parts[split]))

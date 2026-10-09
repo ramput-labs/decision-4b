@@ -17,6 +17,7 @@ This layout is this repo's own: Kev's serving template is not in the pinned file
 from __future__ import annotations
 
 import random
+from collections.abc import Sequence
 from dataclasses import dataclass, replace
 from typing import Literal
 
@@ -38,6 +39,7 @@ class Example:
     ordered: tuple[bool, ...] = ()  # per question: a score question, whose options are ordered levels
     kinds: tuple[str, ...] = ()  # per question: choice | noul | score
     sources: tuple[str, ...] = ()  # per question: its `src` tag (dataset or skill family), for breakdowns
+    teachers: tuple[bool, ...] = ()  # per question: its target is a teacher's (graded on the label), not unknowable
 
 
 @dataclass(frozen=True, slots=True)
@@ -111,6 +113,7 @@ def encode(
         tuple(q.type == "score" for q in record.questions),
         tuple(q.type for q in record.questions),
         tuple(q.source for q in record.questions),
+        tuple(q.teacher for q in record.questions),
     )
 
 
@@ -161,14 +164,7 @@ def rotate_options(record: Record, rng: random.Random) -> Record:
         if q.type != "choice" or len(q.options) < 2:
             return q
         shift = rng.randrange(1, len(q.options))
-        order = [(i + shift) % len(q.options) for i in range(len(q.options))]
-        return replace(
-            q,
-            keys=tuple(q.keys[i] for i in order),
-            options=tuple(q.options[i] for i in order),
-            label=order.index(q.label),
-            target=None if q.target is None else tuple(q.target[i] for i in order),
-        )
+        return reorder(q, [(i + shift) % len(q.options) for i in range(len(q.options))])
 
     return replace(record, questions=tuple(one(q) for q in record.questions))
 
@@ -177,16 +173,21 @@ def _with_options(q: Question, keys: list[str], options: list[str], label: int) 
     return replace(q, keys=tuple(keys), options=tuple(options), label=label)
 
 
-def _shuffled(q: Question, rng: random.Random) -> Question:
-    order = list(range(len(q.options)))
-    rng.shuffle(order)
+def reorder(q: Question, order: Sequence[int]) -> Question:
+    """The question with its options in `order` (new position -> old index), label and target remapped."""
     return replace(
         q,
         keys=tuple(q.keys[i] for i in order),
         options=tuple(q.options[i] for i in order),
-        label=order.index(q.label),
+        label=list(order).index(q.label),
         target=None if q.target is None else tuple(q.target[i] for i in order),
     )
+
+
+def _shuffled(q: Question, rng: random.Random) -> Question:
+    order = list(range(len(q.options)))
+    rng.shuffle(order)
+    return reorder(q, order)
 
 
 def _free(pool: tuple[tuple[str, str | None], ...], q: Question) -> list[tuple[str, str | None]]:

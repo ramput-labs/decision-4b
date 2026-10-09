@@ -1,10 +1,7 @@
-"""Publish a trained run to the Hugging Face Hub as a private model that `den predict --run hf:<repo>` can use.
+"""`den publish`: a trained run as a private Hub model that `--run hf:<repo>` can use. The card is written from the
+run's own records, so the numbers on the Hub are the ones measured. The upload is resumable: rerun it if interrupted.
 
-The model card is written from the run's own records (`run.json` from training, `eval.json` from evaluation), so the
-numbers on the Hub are the ones measured. The upload is resumable: if it is interrupted, run the same command again.
-Afterwards the repo listing is checked for every file `predict` needs.
-
-    den publish --run runs/qwen3.5-4b-lora --repo <org>/<name>
+    den publish --run runs/round2 --repo <org>/<name>
 """
 
 from __future__ import annotations
@@ -16,16 +13,11 @@ from pathlib import Path
 from typing import Any
 
 from .licences import RANK, Kind, allowed, classify
-from .paths import CLEAN
+from .paths import CLEAN, read_json
 from .pins import MODELS
 
 NEEDED = ("head.safetensors", "head.json", "run.json", "merged/config.json", "merged/tokenizer.json")
 SKIP = ("checkpoint-*", "*.tmp", ".cache/*", "runs/*")  # Trainer leftovers and caches
-
-
-def _json(path: Path) -> dict[str, Any]:
-    loaded: dict[str, Any] = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
-    return loaded
 
 
 def stages(run: Path) -> list[tuple[Path, dict[str, Any]]]:
@@ -33,17 +25,17 @@ def stages(run: Path) -> list[tuple[Path, dict[str, Any]]]:
     chain: list[tuple[Path, dict[str, Any]]] = []
     at: Path | None = run
     while at is not None and (at / "run.json").is_file() and len(chain) < 16:
-        record = _json(at / "run.json")
+        record = read_json(at / "run.json")
         chain.append((at, record))
         at = Path(record["init_from"]) if record.get("init_from") else None
     return chain[::-1]
 
 
 def card(run: Path, repo: str) -> str:
+    """The model card: what the model is, its measured numbers, and how to use it."""
     from huggingface_hub import ModelCardData
 
-    """The model card: what the model is, its measured numbers, and how to use it."""
-    trained, evaluated = _json(run / "run.json"), _json(run / "eval.json")
+    trained, evaluated = read_json(run / "run.json"), read_json(run / "eval.json")
     history = "\n".join(
         f"| `{path.name}` | {', '.join(r.get('data', []))}"
         f"{f' + {r["replay"]} replayed' if r.get('replay') else ''} | {r.get('epochs', '?')} | {r.get('lr', '?')} | "
@@ -75,8 +67,9 @@ def card(run: Path, repo: str) -> str:
 
 A System One decision model. It reads a state and typed questions (`choice`, `score`, `noul`) and returns a calibrated
 probability for every option. It runs in one forward pass and generates no text. Built from `{base}` with a bf16 LoRA
-(rank {trained.get("lora_rank", "?")}, {trained.get("engine", "?")}) and a set-aware pointer head; probabilities
-are divided by a temperature T = {trained.get("temperature", float("nan")):.3f} fitted on the calibration split.
+(rank {trained.get("lora", {}).get("rank", "?")}, {trained.get("engine", "?")}) and a set-aware pointer head;
+probabilities are divided by a temperature T = {trained.get("temperature", float("nan")):.3f} fitted on the
+calibration split.
 
 ## Use
 
@@ -150,7 +143,7 @@ def trained_on(run: Path) -> str:
     if not counts:
         return ""
     rows = "\n".join(f"| {k} | {counts[k]} |" for k in RANK if k in counts)
-    limit = _json(run / "run.json").get("max_licence")
+    limit = read_json(run / "run.json").get("max_licence")
     beyond = [k for k in counts if RANK[k] > RANK["share-alike"]]  # type: ignore[index]
     note = (
         f"Some training records come from sources whose terms limit their use ({', '.join(beyond)}; see "
@@ -201,9 +194,9 @@ def behavior(evaluated: dict[str, Any]) -> str:
 
 def compared(run: Path) -> str:
     """The baselines table from `den baselines`."""
-    from .evaluate import markdown
+    from .compare import markdown
 
-    table = _json(run / "baselines.json")
+    table = read_json(run / "baselines.json")
     if not table:
         return ""
     return (
@@ -213,7 +206,7 @@ def compared(run: Path) -> str:
 
 
 def checked(run: Path) -> str:
-    report = _json(run / "integrity.json")
+    report = read_json(run / "integrity.json")
     if not report:
         return ""
     passed = sum(c["ok"] for c in report["checks"])
@@ -269,7 +262,7 @@ def bundle(run: Path, logs: Sequence[Path] = (), public: bool = False) -> dict[s
                 wanted[used["path"]] = "all" if lines == "all" else sorted({*wanted.get(used["path"], []), *lines})
         for f in [*record.get("dev_files", []), *record.get("calibration", [])]:
             wanted[f] = "all"
-    for f in _json(run / "eval.json"):
+    for f in read_json(run / "eval.json"):
         wanted[f] = "all"
     manifest: dict[str, Any] = {}
     for rel, lines in sorted(wanted.items()):

@@ -12,8 +12,8 @@ import pytest
 import torch
 
 from den.api import Json, Record
-from den.evaluate import request
-from den.serve import answer, handler, respond
+from den.runtime import answer, request, respond
+from den.serve import handler
 
 KEV_EXAMPLE: dict[str, Json] = {
     "state": "Shoes arrived two weeks late and in the wrong size. Also I see two charges on my card.",
@@ -47,7 +47,7 @@ def test_answers_match_kevs_published_example() -> None:
 
 
 class Fake:
-    """A stand-in for evaluate.Model: favours the second option of every question."""
+    """A stand-in for runtime.Model: favours the second option of every question."""
 
     temperature = 1.0
     backbone: Any = type("B", (), {"device": type("D", (), {"backend": "cpu", "dtype": "float32"})()})()

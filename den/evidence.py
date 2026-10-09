@@ -1,14 +1,6 @@
-"""Every evaluation, kept in git: what was measured, on what, and every question's answer.
-
-`den evaluate` writes, for each run and file, `reports/runs/<run>/<file>/report.json` (every number `metrics`
-computes) and `rows.json` (each question's calibrated probabilities, label and the links Kev's checks pair rows by),
-plus one `reports/runs/<run>/provenance.json` (the run as given, its base, LoRA, head and temperature, the commit it
-was trained and evaluated at, and the sha256 of every file scored). No weights: a run is a few MB, so it is committed
-and outlives the machine that trained it, like Kev's runs/.
-
-Rows make comparisons question by question: `den compare --paired A B` matches two runs' rows and reports the
-accuracy and NLL difference with a 95% interval from resampling whole records (`metrics.paired_bootstrap`), so "v2 is
-better" can be told apart from noise. `den release` records that comparison against the parent version.
+"""Every evaluation kept in git: `reports/runs/<run>/<file>/report.json` (the numbers), `rows.json` (each question's
+probabilities and the links Kev's checks pair rows by) and `provenance.json` (what was scored, at which commits).
+No weights, so evidence outlives the machine that trained the run. `paired` compares two runs question by question.
 """
 
 from __future__ import annotations
@@ -20,8 +12,8 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
-from .metrics import Answer, Row, paired_bootstrap
-from .paths import REPORTS
+from .metrics import Answer, Row, argmax, paired_bootstrap
+from .paths import REPORTS, read_json
 
 EVIDENCE = REPORTS / "runs"
 
@@ -61,12 +53,14 @@ def encode(r: Row) -> dict[str, Any]:
     }
     if a.target is not None:
         out["target"] = [round(float(x), 6) for x in a.target]
+    if a.teacher:
+        out["teacher"] = True
     links = {"parent": r.parent, "pair": r.pair, "sibling": r.sibling, "control": r.control, "origin": r.origin}
     return out | {k: v for k, v in links.items() if v}
 
 
 def decode(d: dict[str, Any]) -> Row:
-    answer = Answer(d["p"], d["label"], d["type"], d["source"], d.get("target"))
+    answer = Answer(d["p"], d["label"], d["type"], d["source"], d.get("target"), d.get("teacher", False))
     return Row(
         answer,
         d["id"],
@@ -94,8 +88,8 @@ def provenance(run: str, path: Path, scored: dict[str, dict[str, Any]], commit: 
     """reports/runs/<run>/provenance.json: what was evaluated, merged with what earlier evaluations recorded."""
     target = (root or EVIDENCE) / name(run) / "provenance.json"
     known: dict[str, Any] = json.loads(target.read_text(encoding="utf-8")) if target.is_file() else {}
-    head = _json(path / "head.json")
-    trained = _json(path / "run.json")
+    head = read_json(path / "head.json")
+    trained = read_json(path / "run.json")
     entry = {
         "run": run,
         "base": head.get("base"),
@@ -108,11 +102,6 @@ def provenance(run: str, path: Path, scored: dict[str, dict[str, Any]], commit: 
     }
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(json.dumps(entry, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-
-
-def _json(path: Path) -> dict[str, Any]:
-    loaded: dict[str, Any] = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
-    return loaded
 
 
 def rows(run: str, key: str, root: Path | None = None) -> list[Row]:
@@ -130,16 +119,15 @@ def keys(run: str, root: Path | None = None) -> list[str]:
 
 def paired(a: str, b: str, key: str, root: Path | None = None) -> dict[str, Any] | None:
     """b against a on the questions both answered (same record, question and variant): accuracy and NLL differences
-    with 95% intervals. Soft-target (unknowable) questions have no right answer and are left out."""
-    left = {(r.record, r.question, r.variant): r for r in rows(a, key, root) if r.answer.target is None}
-    right = {(r.record, r.question, r.variant): r for r in rows(b, key, root) if r.answer.target is None}
+    with 95% intervals. Unknowable questions have no right answer and are left out."""
+    left = {(r.record, r.question, r.variant): r for r in rows(a, key, root) if not r.answer.unknowable}
+    right = {(r.record, r.question, r.variant): r for r in rows(b, key, root) if not r.answer.unknowable}
     shared = sorted(set(left) & set(right))
     if not shared:
         return None
 
     def correct(r: Row) -> float:
-        p = list(r.answer.probs)
-        return float(max(range(len(p)), key=p.__getitem__) == r.answer.label)
+        return float(argmax(r.answer.probs) == r.answer.label)
 
     def nll(r: Row) -> float:
         return -math.log(max(float(r.answer.probs[r.answer.label]), 1e-12))

@@ -11,7 +11,7 @@ from tokenizers import Tokenizer
 
 from den.api import Record, parse
 from den.calibrate import fit_temperature
-from den.model import HeadConfig, PointerHead, question_loss
+from den.head import HeadConfig, PointerHead, question_loss
 from den.prompt import Example, encode, shuffle_options, split
 
 TOKENIZER = Path("models/qwen3.5-4b/tokenizer.json")
@@ -153,7 +153,7 @@ def test_fit_temperature_recovers_overconfidence() -> None:
 
 
 def test_shuffled_reorders_options_on_every_visit() -> None:
-    from den.train import Shuffled
+    from den.data import Shuffled
 
     class Chars:  # a stand-in tokenizer: one token per character
         def encode(self, text: str, add_special_tokens: bool = False) -> object:
@@ -191,7 +191,7 @@ def test_lora_adapts_every_text_linear_and_nothing_else() -> None:
     """The PEFT engine wraps the same targets Unsloth gets: every attention, DeltaNet and MLP projection of the text
     decoder, none of the vision tower. Starts as the identity, and gradients reach the adapters and the head."""
     from den.device import hidden_size
-    from den.model import LoraConfig, adapted, load_backbone, text_tower
+    from den.lora import LoraConfig, adapted, load_backbone, text_tower
 
     model = load_backbone(MODEL, LoraConfig(rank=4, alpha=8), 64, 0, engine="peft")
     names = adapted(model)
@@ -232,7 +232,7 @@ def test_fit_temperature_stays_bounded_when_every_answer_is_wrong() -> None:
 def test_sample_is_seeded_and_capped(tmp_path: Path) -> None:
     import json
 
-    from den.train import sample
+    from den.data import sample
 
     rows = [
         {"state": f"s{i}", "questions": {"q": {"type": "noul", "instructions": "?", "label": i % 2 == 0}}}
@@ -344,7 +344,7 @@ def test_none_pair_differs_only_in_the_true_option() -> None:
 
 
 def test_shuffled_adds_pair_halves_that_agree() -> None:
-    from den.train import Shuffled
+    from den.data import Shuffled
 
     class Chars:
         def encode(self, text: str, add_special_tokens: bool = False) -> object:
@@ -362,23 +362,24 @@ def test_shuffled_adds_pair_halves_that_agree() -> None:
 
 
 def test_warm_start_refuses_a_different_shape(tmp_path: Path) -> None:
-    from den.model import LoraConfig, save_head, warm_start
+    from den.head import save_head
+    from den.lora import LoraConfig, warm_start
 
     head = PointerHead(8, HeadConfig(dim=4, layers=1, heads=2))
-    save_head(tmp_path, head, base="qwen3.5-4b", lora=0, temperature=1.5)
+    save_head(tmp_path, head, base="qwen3.5-4b", lora=0, lora_alpha=0, rslora=False, temperature=1.5)
     fresh = PointerHead(8, HeadConfig(dim=4, layers=1, heads=2))
     assert warm_start(None, fresh, tmp_path, "qwen3.5-4b", LoraConfig(rank=0)) == 1.5
     assert all(torch.equal(a, b) for a, b in zip(fresh.state_dict().values(), head.state_dict().values(), strict=True))
     with pytest.raises(SystemExit, match="lora rank"):
         warm_start(None, fresh, tmp_path, "qwen3.5-4b", LoraConfig(rank=16))
-    save_head(tmp_path, head, base="qwen3.5-4b", lora=16, temperature=1.5)  # an older head: no alpha, no rsLoRA
+    save_head(tmp_path, head, base="qwen3.5-4b", lora=16, lora_alpha=32, rslora=False, temperature=1.5)
     for other in (LoraConfig(rank=16, alpha=16), LoraConfig(rank=16, rslora=True)):
         with pytest.raises(SystemExit, match="lora scale"):
             warm_start(None, fresh, tmp_path, "qwen3.5-4b", other)
 
 
 def test_lora_scale_follows_alpha_and_rslora() -> None:
-    from den.model import LoraConfig
+    from den.lora import LoraConfig
 
     assert LoraConfig(rank=16, alpha=32).scale == 2.0 and LoraConfig(rank=16, alpha=32, rslora=True).scale == 8.0
     assert LoraConfig(rank=0).scale == 0.0
@@ -387,7 +388,7 @@ def test_lora_scale_follows_alpha_and_rslora() -> None:
 def test_head_saves_as_safetensors_and_checks_the_backbone(tmp_path: Path) -> None:
     import json
 
-    from den.model import load_head, save_head
+    from den.head import load_head, save_head
 
     torch.manual_seed(0)
     head = PointerHead(8, HeadConfig(dim=4, layers=1, heads=2))
@@ -440,7 +441,7 @@ def test_save_merged_folds_lora_into_the_base_layout(tmp_path: Path) -> None:
     import peft
     from safetensors.torch import load_file, save_file
 
-    from den.model import save_merged
+    from den.lora import save_merged
 
     class Attn(torch.nn.Module):
         def __init__(self) -> None:
@@ -552,8 +553,9 @@ def test_merged_export_answers_like_the_adapter(tmp_path: Path) -> None:
     import gc
     import shutil
 
-    from den.evaluate import Model
-    from den.model import LoraConfig, load_backbone, save_head, save_merged, text_tower
+    from den.head import save_head
+    from den.lora import LoraConfig, load_backbone, save_merged, text_tower
+    from den.runtime import Model
 
     torch.manual_seed(0)
     model = load_backbone(MODEL, LoraConfig(rank=8, alpha=16), 256, 0, engine="peft")
@@ -638,7 +640,8 @@ def test_fit_temperature_finds_the_minimum() -> None:
 
 
 def test_run_metadata_helpers() -> None:
-    from den.train import dataset_hash, pinned, runtime
+    from den.doctor import runtime
+    from den.train import dataset_hash, pinned
 
     used: list[dict[str, object]] = [{"path": "train/b.jsonl", "sha256": "2", "lines": [3, 1]},
                                      {"path": "train/a.jsonl", "sha256": "1", "lines": "all"}]  # fmt: skip
@@ -652,7 +655,7 @@ def test_run_metadata_helpers() -> None:
 def test_max_licence_keeps_only_records_the_licence_allows(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     import json
 
-    from den import train
+    from den import data as train
 
     question = {"answer": {"type": "noul", "instructions": "Ok?", "label": True}}
     rows = [{"state": f"s{i}", "questions": question, "_meta": {"source": s}} for i, s in enumerate(
@@ -691,7 +694,7 @@ class Chars:
 
 def test_shuffled_longest_covers_every_augmented_item() -> None:
     """The backbone's max_seq_length comes from `longest`, so no augmented variant may run past it."""
-    from den.train import Shuffled
+    from den.data import Shuffled
 
     data = Shuffled([_choice(), _choice(3)], Chars(), max_state=99, seed=0, augment="kev", p_none_pair=1.0)  # type: ignore[arg-type]
     assert data.longest > max(data.lengths)
@@ -702,8 +705,8 @@ def test_shuffled_longest_covers_every_augmented_item() -> None:
 
 def test_letters_pairs_never_pass_z() -> None:
     """A 26-option question gains a 27th in its pair, which the letter prompt can't hold: no pair, no crash."""
+    from den.data import Shuffled
     from den.prompt import LETTERS
-    from den.train import Shuffled
 
     keys = [f"k{i}" for i in range(len(LETTERS))]
     record = parse(
@@ -758,7 +761,7 @@ def test_sources_leave_out_every_text_of_the_replayed_suites(tmp_path: Path, mon
     trained on the whole suite), not only the lines replayed now. Regression: they were checked against --data only."""
     import argparse
 
-    from den import train
+    from den import data as train
 
     def row(text: str) -> dict[str, Any]:
         return {"state": text, "questions": {"q": {"type": "noul", "instructions": "?", "label": True}}}

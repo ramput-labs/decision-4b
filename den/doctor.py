@@ -1,10 +1,9 @@
-"""`den doctor`: is this machine ready, and with what? Versions come from package metadata, so nothing heavy is
-imported (Unsloth is only imported, to check it, on a CUDA machine).
+"""What this machine and this code are: `den doctor`'s readiness checks, and the provenance every run records.
 
-    den doctor                      # report; MLX on a Mac, CUDA on Linux
-    den doctor --require cuda       # exit 1 unless CUDA training will work: GPU, BF16, driver, Unsloth, kernels
-    den doctor --require cuda --model qwen3.5-0.8b --min-disk 30    # the local 8 GB card (make local-doctor)
-    den doctor --verify             # also re-hash the model's weight shards against locks/models.json
+den doctor                      # report; MLX on a Mac, CUDA on Linux
+den doctor --require cuda       # exit 1 unless CUDA training will work: GPU, BF16, driver, Unsloth, kernels
+den doctor --require cuda --model qwen3.5-0.8b --min-disk 30    # the local 8 GB card (make local-doctor)
+den doctor --verify             # also re-hash the model's weight shards against locks/models.json
 """
 
 from __future__ import annotations
@@ -47,6 +46,45 @@ def driver() -> str | None:
         ["nvidia-smi", "--query-gpu=driver_version", "--format=csv,noheader"], capture_output=True, text=True
     )
     return out.stdout.strip().splitlines()[0] if out.returncode == 0 and out.stdout.strip() else None
+
+
+def commit() -> str:
+    """The git commit of this code, with `+dirty` when there are uncommitted changes."""
+    try:
+        sha = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=True).stdout.strip()
+        dirty = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True, check=True).stdout
+    except (OSError, subprocess.CalledProcessError):
+        return "unknown"
+    return sha + ("+dirty" if dirty.strip() else "")
+
+
+def versions() -> dict[str, str]:
+    """The installed packages that decide a result, and den itself."""
+    return {name: v for name in (*PACKAGES, "den") if (v := package_version(name))}
+
+
+def runtime() -> dict[str, Any]:
+    """Where a run ran: platform, CUDA build, cuDNN, driver and GPU memory (None off CUDA)."""
+    import torch
+
+    info: dict[str, Any] = {
+        "platform": f"{platform.system()} {platform.machine()}",
+        "python": platform.python_version(),
+        "cuda": torch.version.cuda,
+        "cudnn": None,
+        "driver": None,
+        "gpu_count": 0,
+    }
+    if torch.cuda.is_available():
+        info |= {
+            "cudnn": torch.backends.cudnn.version(),  # type: ignore[no-untyped-call]
+            "driver": driver(),
+            "gpu_count": torch.cuda.device_count(),
+            "gpu": torch.cuda.get_device_name(0),
+            "gpu_memory_gb": round(torch.cuda.get_device_properties(0).total_memory / 2**30, 1),
+            "peak_memory_gb": round(torch.cuda.max_memory_allocated() / 2**30, 1),  # this process, over the whole run
+        }
+    return info
 
 
 def _cuda() -> dict[str, Any]:

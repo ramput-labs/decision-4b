@@ -11,7 +11,7 @@
       },
       "noul_true_rate": 0.41,
       "first_option_rate": 0.24,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 420,
       "state_tokens": {
         "median": 58,
@@ -30,7 +30,7 @@
       },
       "noul_true_rate": 0.5,
       "first_option_rate": 0.492,
-      "soft_targets": 256,
+      "unknowable": 256,
       "duplicates": 0,
       "state_tokens": {
         "median": 90,
@@ -48,7 +48,7 @@
       },
       "noul_true_rate": 0.5,
       "first_option_rate": 0.151,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 154,
@@ -65,7 +65,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": 0.307,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 420,
@@ -84,7 +84,7 @@
       },
       "noul_true_rate": 0.472,
       "first_option_rate": 0.228,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 122,
@@ -93,15 +93,34 @@
       }
     },
     {
-      "path": "train/sources/intent/banking77.jsonl",
-      "records": 8937,
-      "questions": 8937,
+      "path": "train/sources/decisions/typed-decisions.jsonl",
+      "records": 1036,
+      "questions": 5180,
       "types": {
-        "choice": 8937
+        "choice": 1551,
+        "noul": 1557,
+        "score": 2072
+      },
+      "noul_true_rate": 0.497,
+      "first_option_rate": 0.198,
+      "unknowable": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 239,
+        "p99": 445,
+        "max": 530
+      }
+    },
+    {
+      "path": "train/sources/intent/banking77.jsonl",
+      "records": 8478,
+      "questions": 8478,
+      "types": {
+        "choice": 8478
       },
       "noul_true_rate": null,
       "first_option_rate": 0.016,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 11,
@@ -111,14 +130,14 @@
     },
     {
       "path": "train/sources/intent/massive-en.jsonl",
-      "records": 11429,
-      "questions": 22858,
+      "records": 10919,
+      "questions": 21838,
       "types": {
-        "choice": 22858
+        "choice": 21838
       },
       "noul_true_rate": null,
       "first_option_rate": 0.032,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 7,
@@ -128,14 +147,14 @@
     },
     {
       "path": "train/sources/knowledge/arc.jsonl",
-      "records": 3348,
-      "questions": 3348,
+      "records": 3180,
+      "questions": 3180,
       "types": {
-        "choice": 3348
+        "choice": 3180
       },
       "noul_true_rate": null,
-      "first_option_rate": 0.233,
-      "soft_targets": 0,
+      "first_option_rate": 0.235,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 21,
@@ -145,14 +164,14 @@
     },
     {
       "path": "train/sources/knowledge/commonsenseqa.jsonl",
-      "records": 8757,
-      "questions": 8757,
+      "records": 8297,
+      "questions": 8297,
       "types": {
-        "choice": 8757
+        "choice": 8297
       },
       "noul_true_rate": null,
       "first_option_rate": 0.195,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 16,
@@ -162,14 +181,14 @@
     },
     {
       "path": "train/sources/knowledge/openbookqa.jsonl",
-      "records": 4906,
-      "questions": 4906,
+      "records": 4661,
+      "questions": 4661,
       "types": {
-        "choice": 4906
+        "choice": 4661
       },
       "noul_true_rate": null,
-      "first_option_rate": 0.278,
-      "soft_targets": 0,
+      "first_option_rate": 0.277,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 13,
@@ -179,48 +198,48 @@
     },
     {
       "path": "train/sources/knowledge/qasc.jsonl",
-      "records": 7325,
-      "questions": 7325,
+      "records": 6974,
+      "questions": 6974,
       "types": {
-        "choice": 7325
+        "choice": 6974
       },
       "noul_true_rate": null,
       "first_option_rate": 0.123,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
-        "median": 43,
+        "median": 42,
         "p99": 63,
         "max": 83
       }
     },
     {
       "path": "train/sources/reading/boolq.jsonl",
-      "records": 7600,
-      "questions": 7600,
+      "records": 7216,
+      "questions": 7216,
       "types": {
-        "noul": 7600
+        "noul": 7216
       },
       "noul_true_rate": 0.621,
       "first_option_rate": null,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 114,
-        "p99": 352,
+        "p99": 353,
         "max": 787
       }
     },
     {
       "path": "train/sources/reading/multinli.jsonl",
-      "records": 391938,
-      "questions": 391938,
+      "records": 390509,
+      "questions": 390509,
       "types": {
-        "choice": 391938
+        "choice": 390509
       },
       "noul_true_rate": null,
       "first_option_rate": 0.333,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 21,
@@ -230,32 +249,32 @@
     },
     {
       "path": "train/sources/safety/aegis.jsonl",
-      "records": 19626,
-      "questions": 21826,
+      "records": 19133,
+      "questions": 21273,
       "types": {
-        "noul": 19626,
-        "choice": 2200
+        "noul": 19133,
+        "choice": 2140
       },
-      "noul_true_rate": 0.448,
-      "first_option_rate": 0.192,
-      "soft_targets": 0,
+      "noul_true_rate": 0.447,
+      "first_option_rate": 0.191,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 17,
-        "p99": 976,
+        "p99": 971,
         "max": 4171
       }
     },
     {
       "path": "train/sources/sentiment/amazon-reviews.jsonl",
-      "records": 199034,
-      "questions": 199034,
+      "records": 198565,
+      "questions": 198565,
       "types": {
-        "score": 199034
+        "score": 198565
       },
       "noul_true_rate": null,
       "first_option_rate": null,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 29,
@@ -265,48 +284,48 @@
     },
     {
       "path": "train/sources/sentiment/imdb.jsonl",
-      "records": 22255,
-      "questions": 22255,
+      "records": 21763,
+      "questions": 21763,
       "types": {
-        "noul": 22255
+        "noul": 21763
       },
-      "noul_true_rate": 0.502,
+      "noul_true_rate": 0.503,
       "first_option_rate": null,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
-        "median": 216,
+        "median": 217,
         "p99": 1125,
         "max": 3060
       }
     },
     {
       "path": "train/sources/sentiment/sst5.jsonl",
-      "records": 8471,
-      "questions": 8471,
+      "records": 8069,
+      "questions": 8069,
       "types": {
-        "score": 8471
+        "score": 8069
       },
       "noul_true_rate": null,
       "first_option_rate": null,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 21,
         "p99": 52,
-        "max": 77
+        "max": 74
       }
     },
     {
       "path": "train/sources/sentiment/yelp-full.jsonl",
-      "records": 644591,
-      "questions": 644591,
+      "records": 644051,
+      "questions": 644051,
       "types": {
-        "score": 644591
+        "score": 644051
       },
       "noul_true_rate": null,
       "first_option_rate": null,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 123,
@@ -316,15 +335,15 @@
     },
     {
       "path": "train/sources/tools/glaive-function-calling.jsonl",
-      "records": 28617,
-      "questions": 57160,
+      "records": 28089,
+      "questions": 56107,
       "types": {
-        "noul": 46515,
-        "choice": 10645
+        "noul": 45659,
+        "choice": 10448
       },
       "noul_true_rate": 0.652,
       "first_option_rate": 0.391,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 59,
@@ -334,14 +353,14 @@
     },
     {
       "path": "train/sources/topic/ag-news.jsonl",
-      "records": 114748,
-      "questions": 114748,
+      "records": 114255,
+      "questions": 114255,
       "types": {
-        "choice": 114748
+        "choice": 114255
       },
       "noul_true_rate": null,
       "first_option_rate": 0.25,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 49,
@@ -351,14 +370,14 @@
     },
     {
       "path": "train/sources/topic/dbpedia14.jsonl",
-      "records": 554866,
-      "questions": 554866,
+      "records": 554365,
+      "questions": 554365,
       "types": {
-        "choice": 554866
+        "choice": 554365
       },
       "noul_true_rate": null,
       "first_option_rate": 0.071,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 69,
@@ -368,14 +387,14 @@
     },
     {
       "path": "train/sources/topic/trec.jsonl",
-      "records": 4764,
-      "questions": 4764,
+      "records": 4519,
+      "questions": 4519,
       "types": {
-        "choice": 4764
+        "choice": 4519
       },
       "noul_true_rate": null,
       "first_option_rate": 0.016,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 11,
@@ -394,7 +413,7 @@
       },
       "noul_true_rate": 0.422,
       "first_option_rate": 0.278,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 60,
       "state_tokens": {
         "median": 72,
@@ -413,12 +432,322 @@
       },
       "noul_true_rate": 0.411,
       "first_option_rate": 0.353,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 12,
       "state_tokens": {
         "median": 52,
         "p99": 236,
         "max": 369
+      }
+    },
+    {
+      "path": "calibration/sources/decisions/typed-decisions.jsonl",
+      "records": 51,
+      "questions": 255,
+      "types": {
+        "choice": 75,
+        "score": 102,
+        "noul": 78
+      },
+      "noul_true_rate": 0.436,
+      "first_option_rate": 0.173,
+      "unknowable": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 231,
+        "p99": 432,
+        "max": 445
+      }
+    },
+    {
+      "path": "calibration/sources/intent/banking77.jsonl",
+      "records": 416,
+      "questions": 416,
+      "types": {
+        "choice": 416
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.014,
+      "unknowable": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 11,
+        "p99": 44,
+        "max": 90
+      }
+    },
+    {
+      "path": "calibration/sources/intent/massive-en.jsonl",
+      "records": 499,
+      "questions": 998,
+      "types": {
+        "choice": 998
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.032,
+      "unknowable": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 7,
+        "p99": 16,
+        "max": 22
+      }
+    },
+    {
+      "path": "calibration/sources/knowledge/arc.jsonl",
+      "records": 168,
+      "questions": 168,
+      "types": {
+        "choice": 168
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.19,
+      "unknowable": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 21,
+        "p99": 53,
+        "max": 61
+      }
+    },
+    {
+      "path": "calibration/sources/knowledge/commonsenseqa.jsonl",
+      "records": 460,
+      "questions": 460,
+      "types": {
+        "choice": 460
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.193,
+      "unknowable": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 16,
+        "p99": 44,
+        "max": 49
+      }
+    },
+    {
+      "path": "calibration/sources/knowledge/openbookqa.jsonl",
+      "records": 228,
+      "questions": 228,
+      "types": {
+        "choice": 228
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.298,
+      "unknowable": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 12,
+        "p99": 38,
+        "max": 52
+      }
+    },
+    {
+      "path": "calibration/sources/knowledge/qasc.jsonl",
+      "records": 351,
+      "questions": 351,
+      "types": {
+        "choice": 351
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.125,
+      "unknowable": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 43,
+        "p99": 65,
+        "max": 73
+      }
+    },
+    {
+      "path": "calibration/sources/reading/boolq.jsonl",
+      "records": 313,
+      "questions": 313,
+      "types": {
+        "noul": 313
+      },
+      "noul_true_rate": 0.629,
+      "first_option_rate": null,
+      "unknowable": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 117,
+        "p99": 334,
+        "max": 452
+      }
+    },
+    {
+      "path": "calibration/sources/reading/multinli.jsonl",
+      "records": 499,
+      "questions": 499,
+      "types": {
+        "choice": 499
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.353,
+      "unknowable": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 21,
+        "p99": 72,
+        "max": 151
+      }
+    },
+    {
+      "path": "calibration/sources/safety/aegis.jsonl",
+      "records": 459,
+      "questions": 515,
+      "types": {
+        "noul": 459,
+        "choice": 56
+      },
+      "noul_true_rate": 0.442,
+      "first_option_rate": 0.232,
+      "unknowable": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 17,
+        "p99": 1021,
+        "max": 2968
+      }
+    },
+    {
+      "path": "calibration/sources/sentiment/amazon-reviews.jsonl",
+      "records": 464,
+      "questions": 464,
+      "types": {
+        "score": 464
+      },
+      "noul_true_rate": null,
+      "first_option_rate": null,
+      "unknowable": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 30,
+        "p99": 191,
+        "max": 544
+      }
+    },
+    {
+      "path": "calibration/sources/sentiment/imdb.jsonl",
+      "records": 472,
+      "questions": 472,
+      "types": {
+        "noul": 472
+      },
+      "noul_true_rate": 0.481,
+      "first_option_rate": null,
+      "unknowable": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 208,
+        "p99": 1094,
+        "max": 1421
+      }
+    },
+    {
+      "path": "calibration/sources/sentiment/sst5.jsonl",
+      "records": 363,
+      "questions": 363,
+      "types": {
+        "score": 363
+      },
+      "noul_true_rate": null,
+      "first_option_rate": null,
+      "unknowable": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 23,
+        "p99": 51,
+        "max": 77
+      }
+    },
+    {
+      "path": "calibration/sources/sentiment/yelp-full.jsonl",
+      "records": 500,
+      "questions": 500,
+      "types": {
+        "score": 500
+      },
+      "noul_true_rate": null,
+      "first_option_rate": null,
+      "unknowable": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 127,
+        "p99": 770,
+        "max": 1004
+      }
+    },
+    {
+      "path": "calibration/sources/tools/glaive-function-calling.jsonl",
+      "records": 500,
+      "questions": 997,
+      "types": {
+        "noul": 810,
+        "choice": 187
+      },
+      "noul_true_rate": 0.642,
+      "first_option_rate": 0.401,
+      "unknowable": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 59,
+        "p99": 104,
+        "max": 115
+      }
+    },
+    {
+      "path": "calibration/sources/topic/ag-news.jsonl",
+      "records": 491,
+      "questions": 491,
+      "types": {
+        "choice": 491
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.283,
+      "unknowable": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 48,
+        "p99": 101,
+        "max": 172
+      }
+    },
+    {
+      "path": "calibration/sources/topic/dbpedia14.jsonl",
+      "records": 500,
+      "questions": 500,
+      "types": {
+        "choice": 500
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.056,
+      "unknowable": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 65,
+        "p99": 131,
+        "max": 183
+      }
+    },
+    {
+      "path": "calibration/sources/topic/trec.jsonl",
+      "records": 174,
+      "questions": 174,
+      "types": {
+        "choice": 174
+      },
+      "noul_true_rate": null,
+      "first_option_rate": 0.023,
+      "unknowable": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 11,
+        "p99": 27,
+        "max": 30
       }
     },
     {
@@ -430,7 +759,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": 0.489,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 97,
@@ -448,7 +777,7 @@
       },
       "noul_true_rate": 0.438,
       "first_option_rate": 0.278,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 139,
@@ -467,7 +796,7 @@
       },
       "noul_true_rate": 0.388,
       "first_option_rate": 0.221,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 37,
       "state_tokens": {
         "median": 49,
@@ -485,7 +814,7 @@
       },
       "noul_true_rate": 0.499,
       "first_option_rate": 0.252,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 158,
@@ -502,7 +831,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": 0.328,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 392,
@@ -521,7 +850,7 @@
       },
       "noul_true_rate": 0.448,
       "first_option_rate": 0.278,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 28,
       "state_tokens": {
         "median": 58,
@@ -538,7 +867,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": 0.369,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 28,
@@ -557,12 +886,31 @@
       },
       "noul_true_rate": 0.455,
       "first_option_rate": 0.226,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 106,
         "p99": 4538,
         "max": 4911
+      }
+    },
+    {
+      "path": "dev/sources/decisions/typed-decisions.jsonl",
+      "records": 113,
+      "questions": 565,
+      "types": {
+        "choice": 174,
+        "noul": 165,
+        "score": 226
+      },
+      "noul_true_rate": 0.539,
+      "first_option_rate": 0.155,
+      "unknowable": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 249,
+        "p99": 419,
+        "max": 436
       }
     },
     {
@@ -574,7 +922,7 @@
       },
       "noul_true_rate": 0.787,
       "first_option_rate": null,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 12,
@@ -591,7 +939,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": 0.346,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 119,
@@ -608,7 +956,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": 0.012,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 11,
@@ -625,7 +973,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": 0.032,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 7,
@@ -642,7 +990,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": 0.256,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 21,
@@ -659,7 +1007,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": 0.203,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 16,
@@ -676,7 +1024,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": 0.252,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 12,
@@ -693,7 +1041,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": 0.13,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 42,
@@ -710,7 +1058,7 @@
       },
       "noul_true_rate": 0.628,
       "first_option_rate": null,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 113,
@@ -727,7 +1075,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": 0.351,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 20,
@@ -745,7 +1093,7 @@
       },
       "noul_true_rate": 0.488,
       "first_option_rate": 0.264,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 16,
@@ -762,7 +1110,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": null,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 29,
@@ -779,7 +1127,7 @@
       },
       "noul_true_rate": 0.5,
       "first_option_rate": null,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 215,
@@ -796,7 +1144,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": null,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 22,
@@ -813,7 +1161,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": null,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 125,
@@ -831,7 +1179,7 @@
       },
       "noul_true_rate": 0.664,
       "first_option_rate": 0.403,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 60,
@@ -848,7 +1196,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": 0.257,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 49,
@@ -865,7 +1213,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": 0.074,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 68,
@@ -882,7 +1230,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": 0.013,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 10,
@@ -899,7 +1247,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": 0.276,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 17,
@@ -916,7 +1264,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": 0.157,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 37,
@@ -933,7 +1281,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": 0.249,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 32,
@@ -950,7 +1298,7 @@
       },
       "noul_true_rate": 0.44,
       "first_option_rate": null,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 27,
@@ -967,7 +1315,7 @@
       },
       "noul_true_rate": 0.504,
       "first_option_rate": null,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 33,
@@ -984,7 +1332,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": 0.229,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 83,
@@ -1001,7 +1349,7 @@
       },
       "noul_true_rate": 0.346,
       "first_option_rate": null,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 27,
@@ -1020,7 +1368,7 @@
       },
       "noul_true_rate": 0.443,
       "first_option_rate": 0.324,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 26,
       "state_tokens": {
         "median": 42,
@@ -1038,7 +1386,7 @@
       },
       "noul_true_rate": 0.439,
       "first_option_rate": 0.28,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 138,
@@ -1057,7 +1405,7 @@
       },
       "noul_true_rate": 0.421,
       "first_option_rate": 0.185,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 6,
       "state_tokens": {
         "median": 49,
@@ -1075,7 +1423,7 @@
       },
       "noul_true_rate": 0.5,
       "first_option_rate": 0.237,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 127,
@@ -1092,7 +1440,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": 0.316,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 376,
@@ -1111,7 +1459,7 @@
       },
       "noul_true_rate": 0.427,
       "first_option_rate": 0.213,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 25,
       "state_tokens": {
         "median": 58,
@@ -1130,12 +1478,31 @@
       },
       "noul_true_rate": 0.473,
       "first_option_rate": 0.23,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 120,
         "p99": 4438,
         "max": 4579
+      }
+    },
+    {
+      "path": "test/sources/decisions/typed-decisions.jsonl",
+      "records": 400,
+      "questions": 2000,
+      "types": {
+        "score": 800,
+        "choice": 600,
+        "noul": 600
+      },
+      "noul_true_rate": 0.508,
+      "first_option_rate": 0.198,
+      "unknowable": 0,
+      "duplicates": 0,
+      "state_tokens": {
+        "median": 240,
+        "p99": 466,
+        "max": 499
       }
     },
     {
@@ -1147,7 +1514,7 @@
       },
       "noul_true_rate": 0.769,
       "first_option_rate": null,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 14,
@@ -1164,7 +1531,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": 0.362,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 125,
@@ -1181,7 +1548,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": 0.013,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 10,
@@ -1198,7 +1565,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": 0.033,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 7,
@@ -1215,7 +1582,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": 0.243,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 21,
@@ -1232,7 +1599,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": 0.195,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 16,
@@ -1249,7 +1616,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": 0.276,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 11,
@@ -1266,7 +1633,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": 0.131,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 42,
@@ -1283,7 +1650,7 @@
       },
       "noul_true_rate": 0.62,
       "first_option_rate": null,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 112,
@@ -1300,7 +1667,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": 0.35,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 22,
@@ -1318,7 +1685,7 @@
       },
       "noul_true_rate": 0.501,
       "first_option_rate": 0.291,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 15,
@@ -1335,7 +1702,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": null,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 29,
@@ -1352,7 +1719,7 @@
       },
       "noul_true_rate": 0.498,
       "first_option_rate": null,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 213,
@@ -1369,7 +1736,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": null,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 21,
@@ -1386,7 +1753,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": null,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 127,
@@ -1404,7 +1771,7 @@
       },
       "noul_true_rate": 0.647,
       "first_option_rate": 0.399,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 59,
@@ -1421,7 +1788,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": 0.252,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 49,
@@ -1438,7 +1805,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": 0.066,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 68,
@@ -1455,7 +1822,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": 0.019,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 8,
@@ -1472,7 +1839,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": 0.29,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 18,
@@ -1489,7 +1856,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": 0.114,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 48,
@@ -1506,7 +1873,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": 0.236,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 32,
@@ -1523,7 +1890,7 @@
       },
       "noul_true_rate": 0.434,
       "first_option_rate": null,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 27,
@@ -1540,7 +1907,7 @@
       },
       "noul_true_rate": 0.496,
       "first_option_rate": null,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 33,
@@ -1557,7 +1924,7 @@
       },
       "noul_true_rate": null,
       "first_option_rate": 0.247,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 84,
@@ -1574,7 +1941,7 @@
       },
       "noul_true_rate": 0.269,
       "first_option_rate": null,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 0,
       "state_tokens": {
         "median": 33,
@@ -1593,7 +1960,7 @@
       },
       "noul_true_rate": 0.414,
       "first_option_rate": 0.232,
-      "soft_targets": 0,
+      "unknowable": 0,
       "duplicates": 25,
       "state_tokens": {
         "median": 43,
@@ -1702,6 +2069,10 @@
     "sources/eval/transfer/tweeteval-offensive": {
       "files": 3,
       "rows": 14100
+    },
+    "sources/train/decisions/typed-decisions": {
+      "files": 2,
+      "rows": 1600
     },
     "sources/train/intent/banking77": {
       "files": 2,

@@ -77,3 +77,18 @@ def test_invalid_questions_are_refused(question: dict[str, Json]) -> None:
 def test_empty_state_is_refused() -> None:
     with pytest.raises(RecordError):
         parse({"state": " ", "questions": {"q": {"type": "noul", "instructions": "?", "label": True}}}, "r")
+
+
+def test_a_teacher_target_is_graded_and_an_unknowable_one_is_not() -> None:
+    def question(**extra: Json) -> Json:
+        return {"type": "choice", "instructions": "Which?", "criteria": {"a": None, "b": None}, "label": "b", **extra}
+
+    taught = parse(
+        {"state": "s", "questions": {"q": question(target={"a": 0.3, "b": 0.7}, target_from="teacher")}}, "r"
+    )
+    (q,) = taught.questions
+    assert q.teacher and not q.unknowable and q.target == (0.3, 0.7)
+    (u,) = parse({"state": "s", "questions": {"q": question(target={"a": 0.5, "b": 0.5})}}, "r").questions
+    assert u.unknowable and not u.teacher
+    with pytest.raises(RecordError, match="most likely"):  # the label must be the teacher's argmax
+        parse({"state": "s", "questions": {"q": question(target={"a": 0.9, "b": 0.1}, target_from="teacher")}}, "r")

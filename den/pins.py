@@ -276,6 +276,10 @@ RAW_NEW: tuple[Item, ...] = (
     _hub("raw-new", "tools/glaive-function-calling", P, "glaiveai/glaive-function-calling-v2", "e7f4b6456019f5d8bcb991ef0dd67d8ff23221ac", "Apache-2.0", "tool choice and call-or-not decisions; targets breadth-v1 tools (BFCL/ToolRet/API-Bank stay eval-only)", files={
         "glaive-function-calling-v2.json": "e9b5d671812b5ca2fbd7b625a37d5c99a19576c37252cdc806defe256aea6dad",
     }),
+    _hub("raw-new", "decisions/typed-decisions", P, "LocalLLaMA/typed-decisions", "e039ebffcc280174dd354227424fb2b249f191de", "Apache-2.0", "four synthetic workflows, five typed questions a case (Laya's fine-tuning set); labels are a teacher's argmax", files={
+        "all/train-00000-of-00001.parquet": "46a58d63edfd86e23229c78afe8b72307bb4ca9fb0e8df180cabb3c67ec9dcd5",
+        "all/test-00000-of-00001.parquet": "4f294f218ea1da27f3efef936359389c62ea4d3973a41457732990f1d31b647c",
+    }),
 )
 
 RAW_EVAL: tuple[Item, ...] = (

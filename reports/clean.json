@@ -70,135 +70,143 @@
       "runs_of_space": 214
     }
   },
-  "train/sources/intent/banking77.jsonl": {
-    "records": 8937,
+  "train/sources/decisions/typed-decisions.jsonl": {
+    "records": 1036,
     "rewritten": 0,
     "duplicates_dropped": 0,
-    "written": 8937,
+    "written": 1036,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "train/sources/intent/banking77.jsonl": {
+    "records": 8478,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 8478,
     "problems_before": {},
     "problems_after": {}
   },
   "train/sources/intent/massive-en.jsonl": {
-    "records": 11429,
+    "records": 10919,
     "rewritten": 0,
     "duplicates_dropped": 0,
-    "written": 11429,
+    "written": 10919,
     "problems_before": {},
     "problems_after": {}
   },
   "train/sources/knowledge/arc.jsonl": {
-    "records": 3348,
+    "records": 3180,
     "rewritten": 0,
     "duplicates_dropped": 0,
-    "written": 3348,
+    "written": 3180,
     "problems_before": {},
     "problems_after": {}
   },
   "train/sources/knowledge/commonsenseqa.jsonl": {
-    "records": 8757,
+    "records": 8297,
     "rewritten": 0,
     "duplicates_dropped": 0,
-    "written": 8757,
+    "written": 8297,
     "problems_before": {},
     "problems_after": {}
   },
   "train/sources/knowledge/openbookqa.jsonl": {
-    "records": 4906,
+    "records": 4661,
     "rewritten": 0,
     "duplicates_dropped": 0,
-    "written": 4906,
+    "written": 4661,
     "problems_before": {},
     "problems_after": {}
   },
   "train/sources/knowledge/qasc.jsonl": {
-    "records": 7325,
+    "records": 6974,
     "rewritten": 0,
     "duplicates_dropped": 0,
-    "written": 7325,
+    "written": 6974,
     "problems_before": {},
     "problems_after": {}
   },
   "train/sources/reading/boolq.jsonl": {
-    "records": 7600,
+    "records": 7216,
     "rewritten": 0,
     "duplicates_dropped": 0,
-    "written": 7600,
+    "written": 7216,
     "problems_before": {},
     "problems_after": {}
   },
   "train/sources/reading/multinli.jsonl": {
-    "records": 391938,
+    "records": 390509,
     "rewritten": 0,
     "duplicates_dropped": 0,
-    "written": 391938,
+    "written": 390509,
     "problems_before": {},
     "problems_after": {}
   },
   "train/sources/safety/aegis.jsonl": {
-    "records": 19626,
+    "records": 19133,
     "rewritten": 0,
     "duplicates_dropped": 0,
-    "written": 19626,
+    "written": 19133,
     "problems_before": {
-      "literal_escapes": 28
+      "literal_escapes": 27
     },
     "problems_after": {
-      "literal_escapes": 28
+      "literal_escapes": 27
     }
   },
   "train/sources/sentiment/amazon-reviews.jsonl": {
-    "records": 199034,
+    "records": 198565,
     "rewritten": 0,
     "duplicates_dropped": 0,
-    "written": 199034,
+    "written": 198565,
     "problems_before": {},
     "problems_after": {}
   },
   "train/sources/sentiment/imdb.jsonl": {
-    "records": 22255,
+    "records": 21763,
     "rewritten": 0,
     "duplicates_dropped": 0,
-    "written": 22255,
+    "written": 21763,
     "problems_before": {},
     "problems_after": {}
   },
   "train/sources/sentiment/sst5.jsonl": {
-    "records": 8471,
+    "records": 8069,
     "rewritten": 0,
     "duplicates_dropped": 0,
-    "written": 8471,
+    "written": 8069,
     "problems_before": {},
     "problems_after": {}
   },
   "train/sources/sentiment/yelp-full.jsonl": {
-    "records": 644591,
+    "records": 644051,
     "rewritten": 0,
     "duplicates_dropped": 0,
-    "written": 644591,
+    "written": 644051,
     "problems_before": {},
     "problems_after": {}
   },
   "train/sources/tools/glaive-function-calling.jsonl": {
-    "records": 28617,
+    "records": 28089,
     "rewritten": 0,
     "duplicates_dropped": 0,
-    "written": 28617,
+    "written": 28089,
     "problems_before": {},
     "problems_after": {}
   },
   "train/sources/topic/ag-news.jsonl": {
-    "records": 114748,
+    "records": 114255,
     "rewritten": 6,
     "duplicates_dropped": 0,
-    "written": 114748,
+    "written": 114255,
     "problems_before": {},
     "problems_after": {}
   },
   "train/sources/topic/dbpedia14.jsonl": {
-    "records": 554866,
+    "records": 554365,
     "rewritten": 0,
     "duplicates_dropped": 0,
-    "written": 554866,
+    "written": 554365,
     "problems_before": {
       "literal_escapes": 1
     },
@@ -207,10 +215,10 @@
     }
   },
   "train/sources/topic/trec.jsonl": {
-    "records": 4764,
+    "records": 4519,
     "rewritten": 0,
     "duplicates_dropped": 0,
-    "written": 4764,
+    "written": 4519,
     "problems_before": {},
     "problems_after": {}
   },
@@ -241,6 +249,154 @@
     "problems_after": {
       "edge_space": 6
     }
+  },
+  "calibration/sources/decisions/typed-decisions.jsonl": {
+    "records": 51,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 51,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "calibration/sources/intent/banking77.jsonl": {
+    "records": 416,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 416,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "calibration/sources/intent/massive-en.jsonl": {
+    "records": 499,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 499,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "calibration/sources/knowledge/arc.jsonl": {
+    "records": 168,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 168,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "calibration/sources/knowledge/commonsenseqa.jsonl": {
+    "records": 460,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 460,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "calibration/sources/knowledge/openbookqa.jsonl": {
+    "records": 228,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 228,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "calibration/sources/knowledge/qasc.jsonl": {
+    "records": 351,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 351,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "calibration/sources/reading/boolq.jsonl": {
+    "records": 313,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 313,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "calibration/sources/reading/multinli.jsonl": {
+    "records": 499,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 499,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "calibration/sources/safety/aegis.jsonl": {
+    "records": 459,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 459,
+    "problems_before": {
+      "literal_escapes": 1
+    },
+    "problems_after": {
+      "literal_escapes": 1
+    }
+  },
+  "calibration/sources/sentiment/amazon-reviews.jsonl": {
+    "records": 464,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 464,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "calibration/sources/sentiment/imdb.jsonl": {
+    "records": 472,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 472,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "calibration/sources/sentiment/sst5.jsonl": {
+    "records": 363,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 363,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "calibration/sources/sentiment/yelp-full.jsonl": {
+    "records": 500,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 500,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "calibration/sources/tools/glaive-function-calling.jsonl": {
+    "records": 500,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 500,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "calibration/sources/topic/ag-news.jsonl": {
+    "records": 491,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 491,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "calibration/sources/topic/dbpedia14.jsonl": {
+    "records": 500,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 500,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "calibration/sources/topic/trec.jsonl": {
+    "records": 174,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 174,
+    "problems_before": {},
+    "problems_after": {}
   },
   "dev/binding.jsonl": {
     "records": 560,
@@ -346,6 +502,14 @@
     "problems_after": {
       "runs_of_space": 100
     }
+  },
+  "dev/sources/decisions/typed-decisions.jsonl": {
+    "records": 113,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 113,
+    "problems_before": {},
+    "problems_after": {}
   },
   "dev/sources/devtools/prompt-injection.jsonl": {
     "records": 1302,
@@ -660,6 +824,14 @@
     "rewritten": 0,
     "duplicates_dropped": 0,
     "written": 700,
+    "problems_before": {},
+    "problems_after": {}
+  },
+  "test/sources/decisions/typed-decisions.jsonl": {
+    "records": 400,
+    "rewritten": 0,
+    "duplicates_dropped": 0,
+    "written": 400,
     "problems_before": {},
     "problems_after": {}
   },

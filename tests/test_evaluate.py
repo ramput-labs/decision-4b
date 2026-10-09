@@ -7,7 +7,7 @@ from typing import Any
 
 import pytest
 
-from den.evaluate import request
+from den.runtime import request
 
 
 def test_request_accepts_unlabelled_questions_of_every_type() -> None:
@@ -36,7 +36,7 @@ def test_model_card_reports_the_measured_numbers(tmp_path: Path) -> None:
         json.dumps(
             {
                 "base": "qwen3.5-4b",
-                "lora_rank": 16,
+                "lora": {"rank": 16},
                 "engine": "unsloth",
                 "temperature": 1.23,
                 "steps": 1883,
@@ -103,7 +103,7 @@ def test_model_card_lists_every_stage(tmp_path: Path) -> None:
 
 
 def test_locate_keeps_local_paths() -> None:
-    from den.release import locate
+    from den.paths import locate
 
     assert locate("runs/x") == Path("runs/x")
 
@@ -115,7 +115,7 @@ def _eval(run: Path, scores: dict[str, float]) -> None:
 
 
 def test_compare_ships_the_better_run_without_regressions(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
-    from den.evaluate import compare_main
+    from den.compare import compare_main
 
     _eval(tmp_path / "round1", {"dev/core.jsonl": 0.86, "dev/documents.jsonl": 0.89})
     _eval(tmp_path / "round2", {"dev/core.jsonl": 0.88, "dev/documents.jsonl": 0.885})  # better mean, -0.5 pp
@@ -262,7 +262,7 @@ def test_metric_pieces_on_edge_cases() -> None:
 
 
 def test_probe_refuses_test_files_and_mixed_modes() -> None:
-    from den.overfit import probe_main
+    from den.probe import probe_main
 
     with pytest.raises(SystemExit, match="never reads test"):
         probe_main(["--dev", "test/core.jsonl"])
@@ -291,7 +291,7 @@ def _run(path: Path, kind: str, lora: int, scores: dict[str, float]) -> Path:
 
 
 def test_baselines_label_each_mode_and_land_on_the_card(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
-    from den.evaluate import baselines_main
+    from den.compare import baselines_main
     from den.publish import card
 
     files = {"test/core.jsonl": 0.86}
@@ -412,3 +412,17 @@ def test_rotate_options_moves_every_option_and_keeps_the_answer() -> None:
         assert all(a != b for a, b in zip(q.keys, record.questions[0].keys, strict=True))  # nothing stays put
         assert q.keys[q.label] == "c" and q.options[q.label] == "c: third"
         assert n == record.questions[1]  # noul is never reordered
+
+
+def test_teacher_questions_count_toward_accuracy_and_report_kl() -> None:
+    import math
+
+    from den.metrics import Answer, summarize
+
+    taught = Answer([0.2, 0.8], 1, target=[0.4, 0.6], teacher=True)
+    unknowable = Answer([0.5, 0.5], 0, target=[0.5, 0.5])
+    got = summarize([taught, unknowable, Answer([0.9, 0.1], 0)])
+    assert got["questions"] == 2 and got["soft_skipped"] == 1 and got["accuracy"] == 1.0
+    want = 0.4 * math.log(0.4 / 0.2) + 0.6 * math.log(0.6 / 0.8)
+    assert got["teacher_questions"] == 1 and abs(got["kl_to_target"] - want) < 1e-12
+    assert "kl_to_target" not in summarize([Answer([0.9, 0.1], 0)])

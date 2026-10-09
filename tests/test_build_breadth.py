@@ -1,5 +1,6 @@
 """The breadth-v1 port on small inputs: cases from Kev's tests/test_breadth_v1.py, plus Kev's admission count. The
-whole build is checked by `scripts.breadth` itself, which writes nothing unless both partitions match Kev's sha256."""
+whole build is checked by `scripts.build_breadth` itself, which writes nothing unless both partitions match Kev's
+sha256."""
 
 from __future__ import annotations
 
@@ -12,7 +13,7 @@ import pytest
 from tokenizers import Tokenizer, models, pre_tokenizers
 
 from den.pins import BREADTH_SHA256 as EXPECTED
-from scripts.breadth import (
+from scripts.build_breadth import (
     BM25,
     MAX_OPTIONS,
     OOS,
@@ -168,7 +169,7 @@ def test_built_breadth_files_are_kevs(split: str) -> None:
 def test_raw_files_are_checked_against_the_lock_before_reading(tmp_path: Path) -> None:
     import json
 
-    from scripts.breadth import verify_raw
+    from scripts.build_breadth import verify_raw
 
     raw = tmp_path / "data" / "sources" / "eval" / "breadth"
     (raw / "tools").mkdir(parents=True)
