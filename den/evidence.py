@@ -21,8 +21,9 @@ from pathlib import Path
 from typing import Any
 
 from .metrics import Answer, Row, paired_bootstrap
+from .paths import REPORTS
 
-EVIDENCE = Path("reports/runs")
+EVIDENCE = REPORTS / "runs"
 
 
 def name(run: str) -> str:

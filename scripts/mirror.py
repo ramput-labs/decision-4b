@@ -30,10 +30,9 @@ from typing import Any
 
 from den.fetch import digest, fetch_item, locked_digests, read_lock
 from den.licences import IGNORE, data_files, notices
+from den.paths import DATA, LOCKS, model_dir
 from den.pins import ITEMS, MODELS
 
-DATA = Path("data")
-LOCKS = Path("locks")
 MANIFEST = "MANIFEST.json"
 REBUILD = "make data-download (fetch, breadth, normalize, clean: only the steps whose files are missing)"
 STEPS = ("fetch", "breadth", "normalize", "clean")
@@ -169,7 +168,7 @@ def tokenizer() -> None:
     from huggingface_hub import hf_hub_download
 
     model = MODELS[BREADTH_MODEL]
-    path = Path("models") / BREADTH_MODEL / "tokenizer.json"
+    path = model_dir(BREADTH_MODEL) / "tokenizer.json"
     pin = next(f.sha256 for f in model.verify if f.path == "tokenizer.json")
     if path.is_file() and digest(path) == pin:
         return

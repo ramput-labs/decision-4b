@@ -103,7 +103,7 @@ def test_model_card_lists_every_stage(tmp_path: Path) -> None:
 
 
 def test_locate_keeps_local_paths() -> None:
-    from den.evaluate import locate
+    from den.release import locate
 
     assert locate("runs/x") == Path("runs/x")
 

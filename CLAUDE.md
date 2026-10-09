@@ -43,6 +43,11 @@ uv run pytest -q tests/test_train.py   # one file
 One flat package, `den/`, at the repo root (plus `scripts/` for tools, below), like kev's `kev/`. One module per concern, no subpackages, and
 `tests/test_<module>.py` beside it. Keep it flat: add a module rather than a subpackage.
 
+- `cli.py`: `den <command>`. A command with its own flags is one line in `DELEGATED` (`"module:function"`, and whether
+  it exits without interpreter teardown, where native libraries have crashed after finished runs) plus one in the
+  docstring; `tests/test_cli.py` checks both. Library `main`s return their code; they never call `os._exit`.
+- `paths.py`: `DATA`, `CLEAN`, `MODELS`, `LOCKS`, `REPORTS`, `model_dir(key)`. Import these; don't write `Path("data/...")`.
+  `release.locate(run, files)` is the one way to turn a run spec (path, `hf:`, `release:`) into a directory.
 - `api.py`: the record schema (`/v1/systemone` request plus labels). `render` must match Kev's `api.render` byte for
   byte.
 - `pins.py`, `catalog.py`, `fetch.py`: every dataset/model pinned to a commit and a sha256, and the role of every path.
@@ -211,7 +216,9 @@ import `scripts` from `den`. ruff and mypy cover it like `den/`.
   trained from too (`make data-upload ... TAG=data-v2`). Never edit a record in `releases/`.
 - The release recipe is Kev-4B's, `make train-round1`: four stages (core ×2 at 5e-5 with 25% none minimal pairs →
   dates → documents → skills+devtools, at 2e-5 with 2k/2k/4k `core` replay), each `--init-from` the last. It is
-  sourced from Kev's model card and `kev/train.py`/`kev/data.py`; change it only with evidence, and say so.
+  sourced from Kev's model card and `kev/train.py`/`kev/data.py`; change it only with evidence, and say so. One
+  deliberate change: stage 1's fresh head trains at `--head-lr 1e-3` (Kev records no head rate; at 5e-5 the gate
+  and the recipe disagreed). Later stages continue the head at `--lr`.
 - `prompt.augment`/`prompt.none_pair` port Kev's augmentation (none-of-the-above 10%/12%, distractor 15%, minimal
   pairs). Soft-target questions are only shuffled, and score/noul are never touched. `--augment shuffle|none` for
   ablations.

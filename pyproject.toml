@@ -32,8 +32,8 @@ python_version = "3.12"
 files = ["den", "scripts", "tests"]
 
 [[tool.mypy.overrides]]
-# mlx/mlx-lm install only on Apple Silicon (see dependencies): on Linux the MLX backbone is checked without them
-module = ["mlx", "mlx.*", "mlx_lm", "mlx_lm.*"]
+# mlx/mlx-lm install only on Apple Silicon (see dependencies), unsloth only on Linux + CUDA: checked without them
+module = ["mlx", "mlx.*", "mlx_lm", "mlx_lm.*", "unsloth.*"]
 ignore_missing_imports = true
 
 [tool.ruff]
@@ -45,10 +45,6 @@ exclude = ["den/pins.py", "den/licences.py"]  # pin and licence tables: one sour
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "SIM", "RUF", "ANN"]
-
-[[tool.mypy.overrides]]
-module = ["unsloth.*"]
-ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -71,7 +71,8 @@ class PointerTrainer(Trainer):
             assert this is not None
             decay = set(self.get_decay_parameter_names(this))
             groups = param_groups(this, self.args.learning_rate, self.head_lr, self.args.weight_decay, decay)
-            self.optimizer = torch.optim.AdamW(groups)
+            betas = (self.args.adam_beta1, self.args.adam_beta2)
+            self.optimizer = torch.optim.AdamW(groups, betas=betas, eps=self.args.adam_epsilon)
         return self.optimizer
 
     def _save(self, output_dir: str | None = None, state_dict: Any = None) -> None:  # noqa: ANN401

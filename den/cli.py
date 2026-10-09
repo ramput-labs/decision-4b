@@ -31,6 +31,7 @@ MODEL defaults to $DEN_MODEL, else qwen3.5-4b.
 from __future__ import annotations
 
 import argparse
+import importlib
 import json
 import os
 import sys
@@ -53,12 +54,9 @@ from .fetch import (
     verify_lock,
     write_lock,
 )
+from .paths import DATA, LOCKS, REPORTS, downloaded, model_dir
+from .paths import MODELS as MODELS_DIR
 from .pins import DEFAULT_MODEL, ITEMS, MODELS
-
-DATA = Path("data")
-MODELS_DIR = Path("models")
-LOCKS = Path("locks")
-REPORTS = Path("reports")
 
 
 def _default_model() -> str:
@@ -73,14 +71,10 @@ def _model(spec: str) -> Model:
     return MODELS[spec]
 
 
-def _downloaded(key: str) -> bool:
-    return (MODELS_DIR / key / "config.json").is_file()
-
-
 def _model_dir(key: str) -> Path:
-    if not _downloaded(key):
+    if not downloaded(key):
         raise SystemExit(f"model {key!r} is not downloaded: den model {key}")
-    return MODELS_DIR / key
+    return model_dir(key)
 
 
 def _write_report(name: str, text: str) -> None:
@@ -107,7 +101,7 @@ def cmd_models() -> int:
     for role in ("base", "reference"):
         print(f"\n[{role}s]")
         for m in (m for m in MODELS.values() if m.role == role):
-            here = "downloaded" if _downloaded(m.key) else ""
+            here = "downloaded" if downloaded(m.key) else ""
             mark = "*" if m.key == default else " "
             print(f" {mark}{m.key:<18}{_size(m.bytes):>10}  {m.note:<52}{here}")
     print(f"\n* default (DEN_MODEL={default})")
@@ -190,7 +184,7 @@ def cmd_clean() -> int:
 def cmd_audit(model: str) -> int:
     from .audit import audit, summary, to_json
 
-    report = audit(DATA, MODELS_DIR / model / "tokenizer.json", REPORTS / "normalize.json")
+    report = audit(DATA, model_dir(model) / "tokenizer.json", REPORTS / "normalize.json")
     _write_report("data-audit.json", to_json(report))
     print("\n".join(summary(report)))
     return 0 if report.ok else 1
@@ -225,9 +219,44 @@ def cmd_smoke(model: str, backend: str | None) -> int:
     return 0 if hidden.shape == (len(ids), backbone.hidden_size) and np.isfinite(hidden).all() else 1
 
 
+# Commands that parse their own flags: name -> ("module:function", exit hard). Adding a command is one line here
+# (and one in the docstring above). "Exit hard" skips interpreter teardown once results are written: native libraries
+# (torch, tokenizers, triton) have crashed there with SIGSEGV after a finished run, and that nonzero exit would fail
+# a pipeline that had succeeded (`make train-round1` between stages).
+DELEGATED: dict[str, tuple[str, bool]] = {
+    "train": ("train:main", True),
+    "evaluate": ("evaluate:evaluate_main", True),
+    "predict": ("evaluate:predict_main", True),
+    "compare": ("evaluate:compare_main", True),
+    "baselines": ("evaluate:baselines_main", True),
+    "check-run": ("integrity:check_main", True),
+    "overfit": ("overfit:overfit_main", True),
+    "probe": ("overfit:probe_main", True),
+    "serve": ("serve:serve_main", False),
+    "doctor": ("doctor:doctor_main", False),
+    "publish": ("publish:publish_main", False),
+    "release": ("release:main", False),
+    "licences": ("licences:main", False),
+}
+
+
+def delegate(name: str, argv: list[str]) -> int:
+    """Run a DELEGATED command, importing its module only now (most pull in torch)."""
+    target, hard = DELEGATED[name]
+    module, _, function = target.partition(":")
+    code = int(getattr(importlib.import_module(f".{module}", __package__), function)(argv))
+    if hard:
+        sys.stdout.flush()
+        sys.stderr.flush()
+        os._exit(code)
+    return code
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="den", description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
     sub = parser.add_subparsers(dest="cmd", required=True)
+    for name in DELEGATED:  # no help of their own: `den train --help` reaches den.train's parser
+        sub.add_parser(name, add_help=False)
     sub.add_parser("models")
     sub.add_parser("model").add_argument("models", nargs="*")
     sub.add_parser("list").add_argument("sets", nargs="*")
@@ -235,67 +264,14 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("verify")
     sub.add_parser("normalize")
     sub.add_parser("clean")
-    sub.add_parser("train")  # flags are parsed by den.train
-    sub.add_parser("evaluate")  # flags are parsed by den.evaluate
-    sub.add_parser("predict")
-    sub.add_parser("compare")
-    sub.add_parser("baselines")
-    sub.add_parser("check-run")  # flags are parsed by den.integrity
-    sub.add_parser("serve")  # flags are parsed by den.serve
-    sub.add_parser("overfit")  # flags are parsed by den.overfit
-    sub.add_parser("probe")  # flags are parsed by den.overfit
-    sub.add_parser("doctor")  # flags are parsed by den.doctor
-    sub.add_parser("publish")  # flags are parsed by den.publish
-    sub.add_parser("licences")  # flags are parsed by den.licences
-    sub.add_parser("release")  # flags are parsed by den.release
     sub.add_parser("audit").add_argument("--model", default=_default_model())
     sub.add_parser("env")
     smoke = sub.add_parser("smoke")
     smoke.add_argument("--model", default=_default_model())
     smoke.add_argument("--backend")
     args, rest = parser.parse_known_args(argv)
-    if args.cmd == "train":
-        from .train import main as train_main
-
-        return train_main(rest)
-    if args.cmd == "doctor":
-        from .doctor import doctor_main
-
-        return doctor_main(rest)
-    if args.cmd in ("overfit", "probe"):
-        from .overfit import overfit_main, probe_main
-
-        code = (overfit_main if args.cmd == "overfit" else probe_main)(rest)
-        sys.stdout.flush()
-        os._exit(code)  # skip native-library teardown, as for evaluate
-    if args.cmd == "serve":
-        from .serve import serve_main
-
-        return serve_main(rest)
-    if args.cmd in ("evaluate", "predict", "compare", "baselines", "check-run"):
-        from .evaluate import baselines_main, compare_main, evaluate_main, predict_main
-        from .integrity import check_main
-
-        mains = {"evaluate": evaluate_main, "predict": predict_main, "compare": compare_main,
-                 "baselines": baselines_main, "check-run": check_main}  # fmt: skip
-        code = mains[args.cmd](rest)
-        # Results are written. Skip interpreter teardown, where native libraries have crashed (SIGSEGV) after a
-        # finished run; a nonzero exit would fail a scripted pipeline that had succeeded.
-        sys.stdout.flush()
-        sys.stderr.flush()
-        os._exit(code)
-    if args.cmd == "release":
-        from .release import main as release_main
-
-        return release_main(rest)
-    if args.cmd == "licences":
-        from .licences import main as licences_main
-
-        return licences_main(rest)
-    if args.cmd == "publish":
-        from .publish import publish_main
-
-        return publish_main(rest)
+    if args.cmd in DELEGATED:
+        return delegate(args.cmd, rest)
     if rest:
         parser.error(f"unrecognized arguments: {' '.join(rest)}")
     commands: dict[str, Callable[[], int]] = {

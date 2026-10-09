@@ -17,7 +17,9 @@ import re
 from pathlib import Path
 from typing import Any
 
-CLAIMS = Path("reports/claims.json")
+from den.paths import REPORTS
+
+CLAIMS = REPORTS / "claims.json"
 
 
 def value(source: Path, path: list[Any]) -> Any:  # noqa: ANN401 (a JSON value)

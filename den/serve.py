@@ -21,7 +21,8 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Any
 
 from .api import Json, Question, RecordError
-from .evaluate import Model, locate, request
+from .evaluate import Model, request
+from .release import locate
 
 DEFAULT_NAME = "den-latest"
 

@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any
 
 from .licences import RANK, Kind, allowed, classify
+from .paths import CLEAN
 from .pins import MODELS
 
 NEEDED = ("head.safetensors", "head.json", "run.json", "merged/config.json", "merged/tokenizer.json")
@@ -232,7 +233,6 @@ STAGE_FILES = (
     "eval.json",
     "integrity.json",
 )
-CLEAN = Path("data/clean")
 
 
 def licence(rel: str) -> tuple[Kind, list[str]]:

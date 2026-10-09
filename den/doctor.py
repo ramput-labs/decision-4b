@@ -17,7 +17,6 @@ import shutil
 import subprocess
 import sys
 from importlib import metadata
-from pathlib import Path
 from typing import Any
 
 PACKAGES = (
@@ -29,7 +28,7 @@ MIN_TRANSFORMERS = (5, 17)
 HEADROOM_GB = 2.0  # beyond the bf16 weights: LoRA, optimizer state, activations of one checkpointed batch
 
 
-def _version(name: str) -> str | None:
+def package_version(name: str) -> str | None:
     try:
         return metadata.version(name)
     except metadata.PackageNotFoundError:
@@ -41,7 +40,7 @@ def _major_minor(version: str | None) -> tuple[int, int]:
     return int(parts[0]), int("".join(c for c in parts[1] if c.isdigit()) or 0)
 
 
-def _driver() -> str | None:
+def driver() -> str | None:
     if shutil.which("nvidia-smi") is None:
         return None
     out = subprocess.run(
@@ -65,7 +64,7 @@ def _cuda() -> dict[str, Any]:
         "compute_capability": f"{props.major}.{props.minor}",
         "bf16": torch.cuda.is_bf16_supported(),
         "cudnn": torch.backends.cudnn.version(),  # type: ignore[no-untyped-call]
-        "driver": _driver(),
+        "driver": driver(),
     }
     return info
 
@@ -81,29 +80,29 @@ def _unsloth_import() -> str:
 
 def _model(key: str, verify: bool) -> dict[str, Any]:
     from .fetch import digest
+    from .paths import LOCKS, model_dir
+    from .paths import MODELS as MODELS_DIR
     from .pins import MODELS
 
     info: dict[str, Any] = {"key": key}
     if key in MODELS:
         info["pinned"] = f"{MODELS[key].source.repo}@{MODELS[key].source.revision}"
         info["gb"] = round(MODELS[key].bytes / 2**30, 1)
-    path = Path("models") / key
+    path = model_dir(key)
     info["local"] = str(path) if (path / "config.json").is_file() else None
-    lock = Path("locks/models.json")
+    lock = LOCKS / "models.json"
     files = (
         json.loads(lock.read_text(encoding="utf-8"))["entries"].get(key, {}).get("files", {}) if lock.is_file() else {}
     )
     info["locked_files"] = len(files)
     if info["local"] and files:
-        missing = [f for f in files if not (Path("models") / f).is_file()]
-        wrong_size = [
-            f for f, m in files.items() if f not in missing and (Path("models") / f).stat().st_size != m["bytes"]
-        ]
+        missing = [f for f in files if not (MODELS_DIR / f).is_file()]
+        wrong_size = [f for f, m in files.items() if f not in missing and (MODELS_DIR / f).stat().st_size != m["bytes"]]
         info["files_ok"] = not missing and not wrong_size
         if missing or wrong_size:
             info["files_problem"] = {"missing": missing[:3], "wrong_size": wrong_size[:3]}
         if verify and info["files_ok"]:
-            bad = [f for f, m in files.items() if digest(Path("models") / f) != m["sha256"]]
+            bad = [f for f, m in files.items() if digest(MODELS_DIR / f) != m["sha256"]]
             info["sha256_ok"] = not bad
     if info["local"]:
         config = json.loads((path / "config.json").read_text(encoding="utf-8"))
@@ -121,7 +120,7 @@ def report(model: str, verify: bool = False) -> dict[str, Any]:
         "python": sys.version.split()[0],
         "platform": f"{platform.system()} {platform.machine()}",
         "backend": detect(),
-        "packages": {name: _version(name) for name in PACKAGES},
+        "packages": {name: package_version(name) for name in PACKAGES},
         "cuda": cuda,
         "model": _model(model, verify),
         "env": {k: os.environ.get(k) for k in ("UV_NO_SYNC", "DEN_BACKEND", "DEN_MODEL", "HF_HOME")}

@@ -29,11 +29,13 @@ from typing import Any
 import torch
 
 from .api import Question, Record
+from .catalog import record_path, role
 from .evaluate import base_weights
 from .metrics import Answer, summarize
 from .model import HeadConfig, make_head, question_loss
+from .paths import CLEAN
 from .prompt import Example, encode, split
-from .train import CLEAN, load
+from .train import load
 
 UNRELATED = "A recipe for pancakes with blueberries"
 
@@ -253,6 +255,9 @@ def overfit_main(argv: list[str] | None = None) -> int:
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--out", type=Path, help="write the report here as JSON")
     args = p.parse_args(argv)
+    args.file = record_path(args.file)
+    if role(args.file) == "test":
+        raise SystemExit("overfit trains on --file: never a test file")
     path = args.path if args.path != "auto" else ("lora" if torch.cuda.is_available() else "frozen")
 
     torch.manual_seed(args.seed)
@@ -360,7 +365,10 @@ def probe_main(argv: list[str] | None = None) -> int:
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--out", type=Path)
     args = p.parse_args(argv)
-    if any(Path(f).parts[0] == "test" for f in [*args.train, *args.dev, *args.calibration]):
+    args.train, args.dev, args.calibration = (
+        [record_path(f) for f in fs] for fs in (args.train, args.dev, args.calibration)
+    )
+    if any(role(f) == "test" for f in [*args.train, *args.dev, *args.calibration]):
         raise SystemExit("probe never reads test files")
     if (args.head_kind == "letters") == bool(args.train):
         raise SystemExit("letters is zero-shot (no --train); set/pointer need --train")

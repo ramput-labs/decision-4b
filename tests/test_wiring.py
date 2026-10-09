@@ -258,6 +258,10 @@ class Rows:
 
     def __init__(self, rows: list[Example]) -> None:
         self.rows, self.lengths = rows, [len(e.ids) for e in rows]
+        self.longest = max(self.lengths)
+
+    def set_epoch(self, epoch: int) -> None:
+        pass
 
     def __len__(self) -> int:
         return len(self.rows)

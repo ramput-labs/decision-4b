@@ -66,7 +66,8 @@ Training runs in two rounds, each a chain of stages where every stage continues 
 
 - **Round 1, `make train-round1`:** Kev-4B's own recipe, from its model card and code. It has four stages: `core` ×2 at
   5e-5 with 25% none-of-the-above minimal pairs, then dates, then documents, then skills+devtools, at 2e-5 with
-  2k/2k/4k `core` records replayed.
+  2k/2k/4k `core` records replayed. One change of ours: stage 1 trains its fresh head at 1e-3 (`--head-lr`), the
+  rate the overfit gate passes at, since Kev's card and code give no head rate.
 - **Round 2, `make train-round2`:** continues from round 1 on 17 public sources Kev-4B never trained on (`CAP`
   records each) with `CAP` records replayed from each of Kev's suites. `den compare` ships round 2 only if it beats
   round 1 on dev without losing more than 1 point on any file.
@@ -379,10 +380,11 @@ den/                  the package, one module per concern (flat, like kev/)
 ├── evaluate.py               load a run; `den evaluate` and `den predict`
 ├── publish.py                `den publish`: model card, stages, data, logs -> private Hub upload
 ├── serve.py                  `den serve`: POST /v1/systemone (Kev's API)
+├── paths.py                  where data/, models/, locks/ and reports/ live: one place to change the layout
 ├── device.py                 backend choice (mlx | cuda | cpu) and the backbone interface
 ├── mlx_model.py              MLX backbone (Apple Silicon)
 ├── torch_model.py            PyTorch backbone (CUDA, CPU)
-└── cli.py                    `den models | model | list | data | verify | normalize | clean | audit | train | env | smoke`
+└── cli.py                    `den <command>`: built-ins, plus every module's own CLI in one `DELEGATED` table
 tests/                      one test file per module it covers
 data/                       suites and normalized sources, by role (see Data layout)
 locks/                      sha256 of every placed file
