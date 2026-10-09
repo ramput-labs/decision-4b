@@ -16,12 +16,12 @@ import pyarrow.parquet as pq
 from .api import Json, squash
 from .text import clean
 
-type Split = Literal["train", "dev", "test"]
+type Split = Literal["train", "calibration", "dev", "test"]
 type Row = Mapping[str, object]
 type Labels = Mapping[str, Sequence[str]]
 type Converter = Callable[[Row, Labels], Json | None]
 
-SPLITS: tuple[Split, ...] = ("train", "dev", "test")
+SPLITS: tuple[Split, ...] = ("train", "calibration", "dev", "test")
 
 
 @dataclass(frozen=True, slots=True)
@@ -522,6 +522,32 @@ def prompt_injection(row: Row, labels: Labels) -> Json | None:
     return _request(clean(text), injection=_noul("Is this a prompt injection?", label == 1, criteria))
 
 
+def typed_decisions(row: Row, labels: Labels) -> Json | None:
+    """A case is already a /v1/systemone request. Gold is the mean of three teacher samples: the question trains on
+    that distribution (`target_from: teacher`) and is graded on its argmax, the gold `label`."""
+    state, questions, gold = (_str(row, k) for k in ("state", "questions", "gold"))
+    if state is None or questions is None or gold is None:
+        return None
+    parsed, answers = json.loads(questions), json.loads(gold)
+    if not isinstance(parsed, dict) or not isinstance(answers, dict) or set(parsed) != set(answers):
+        return None
+    labelled: dict[str, Json] = {}
+    for qid, q in parsed.items():
+        gold_q = answers[qid] if isinstance(answers[qid], dict) else {}
+        label, probabilities = gold_q.get("label"), gold_q.get("probabilities")
+        if not isinstance(q, dict) or not isinstance(label, str) or not isinstance(probabilities, dict):
+            return None
+        match q.get("type"):
+            case "noul":
+                value: Json = label == "true"
+            case "score":
+                value = int(label)
+            case _:
+                value = label
+        labelled[qid] = {**q, "label": value, "target": probabilities, "target_from": "teacher"}
+    return {"state": json.loads(state), "questions": labelled}
+
+
 STANDARD: dict[Split, tuple[str, ...]] = {"train": ("train",), "dev": ("validation",), "test": ("test",)}
 DEV_FROM_TRAIN: dict[Split, tuple[str, ...]] = {"train": ("train",), "dev": (), "test": ("test",)}
 VALIDATION_AS_TEST: dict[Split, tuple[str, ...]] = {"train": ("train",), "dev": (), "test": ("validation",)}
@@ -576,6 +602,7 @@ def specs(root: Path) -> tuple[Spec, ...]:
         ),
         Spec("sentiment/imdb", _each("plain_text/{}-*", "train", "test"), DEV_FROM_TRAIN, imdb),
         Spec("safety/aegis", _each("{}.json", *tvt), STANDARD, aegis(root)),
+        Spec("decisions/typed-decisions", _each("all/{}-*", "train", "test"), DEV_FROM_TRAIN, typed_decisions),
         Spec("knowledge/arc", _each("ARC-*/{}-*", *tvt), STANDARD, _question_mcq("question")),
         Spec("knowledge/openbookqa", _each("main/{}-*", *tvt), STANDARD, _question_mcq("question_stem")),
         Spec(

@@ -1,4 +1,4 @@
-"""The runbook's check scripts on small inputs (scripts/check_merged.py, scripts/estimate_time.py)."""
+"""The runbook's check scripts on small inputs (scripts/estimate_time.py, scripts/check_env.py)."""
 
 from __future__ import annotations
 
@@ -8,18 +8,8 @@ from typing import Any
 
 import pytest
 
-from scripts import check_merged, estimate_time
+from scripts import estimate_time
 from scripts.check_env import version
-
-
-def test_check_merged_wants_the_base_model_type(tmp_path: Path) -> None:
-    (tmp_path / "run" / "merged").mkdir(parents=True)
-    (tmp_path / "run" / "merged" / "config.json").write_text(json.dumps({"model_type": "qwen3_5"}))
-    assert check_merged.main([str(tmp_path / "run")]) == 0
-    (tmp_path / "run" / "merged" / "config.json").write_text(json.dumps({"model_type": "qwen3_5_text"}))
-    assert check_merged.main([str(tmp_path / "run")]) == 1
-    with pytest.raises(SystemExit, match="--merge"):
-        check_merged.main([str(tmp_path / "missing")])
 
 
 def test_estimate_time_and_the_phase_3_decision(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:

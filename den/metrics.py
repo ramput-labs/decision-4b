@@ -1,8 +1,9 @@
 """Every evaluation number, computed in one place from per-question probabilities.
 
 `den evaluate`, the calibration report written during training, and `den overfit` all call `summarize`, so the same
-question always gets the same score. Soft-target (unknowable) questions have no right answer: they are counted, not
-scored.
+question always gets the same score. Unknowable questions (a soft target with no right answer) are counted, not
+scored. Teacher questions (a soft target whose argmax is the label) are scored on the label, and their distance from
+the teacher's distribution is reported as `kl_to_target`.
 """
 
 from __future__ import annotations
@@ -22,7 +23,12 @@ class Answer:
     label: int
     kind: str = "choice"  # choice | noul | score
     source: str = ""  # the question's `src` tag: dataset or skill family
-    target: Sequence[float] | None = None  # soft target: an unknowable item
+    target: Sequence[float] | None = None  # soft target: an unknowable item's, or a teacher's
+    teacher: bool = False  # the target is a teacher's distribution: the label is still graded
+
+    @property
+    def unknowable(self) -> bool:
+        return self.target is not None and not self.teacher
 
 
 def ece(rows: Sequence[tuple[float, bool]]) -> float:
@@ -50,7 +56,7 @@ def coverage(rows: Sequence[tuple[float, bool]], risk: float = RISK) -> float:
 def summarize(answers: Sequence[Answer]) -> dict[str, Any]:
     """Accuracy, NLL, Brier, ECE and coverage at 5% error over hard-labelled questions; accuracy and ECE per question
     type; accuracy per source; and, for score questions, the expected level's MAE and the ranked probability score."""
-    hard = [a for a in answers if a.target is None]
+    hard = [a for a in answers if not a.unknowable]
     graded: list[tuple[float, bool]] = []
     nll = brier = level_error = rps = 0.0
     by_kind: dict[str, list[tuple[float, bool]]] = {}
@@ -58,7 +64,7 @@ def summarize(answers: Sequence[Answer]) -> dict[str, Any]:
     scored = 0
     for a in hard:
         p = list(a.probs)
-        top = max(range(len(p)), key=p.__getitem__)
+        top = argmax(p)
         right = top == a.label
         graded.append((p[top], right))
         nll -= math.log(max(p[a.label], 1e-12))
@@ -86,7 +92,15 @@ def summarize(answers: Sequence[Answer]) -> dict[str, Any]:
     if scored:
         result["score_level_mae"] = level_error / scored
         result["score_rps"] = rps / scored
+    if taught := [a for a in hard if a.target is not None]:
+        result["teacher_questions"] = len(taught)
+        result["kl_to_target"] = sum(kl(a.target, a.probs) for a in taught if a.target is not None) / len(taught)
     return result
+
+
+def kl(target: Sequence[float], probs: Sequence[float]) -> float:
+    """KL(target || probs): how far the predicted distribution is from the teacher's."""
+    return sum(t * math.log(t / max(p, 1e-12)) for t, p in zip(target, probs, strict=True) if t > 0)
 
 
 @dataclass(frozen=True, slots=True)
@@ -105,7 +119,7 @@ class Row:
     origin: str = ""  # _meta.source: "unknowable" and "unknowable_control" are scored on confidence
 
 
-def _top(p: Sequence[float]) -> int:
+def argmax(p: Sequence[float]) -> int:
     return max(range(len(p)), key=p.__getitem__)
 
 
@@ -123,8 +137,8 @@ def robustness(rows: Sequence[Row]) -> dict[str, Any]:
         out["clean"] = summarize([r.answer for r in clean if r.origin != "unknowable"])
         by_variant: dict[str, list[bool]] = {}
         for r in rows:
-            if r.answer.target is None:
-                by_variant.setdefault(r.variant, []).append(_top(r.answer.probs) == r.answer.label)
+            if not r.answer.unknowable:
+                by_variant.setdefault(r.variant, []).append(argmax(r.answer.probs) == r.answer.label)
         out["variants"] = {k: {"n": len(v), "accuracy": sum(v) / len(v)} for k, v in sorted(by_variant.items())}
     lookup = {(r.record, r.question): r for r in clean}
     deltas, flips = [], []
@@ -132,7 +146,7 @@ def robustness(rows: Sequence[Row]) -> dict[str, Any]:
         if r.variant == "permuted" and r.answer.kind == "choice" and (o := lookup.get((r.parent or "", r.question))):
             aligned = [r.answer.probs[list(r.keys).index(k)] for k in o.keys]
             deltas.append(max(abs(a - b) for a, b in zip(aligned, o.answer.probs, strict=True)))
-            flips.append(_top(aligned) != _top(o.answer.probs))
+            flips.append(argmax(aligned) != argmax(o.answer.probs))
     if deltas:
         out["permutation"] = {
             "n": len(deltas),
@@ -160,7 +174,7 @@ def paired_flip(rows: Sequence[Row]) -> dict[str, Any] | None:
     truth = [(p, p["a"].keys[p["a"].answer.label], p["b"].keys[p["b"].answer.label]) for p in whole]
 
     def said(r: Row) -> str:
-        return r.keys[_top(r.answer.probs)]
+        return r.keys[argmax(r.answer.probs)]
 
     def both(ps: list[dict[str, Row]]) -> float | None:
         return sum(all(said(r) == r.keys[r.answer.label] for r in p.values()) for p in ps) / len(ps) if ps else None
@@ -204,7 +218,7 @@ def unknowable(rows: Sequence[Row]) -> dict[str, Any] | None:
         "share_at_0_9": mean([c >= 0.9 for c in conf(unk)]),
         "control_mean_max_p": mean(conf(ctl)),
         "control_share_at_0_9": mean([c >= 0.9 for c in conf(ctl)]),
-        "control_acc": mean([_top(r.answer.probs) == r.answer.label for r in ctl]),
+        "control_acc": mean([argmax(r.answer.probs) == r.answer.label for r in ctl]),
         "paired_confidence_drop": mean([c - u for u, c in paired]),
         "share_less_confident_than_control": mean([u < c for u, c in paired]),
     }

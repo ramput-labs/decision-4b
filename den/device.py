@@ -1,3 +1,5 @@
+"""Inference backbones: the hidden states of a checkpoint on MLX (Apple Silicon), CUDA or CPU, one interface."""
+
 from __future__ import annotations
 
 import importlib.util

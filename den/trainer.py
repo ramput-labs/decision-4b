@@ -1,11 +1,6 @@
-"""The Hugging Face `Trainer` as den uses it (Unsloth patches it on CUDA).
-
-Three things differ from the stock Trainer, nothing else:
-- batches come from length groups (`lengths`), so a short record isn't padded to the length of a long document;
-- the optimizer is `model.param_groups`: the head at its own learning rate, and exactly the trainable parameters;
-- a checkpoint holds only what trains (the LoRA adapters and the head, `trainable.safetensors`), not the frozen
-  4B base. The Trainer still writes and restores the optimizer, scheduler, RNG and step state beside it, so
-  `--resume` continues a run where it stopped.
+"""The Hugging Face `Trainer` (which Unsloth patches) with three changes: length-grouped batches, the head at its own
+learning rate, and checkpoints of only the trainable parameters (the Trainer still saves optimizer, scheduler and RNG
+state beside them, so `--resume` continues where a run stopped).
 """
 
 from __future__ import annotations
@@ -15,12 +10,27 @@ from pathlib import Path
 from typing import Any
 
 import torch
+from torch import nn
 from transformers import Trainer
 from transformers.trainer_pt_utils import LengthGroupedSampler
 
-from .model import param_groups
-
 TRAINABLE = "trainable.safetensors"
+
+
+def param_groups(
+    model: nn.Module, lr: float, head_lr: float, weight_decay: float, decay: set[str]
+) -> list[dict[str, Any]]:
+    """AdamW groups: the head (`head.*`) at `head_lr`, the adapters at `lr`; weight decay only on `decay`. Refuses to
+    leave out a trainable parameter or take a frozen one."""
+    groups: dict[tuple[float, float], list[nn.Parameter]] = {}
+    for name, p in model.named_parameters():
+        if p.requires_grad:
+            rate = head_lr if name.startswith("head.") else lr
+            groups.setdefault((rate, weight_decay if name in decay else 0.0), []).append(p)
+    out: list[dict[str, Any]] = [{"params": ps, "lr": rate, "weight_decay": wd} for (rate, wd), ps in groups.items()]
+    if {id(p) for g in out for p in g["params"]} != {id(p) for p in model.parameters() if p.requires_grad}:
+        raise RuntimeError("the optimizer's parameters differ from the model's trainable ones")
+    return out
 
 
 def trainable_state(model: torch.nn.Module) -> dict[str, torch.Tensor]:

@@ -10,7 +10,7 @@ from __future__ import annotations
 import argparse
 import importlib
 
-MIN_TRANSFORMERS = (5, 17)  # Qwen3.5 needs transformers v5
+from den.doctor import MIN_TRANSFORMERS
 
 
 def version(text: str) -> tuple[int, ...]:

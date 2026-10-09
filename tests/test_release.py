@@ -7,7 +7,7 @@ from typing import Any
 import huggingface_hub
 import pytest
 
-from den import release
+from den import paths, release
 
 
 def run_dir(path: Path, dev: dict[str, float], base: str = "qwen3.5-4b", ok: bool = True, tested: bool = True) -> Path:
@@ -50,10 +50,10 @@ def released(root: Path, version: str, dev: dict[str, float], base: str = "qwen3
 
 def test_release_names_resolve_to_their_tagged_hub_commit(tmp_path: Path) -> None:
     released(tmp_path, "v1", {"dev/core.jsonl": 0.86})
-    assert release.resolve("release:v1", tmp_path) == "hf:org/den@v1"
-    assert release.resolve("runs/v2", tmp_path) == "runs/v2" and release.resolve("hf:x/y@z", tmp_path) == "hf:x/y@z"
+    assert paths.resolve("release:v1", tmp_path) == "hf:org/den@v1"
+    assert paths.resolve("runs/v2", tmp_path) == "runs/v2" and paths.resolve("hf:x/y@z", tmp_path) == "hf:x/y@z"
     with pytest.raises(SystemExit, match="no release v9"):
-        release.resolve("release:v9", tmp_path)
+        paths.resolve("release:v9", tmp_path)
 
 
 def test_regressions_count_dev_files_both_saw_never_test_or_augmented() -> None:
@@ -140,7 +140,7 @@ def test_init_from_a_release_downloads_only_the_adapter_and_head(
     from den import train
 
     released(tmp_path / "releases", "v1", {"dev/core.jsonl": 0.86})
-    monkeypatch.setattr(release, "RELEASES", tmp_path / "releases")
+    monkeypatch.setattr(paths, "RELEASES", tmp_path / "releases")
     seen: dict[str, Any] = {}
 
     def snapshot(repo: str, revision: str | None = None, allow_patterns: list[str] | None = None) -> str:
@@ -148,7 +148,7 @@ def test_init_from_a_release_downloads_only_the_adapter_and_head(
         return str(tmp_path / "cache")
 
     monkeypatch.setattr(huggingface_hub, "snapshot_download", snapshot)
-    assert release.locate("runs/v1", train.CONTINUE_FILES) == Path("runs/v1")
-    assert release.locate("release:v1", train.CONTINUE_FILES) == tmp_path / "cache"
+    assert paths.locate("runs/v1", train.CONTINUE_FILES) == Path("runs/v1")
+    assert paths.locate("release:v1", train.CONTINUE_FILES) == tmp_path / "cache"
     assert seen["repo"] == "org/den" and seen["revision"] == "v1"
     assert "adapter_model.safetensors" in seen["allow"] and not any("merged" in a for a in seen["allow"])

@@ -183,7 +183,7 @@ Check `runs-timing.log`:
 - every stage has a `setup` line with `engine unsloth  dtype bf16 ... lora_modules 248 ... trainable_dtype float32`
 - every stage after the first has `init   from runs/timing/...`
 - no `nan` loss, no `CUDA out of memory`
-- both merges print `saved .../merged  (248 merged weights)` and `check_merged` prints `ok` twice
+- both merges print `saved .../merged  (248 merged weights)` and `den check-run` prints `integrity ok` for both
 
 The decision at the end:
 - **run both rounds:** do F, G, H.

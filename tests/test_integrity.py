@@ -8,8 +8,8 @@ import pytest
 import torch
 from safetensors.torch import load_file, save_file
 
+from den.head import HeadConfig, make_head, save_head
 from den.integrity import check, check_main
-from den.model import HeadConfig, make_head, save_head
 
 HIDDEN = 16
 Q = "model.language_model.layers.{}.self_attn.q_proj.weight"
@@ -33,7 +33,7 @@ def run_dir(tmp_path: Path) -> tuple[Path, Path]:
                for i in range(2) for ab in "AB"}  # fmt: skip
     save_file(adapter, run / "adapter_model.safetensors")
     save_head(run, make_head(HIDDEN, HeadConfig(kind="set", dim=8, heads=2)), base="tiny", lora=4, temperature=1.2)
-    (run / "run.json").write_text(json.dumps({"base": "tiny", "lora_rank": 4, "lora": {"modules": 2}}))
+    (run / "run.json").write_text(json.dumps({"base": "tiny", "lora": {"rank": 4, "modules": 2}}))
     return run, base
 
 

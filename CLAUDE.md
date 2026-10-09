@@ -40,62 +40,92 @@ uv run pytest -q tests/test_train.py   # one file
 
 ## Layout
 
-One flat package, `den/`, at the repo root (plus `scripts/` for tools, below), like kev's `kev/`. One module per concern, no subpackages, and
-`tests/test_<module>.py` beside it. Keep it flat: add a module rather than a subpackage.
+One flat package, `den/`, at the repo root (plus `scripts/` for tools, below): only modules, no subpackages. One module
+per concern; add a module rather than a subpackage. Tests stay flat in `tests/`, one file per area. The groups below
+are by pipeline stage, for reading only.
 
-- `cli.py`: `den <command>`. A command with its own flags is one line in `DELEGATED` (`"module:function"`, and whether
-  it exits without interpreter teardown, where native libraries have crashed after finished runs) plus one in the
-  docstring; `tests/test_cli.py` checks both. Library `main`s return their code; they never call `os._exit`.
-- `paths.py`: `DATA`, `CLEAN`, `MODELS`, `LOCKS`, `REPORTS`, `model_dir(key)`. Import these; don't write `Path("data/...")`.
-  `release.locate(run, files)` is the one way to turn a run spec (path, `hf:`, `release:`) into a directory.
+Naming follows Kev (`kev/`) and Laya (`laya/`): a module is one short lowercase word for its concern (`data`, `model`,
+`head`, `metrics`), and a module that implements a `den` command is named after it (`train.py`, `evaluate.py`,
+`serve.py`, `doctor.py`, `release.py`), its entry point `<command>_main` or `main`. Two words only when one is a
+qualifier (`mlx_model.py`). Scripts are verb_object (`build_breadth.py`, `verify_claims.py`, `estimate_time.py`).
+Tests are `tests/test_<module>.py`, or `test_<behaviour>.py` for one that spans modules (`test_wiring.py`).
+
+Shared by every stage:
+- `cli.py`: `den <command>`. A command with its own flags is one line in `DELEGATED` (`"module:function"`, and
+  whether it exits without interpreter teardown, where native libraries have crashed after finished runs) plus one in
+  the docstring; `tests/test_cli.py` checks both. Library `main`s return their code; they never call `os._exit`.
+- `paths.py`: `DATA`, `CLEAN`, `MODELS`, `LOCKS`, `REPORTS`, `RELEASES`, `model_dir(key)`, `read_json`. Import these;
+  don't write `Path("data/...")`. `locate(run, files)` is the one way to turn a run spec (path, `hf:`, `release:`) into
+  a directory; `base_weights(key)` does the same for a base checkpoint.
 - `api.py`: the record schema (`/v1/systemone` request plus labels). `render` must match Kev's `api.render` byte for
   byte.
+- `prompt.py`: prompt layout and token positions (option `starts`/`closes`, question `finals`), `reorder`,
+  `shuffle_options` and Kev's augmentation.
+- `doctor.py`: `den doctor`, and `commit`/`versions`/`runtime`, the provenance every run and evaluation records.
+
+Data, everything before training:
 - `pins.py`, `catalog.py`, `fetch.py`: every dataset/model pinned to a commit and a sha256, and the role of every path.
 - `sources.py`, `text.py`, `normalize.py`: raw sources -> canonical, leakage-free train/dev/test under
   `data/*/sources/`.
 - `clean.py`: writes cleaned, deduplicated copies to `data/clean/`. Training reads only `data/clean/`.
 - `audit.py`: validity, duplicate, conflict and leakage checks.
-- `prompt.py`: prompt layout and token positions (option `starts`/`closes`, question `finals`), and `shuffle_options`.
-- `model.py`: `load_backbone` (Unsloth or PEFT LoRA), `text_tower`, `PointerHead` (Kev's q·k pointer plus span
-  pooling, cross-option attention and a per-option prior), `question_loss`.
-- `serve.py`: `den serve`, Kev's `POST /v1/systemone` over the standard library's HTTP server (`DEN_API_KEY` for a
-  bearer key). Keep the response shape identical to Kev's: `answer()` is tested against Kev's README example.
-- `metrics.py`: every evaluation number (`summarize`). `overfit.py`: `den overfit`.
-- `calibrate.py`: `fit_temperature`. `train.py`: the data (`Shuffled`), a `transformers.Trainer` subclass, and the CLI
-  flags (`den train ...`).
-- `evaluate.py`: loads a trained run (`merged/` + `head.safetensors`/`head.json`) through `device.load`, so a run is scored by the same
-  backbone code that serves it. `den evaluate` (acc/NLL/ECE, `--final` for test) and `den predict`.
-- `evidence.py`: every `den evaluate` writes `reports/runs/<run>/<file>/report.json` + `rows.json` (each question's
-  probabilities) and `provenance.json`, committed like Kev's runs/ (no weights). `den compare --paired A B` compares two
-  runs question by question (`metrics.paired_bootstrap`, records resampled, 95% intervals). `reports/claims.json` ties
-  printed numbers to that evidence; `scripts/verify_claims.py` (in `make check`) fails on any that drifts.
-- `release.py`: `den release create|list|show` (`make release`, `make release-list`). Versions v1, v2, ...: a release
-  publishes a finished run, tags the Hub commit with the version and writes `releases/<version>.json` (lineage, data
-  hashes, dev/test results, file hashes, data repo commit). `release:<version>` resolves to `hf:<repo>@<version>` for
-  `--init-from`, `--run`. A release refuses: an existing version, a failed integrity check, no locked-test results, a
-  different base than its parent, or any dev file more than 1 point below its parent unless `--accept-regression`
-  says why (recorded). The record names its evidence folder and holds the paired comparison with its parent.
-- `licences.py`: `den licences` (`make data-licences`). Every source's licence, class (open / share-alike / non-commercial
-  / unspecified / restricted) and the primary-source evidence for it; each file in `data/` takes its most restrictive
-  source (`_meta.source`, or the raw item it sits under). Writes `data/README.md` (Hub card), `data/LICENSES.md`,
-  `data/LICENSES/` (per-source pages, SPDX texts from `licences/`, upstream licence files) and a `SOURCE-LICENSE.md`
-  beside every dataset (each raw source, each folder of suite/normalized/clean files): every file there, its sources,
-  licence, class and whether the copy has it. A new pin or `_meta.source` must get an entry: `tests/test_licences.py` fails otherwise.
-- `integrity.py`: `den check-run`, run after `--merge` and before every upload: head/adapter finite, `merged/` has
-  the base's layout and files with exactly the adapted weights changed, sha256 of every model file -> `integrity.json`.
-- `publish.py`: `den publish` bundles `stages/`, `data/` (exact training data + every scored file, sha256
-  manifest) and `logs/` into the run, writes the card, uploads it as a private Hub model (resumable), checks the listing. `predict`/`evaluate` accept `--run hf:<org>/<name>`.
-  Hard rule 4 holds here too: `bundle` copies only what `licences.allowed` permits (Kev's `core` suites hold Yelp
-  and Amazon rows, so they never go up) and lists the rest in `MANIFEST.json` by hash and lines; a repo that is
-  already public gets the public rules.
+- `licences.py`: `den licences` (`make data-licences`). Every source's licence, class (open / share-alike /
+  non-commercial / unspecified / restricted) and the primary-source evidence for it; each file in `data/` takes its
+  most restrictive source (`_meta.source`, or the raw item it sits under). Writes `data/README.md` (Hub card),
+  `data/LICENSES.md`, `data/LICENSES/` and a `SOURCE-LICENSE.md` beside every dataset. A new pin or `_meta.source`
+  must get an entry: `tests/test_licences.py` fails otherwise.
+
+Model:
+- `head.py`: `PointerHead` (Kev's q·k pointer plus span pooling, cross-option attention and a per-option prior),
+  `LetterHead`, `question_loss`, `save_head`/`load_head`.
+- `lora.py`: `load_backbone` (Unsloth or PEFT LoRA), `text_tower`, `save_merged`, `warm_start`.
+- `model.py`: `SystemOne` (backbone + head, `forward` returns the loss) and `collate`.
 - `device.py`, `mlx_model.py`, `torch_model.py`: MLX (Apple Silicon) and PyTorch (CUDA/CPU) inference backbones,
   which must return the same hidden states.
+
+Training:
+- `data.py`: what a run trains on (`gather`, `sample`, `sources`, `--max-licence`) and `Shuffled`, the augmented items.
+- `train.py`: `den train`: the Trainer run, validation (`Monitor`), `best/` (`Best`), calibration (`Scorer`), run.json.
+- `trainer.py`: the `transformers.Trainer` subclass and `param_groups`. `calibrate.py`: `fit_temperature`.
+- `overfit.py`: `den overfit`. `probe.py`: `den probe`, and `Features`/`fit_head` (head training on cached features).
+
+Evaluation:
+- `metrics.py`: every evaluation number (`summarize`, `robustness`, `paired_bootstrap`, `argmax`).
+- `evaluate.py`: `den evaluate` (acc/NLL/ECE, `--final` for test, `--augment`), scored through `runtime.Model`,
+  so a run is scored by the same backbone code that serves it.
+- `compare.py`: `den compare` (which run ships, dev only; `--paired A B` question by question with 95% intervals) and
+  `den baselines`.
+- `evidence.py`: every `den evaluate` writes `reports/runs/<run>/<file>/report.json` + `rows.json` (each question's
+  probabilities) and `provenance.json`, committed like Kev's runs/ (no weights). `reports/claims.json` ties printed
+  numbers to that evidence; `scripts/verify_claims.py` (in `make check`) fails on any that drifts.
+
+Serving:
+- `runtime.py`: `Model` (a run's `merged/` + `head.safetensors`/`head.json` through `device.load`), `request`,
+  `answer`, `respond`. `den.load(run)` returns a `Model`. Keep the response shape identical to Kev's: `answer()` is
+  tested against Kev's README example.
+- `serve.py`: `den serve`, Kev's `POST /v1/systemone` over the standard library's HTTP server (`DEN_API_KEY` for a
+  bearer key), and `den predict`.
+
+Release:
+- `integrity.py`: `den check-run`, run after `--merge` and before every upload: head/adapter finite, `merged/` has
+  the base's layout and files with exactly the adapted weights changed, sha256 of every model file -> `integrity.json`.
+- `publish.py`: `den publish` bundles `stages/`, `data/` (exact training data + every scored file, sha256 manifest) and
+  `logs/` into the run, writes the card, uploads it as a private Hub model (resumable), checks the listing. Hard rule 4
+  holds here too: `bundle` copies only what `licences.allowed` permits (Kev's `core` suites hold Yelp and Amazon rows,
+  so they never go up) and lists the rest in `MANIFEST.json` by hash and lines; a repo already public gets the public
+  rules.
+- `release.py`: `den release create|list|show` (`make release`, `make release-list`). A release publishes a finished
+  run, tags the Hub commit with the version and writes `releases/<version>.json` (lineage, data hashes, dev/test
+  results, file hashes, data repo commit). `release:<version>` resolves to `hf:<repo>@<version>` for `--init-from`,
+  `--run`. A release refuses: an existing version, a failed integrity check, no locked-test results, a different base
+  than its parent, or any dev file more than 1 point below its parent unless `--accept-regression` says why
+  (recorded). The record names its evidence folder and holds the paired comparison with its parent.
 
 `scripts/` (top level, beside `den/`) holds one-off and operational tools that use `den` but aren't the library.
 Run them as `uv run python -m scripts.<name>`, test them in `tests/test_<name>.py` (or `test_scripts.py`), and never
 import `scripts` from `den`. ruff and mypy cover it like `den/`.
 
-- `breadth.py` (`make data-breadth`): Kev's breadth-v1 builder (his scripts/build_breadth_v1.py) ported to read our pinned
+- `build_breadth.py` (`make data-breadth`): Kev's breadth-v1 builder (his scripts/build_breadth_v1.py) ported to read our pinned
   raws. Writes `data/{dev,test}/breadth.jsonl` only if both match `pins.BREADTH_SHA256`; keep it byte-faithful
   (seeds, sorts, key order).
 - `mirror.py` (`make data-upload` / `make data-download`): `data/` as a Hub dataset with a sha256 manifest (left-out
@@ -103,7 +133,7 @@ import `scripts` from `den`. ruff and mypy cover it like `den/`.
   rebuilds the files the licences leave out, running only the steps (fetch by item, breadth, normalize, clean) whose
   files are missing or wrong, and checks the result against the uploader's hashes. No target fetches single sets:
   `uv run den data <set>` is for work on the data pipeline itself.
-- `check_env.py`, `check_merged.py`, `estimate_time.py`: the runbook's phase 1 and phase 3 checks (docs/h100-runbook.md).
+- `check_env.py`, `estimate_time.py`: the runbook's phase 1 and phase 3 checks (docs/h100-runbook.md).
 
 ## Hard rules (do not break)
 
@@ -111,7 +141,8 @@ import `scripts` from `den`. ruff and mypy cover it like `den/`.
    paths. Keep that guard.
 2. **Eval-only sources are never trained on** (`data/sources/eval/**` and anything they produce). The role of each
    path is enforced in `catalog.py` and its tests.
-3. **Temperature `T` is fitted only on calibration files**, never on dev or test. By default, leave
+3. **Temperature `T` is fitted only on calibration files**, never on dev or test: `calibration/core.jsonl` and the
+   per-source `calibration/sources/**` that normalize carves out of train (never trained on). By default, leave
    `calibration/heldout` out: 18 of its 22 unknowable families also appear in `train/dates-unknowable`.
 4. **Never upload data the licences exclude.** `scripts/mirror.py` leaves out restricted sources (Yelp, Amazon
    reviews, raw files holding HellaSwag's wikiHow items) always and unlicensed ones from public copies; a repo that is
@@ -138,8 +169,8 @@ import `scripts` from `den`. ruff and mypy cover it like `den/`.
 - Keep `lora_dropout=0` and bf16 (no 4-bit) for Unsloth on Qwen3.5. `text_tower()` must return
   `Qwen3_5TextModel`, the module the serving backends run, not the vision-language wrapper.
 - The head is exported Hugging Face-style: `head.safetensors` (weights) + `head.json` (format `den-pointer-head`,
-  kind, dim, layers, heads, `hidden_size`, base, lora, engine, temperature). No pickle anywhere. `model.save_head` /
-  `model.load_head` are the only reader and writer; `load_head` refuses a head whose `hidden_size` differs from the
+  kind, dim, layers, heads, `hidden_size`, base, lora, engine, temperature). No pickle anywhere. `head.save_head` /
+  `head.load_head` are the only reader and writer; `load_head` refuses a head whose `hidden_size` differs from the
   backbone's. Head kinds: `set` (ours, default) and `pointer` (Kev's plain q·k), chosen with `--head-kind`.
 
 ## Known data facts
@@ -149,6 +180,17 @@ import `scripts` from `den`. ruff and mypy cover it like `den/`.
 - `documents` (CFPB) lists options in a fixed order that tracks the label: the answer is option 1 in 92%/64%/53% of
   its 3/4/5-option questions, in dev and test too. Option shuffling during training handles this. Don't trust
   documents dev/test accuracy as-is.
+- `decisions/typed-decisions` (LocalLLaMA/typed-decisions, the set Laya fine-tunes on): four synthetic workflows, five
+  typed questions a case, already in the /v1/systemone shape. Gold is the mean of three teacher samples: each question
+  carries it as a `target` with `"target_from": "teacher"`, so it trains on the distribution, is graded on its argmax
+  (`label`), and reports `kl_to_target` (the benchmark's KL). Its labels agree with a fresh teacher sample only 73.5% of
+  the time, so dev/test accuracy above ~0.74 means fitting the teacher's quirks. Native test -> our locked test; dev
+  and calibration are carved from train.
+- Soft targets come in two kinds (`api.Question.unknowable`): without `target_from` a target marks an unknowable item
+  (no right answer: out of accuracy, NLL and pairs); with `"target_from": "teacher"` it is graded on its label like any
+  hard question. The label of a teacher target must be one of its most likely options (`api.parse` refuses otherwise).
+- normalize carves a calibration split from every trainable source (`CAL_CAP` 500, at most 5% of its train, by hash
+  of the raw document), kept out of training by the same leakage rules as dev.
 - Weaker shortcuts: in OpenBookQA the longest option is correct 40% of the time (chance is 25%), and in `when2call`
   option 1 is correct 35% of the time.
 - Glaive's assistant often asks for missing arguments and calls a turn later: that request is `call` true, `ready`
@@ -162,7 +204,7 @@ import `scripts` from `den`. ruff and mypy cover it like `den/`.
 
 - Modes (all through `den train`, all evaluated by `den evaluate` on the same files):
   A zero-shot Qwen `--head-kind letters --lora 0 --epochs 0`; B LoRA + letters `--head-kind letters`;
-  C frozen Qwen + head `--lora 0`; D LoRA + head (default). The letter scorer (`model.LetterHead`) is Qwen's own
+  C frozen Qwen + head `--lora 0`; D LoRA + head (default). The letter scorer (`head.LetterHead`) is Qwen's own
   next-token logits for " A".." Z" (tied embedding rows stored in the head), over the `A) option` prompt: at most
   26 options. `tests/test_wiring.py` proves the four modes train different parameter sets.
 - Ablations: `--lora-targets all|attention-mlp|attention` (248/128/32 modules), `--option-rep end|marker|mean|attn`,
@@ -210,10 +252,14 @@ import `scripts` from `den`. ruff and mypy cover it like `den/`.
 - `den evaluate --final` refuses to re-read a test file a run already has in `eval.json`. `den baselines D=.. A=..`
   writes the A/B/C/D table to the shipped run's `baselines.json`; the card shows it. `make eval-dev RUN=..` and
   `make eval-test RUN=..` run the after-training steps.
-- Versions: v1 is the shipped run of the two rounds; each later version continues from the last release on new data
-  with replay of Kev's suites, `make train-next FROM=v1 OUT=runs/v2 DATA="..."` (round 2's settings), then
-  `make eval-dev`, `make eval-test`, `make release VERSION=v2 RUN=runs/v2 REPO=... PARENT=v1`. Tag the data copy it
-  trained from too (`make data-upload ... TAG=data-v2`). Never edit a record in `releases/`.
+- Versions: v1 is the shipped run of the two rounds; each later version continues from the last release once enough
+  new data has gathered, replaying Kev's suites and `NEXT_SOURCES` (500) of every public source, `make train-next FROM=v1
+  OUT=runs/v2 DATA="..."` (round 2's settings), then `make eval-dev`, `make eval-test`, `make release VERSION=v2
+  RUN=runs/v2 REPO=... PARENT=v1`. Tag the data copy it trained from too (`make data-upload ... TAG=data-v2`). On a new
+  base, rank or head shape, or after three versions in a chain, `make train-rebuild` trains one model from the base on
+  everything; it ships only if it beats the chain on dev. Shipped runs fit T with `$(CALIB)`: core plus every source's
+  calibration split, `--calibrate-by-type`. Choose from dev only; test is reported, never used to decide. Never edit a
+  record in `releases/`.
 - The release recipe is Kev-4B's, `make train-round1`: four stages (core ×2 at 5e-5 with 25% none minimal pairs →
   dates → documents → skills+devtools, at 2e-5 with 2k/2k/4k `core` replay), each `--init-from` the last. It is
   sourced from Kev's model card and `kev/train.py`/`kev/data.py`; change it only with evidence, and say so. One
@@ -222,7 +268,7 @@ import `scripts` from `den`. ruff and mypy cover it like `den/`.
 - `prompt.augment`/`prompt.none_pair` port Kev's augmentation (none-of-the-above 10%/12%, distractor 15%, minimal
   pairs). Soft-target questions are only shuffled, and score/noul are never touched. `--augment shuffle|none` for
   ablations.
-- `--init-from` (`model.warm_start`) refuses a different base, LoRA rank or head shape.
+- `--init-from` (`lora.warm_start`) refuses a different base, LoRA rank or head shape.
 - `--ordinal-weight` adds Kev's ranked probability score on score questions (default 0, as Kev-4B trained).
 - `den evaluate` reports accuracy, NLL, Brier, ECE, coverage at 5% error, accuracy per question type, and score-level
   MAE/RPS. `den.load(run).predict(request)` is the Python API; it returns exactly what `den serve` returns.
@@ -230,8 +276,8 @@ import `scripts` from `den`. ruff and mypy cover it like `den/`.
 - The `Trainer` (which Unsloth patches) owns bf16, gradient accumulation, clipping, the cosine schedule with warmup and
   length-grouped sampling. Only override what is specific to this model: `_get_train_sampler` (precomputed lengths)
   and `create_optimizer` (the head's own learning rate). Don't reintroduce manual autocast or step loops.
-- `model.SystemOne.forward` returns `{"loss": ...}`. `save_strategy="no"`: the run saves the adapter, the head,
-  `run.json` (setup, timings, versions, commit) and then, with `--merge`, merged weights. `model.save_merged` is
+- `system.SystemOne.forward` returns `{"loss": ...}`. `save_strategy="no"`: the run saves the adapter, the head,
+  `run.json` (setup, timings, versions, commit) and then, with `--merge`, merged weights. `lora.save_merged` is
   ours on both engines: W + scale × B·A for each adapted module, written into a copy of the base checkpoint's own
   files, so `merged/` has the base's layout by construction. It refuses unless all 248 weights are replaced. Verified
   on real weights: merged (MLX) vs adapter (torch) hidden states, min cosine 0.9999.

@@ -1,19 +1,11 @@
-"""Versioned releases: v1, v2, ... each a published run, tagged on the Hub and recorded in git.
-
-A release is immutable. `den release create` publishes a finished run (`den publish`), tags that Hub commit with the
-version, and writes `releases/<version>.json`: the base, LoRA and head, every stage's data (sha256 of each file and
-the lines used), the dev and locked-test results, the model files' sha256 (`integrity.json`), the Hub commit, the data
-repo commit it was trained from, and its parent version. Commit the record: it is what `release:<version>` resolves.
-
-The next version continues from the last one, `den train --init-from release:v1` (the adapter and head come from the
-tagged Hub commit, so the GPU box that trained v1 need not exist), on the new data plus replay of the old
-(`make train-next`). Before v2 is released it must not regress on v1: on every dev file both were evaluated on, no
-accuracy drop above `--max-drop` (the rule `den compare` ships rounds by), unless the reason is given and recorded.
+"""`den release`: immutable versions v1, v2, ..., each a published run tagged on the Hub and recorded in
+`releases/<version>.json` (lineage, data hashes, dev and test results, file hashes). `release:<version>` resolves to
+that tag, so `--init-from release:v1` continues from it on any machine. A version may not drop more than `MAX_DROP` on
+any dev file its parent was evaluated on, unless `--accept-regression` records why.
 
     den release create --version v1 --run runs/round2 --repo <org>/<name> --data-repo <org>/den-datasets@<commit>
     den release create --version v2 --run runs/v2 --repo <org>/<name> --parent v1
     den release list
-    den evaluate --run release:v1 dev/core.jsonl          # any --run / --init-from takes release:<version>
 """
 
 from __future__ import annotations
@@ -25,47 +17,21 @@ import time
 from pathlib import Path
 from typing import Any
 
+from .compare import MAX_DROP
 from .evidence import keys, name, paired
+from .paths import RELEASES, read_json, release_record
 
-RELEASES = Path("releases")
 VERSION = re.compile(r"v\d+(\.\d+)*")
-MAX_DROP = 0.01  # the largest dev accuracy drop on any file a new version may have (`den compare`'s rule)
 
 
-def _json(path: Path) -> dict[str, Any]:
-    loaded: dict[str, Any] = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
-    return loaded
-
-
-def load(version: str, root: Path | None = None) -> dict[str, Any]:
-    if not (path := (root or RELEASES) / f"{version}.json").is_file():
-        raise SystemExit(f"no release {version}: {path} is missing (den release list)")
-    return _json(path)
-
-
-def resolve(spec: str, root: Path | None = None) -> str:
-    """`release:<version>` -> `hf:<repo>@<version>`, the tagged Hub commit; anything else unchanged."""
-    if not spec.startswith("release:"):
-        return spec
-    record = load(spec.removeprefix("release:"), root)
-    return f"hf:{record['hub']['repo']}@{record['version']}"
-
-
-def locate(run: str, files: list[str] | None = None) -> Path:
-    """A run directory: a local path, or `hf:<org>/<name>[@<revision>]` / `release:<version>` downloaded once into the
-    Hub cache (only `files`, when given: continuing from a run needs its adapter and head, not its merged weights)."""
-    run = resolve(run)
-    if not run.startswith("hf:"):
-        return Path(run)
-    from huggingface_hub import snapshot_download
-
-    repo, _, revision = run.removeprefix("hf:").partition("@")
-    return Path(snapshot_download(repo, revision=revision or None, allow_patterns=files))
+def _test(key: str) -> bool:
+    """An eval.json key (`test/core.jsonl+pairs`) that read the locked test set."""
+    return Path(key.split("+")[0]).parts[0] == "test"
 
 
 def regressions(parent: dict[str, Any], child: dict[str, Any], max_drop: float = MAX_DROP) -> dict[str, float]:
     """Dev files (both evaluated, never test) where the child's accuracy fell over `max_drop` below the parent's."""
-    shared = sorted(f for f in set(parent) & set(child) if Path(f.split("+")[0]).parts[0] != "test" and "+" not in f)
+    shared = sorted(f for f in set(parent) & set(child) if not _test(f) and "+" not in f)
     drops = {f: parent[f]["accuracy"] - child[f]["accuracy"] for f in shared}
     return {f: round(d, 4) for f, d in drops.items() if d > max_drop}
 
@@ -83,7 +49,7 @@ def record(
     """The release record of a finished, evaluated run."""
     from .publish import stages
 
-    trained, evaluated, head = _json(run / "run.json"), _json(run / "eval.json"), _json(run / "head.json")
+    trained, evaluated, head = read_json(run / "run.json"), read_json(run / "eval.json"), read_json(run / "head.json")
     data, _, data_revision = (data_repo or "").partition("@")
     return {
         "version": version,
@@ -91,7 +57,7 @@ def record(
         "parent": parent,
         "hub": {"repo": repo, "revision": revision, "tag": version},
         "data": {"repo": data or None, "revision": data_revision or None},
-        "base": trained.get("model") or trained.get("base"),
+        "base": trained.get("model"),
         "lora": trained.get("lora"),
         "head": {k: head.get(k) for k in ("kind", "dim", "layers", "heads", "rep", "proj", "hidden_size")},
         "temperature": head.get("temperature"),
@@ -111,9 +77,9 @@ def record(
             }
             for path, r in stages(run)
         ],
-        "dev": {f: m for f, m in evaluated.items() if Path(f.split("+")[0]).parts[0] != "test"},
-        "test": {f: m for f, m in evaluated.items() if Path(f.split("+")[0]).parts[0] == "test"},
-        "files": _json(run / "integrity.json").get("files", {}),
+        "dev": {f: m for f, m in evaluated.items() if not _test(f)},
+        "test": {f: m for f, m in evaluated.items() if _test(f)},
+        "files": read_json(run / "integrity.json").get("files", {}),
         "regression_note": regression_note,
         "evidence": name(str(run)),  # reports/runs/<this>: rows and reports, for paired comparisons with later versions
         "paired_vs_parent": against(parent, str(run), root),
@@ -124,7 +90,7 @@ def against(parent: str | None, run: str, root: Path | None = None) -> dict[str,
     """The paired comparison with the parent version on every dev file both have committed rows for (`evidence`)."""
     if not parent:
         return None
-    folder = load(parent, root).get("evidence")
+    folder = release_record(parent, root).get("evidence")
     if not folder:
         return None
     earlier = f"evidence:{folder}"
@@ -147,17 +113,17 @@ def check(
         raise SystemExit(
             f"release {version} exists ({root / f'{version}.json'}): releases are immutable, use a new one"
         )
-    integrity = _json(run / "integrity.json")
+    integrity = read_json(run / "integrity.json")
     if not integrity.get("ok"):
         raise SystemExit(f"{run}: integrity.json is missing or failed (den check-run --run {run})")
-    evaluated = _json(run / "eval.json")
-    if not any(Path(f.split("+")[0]).parts[0] == "test" for f in evaluated):
+    evaluated = read_json(run / "eval.json")
+    if not any(_test(f) for f in evaluated):
         raise SystemExit(f"{run}: no locked-test results in eval.json (make eval-test RUN={run})")
     if not parent:
         return {}
-    previous = load(parent, root)
-    trained = _json(run / "run.json")
-    if (trained.get("model") or trained.get("base")) != previous.get("base"):
+    previous = release_record(parent, root)
+    trained = read_json(run / "run.json")
+    if trained.get("model") != previous.get("base"):
         raise SystemExit(f"{run} is on another base than {parent}: a new base starts a new line (no --parent)")
     if not any(f in evaluated for f in previous["dev"] if "+" not in f):
         raise SystemExit(f"{run} shares no dev file with {parent}: evaluate it on {sorted(previous['dev'])[:4]} ...")
@@ -234,10 +200,11 @@ def main(argv: list[str] | None = None) -> int:
         print(f"recorded {RELEASES / (args.version + '.json')}: commit it")
         return 0
     if args.action == "show":
-        print(json.dumps(load(args.version), indent=2))
+        print(json.dumps(release_record(args.version), indent=2))
         return 0
     versions = sorted(
-        (_json(path) for path in RELEASES.glob("*.json")), key=lambda r: [int(x) for x in r["version"][1:].split(".")]
+        (read_json(path) for path in RELEASES.glob("*.json")),
+        key=lambda r: [int(x) for x in r["version"][1:].split(".")],
     )
     print(f"{'version':<9}{'parent':<9}{'created':<22}{'dev accuracy':<22}{'test accuracy':<22}model")
     for r in versions:

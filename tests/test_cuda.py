@@ -13,7 +13,9 @@ from pathlib import Path
 import pytest
 import torch
 
-from den.model import HeadConfig, PointerHead, collate, param_groups, question_loss
+from den.head import HeadConfig, PointerHead, question_loss
+from den.model import collate
+from den.trainer import param_groups
 
 pytestmark = [
     pytest.mark.cuda,
@@ -70,7 +72,8 @@ def test_unsloth_qwen_lora_pointer_step() -> None:
     from tokenizers import Tokenizer
 
     from den.api import parse
-    from den.model import LoraConfig, SystemOne, adapted, load_backbone, text_tower
+    from den.lora import LoraConfig, adapted, load_backbone, text_tower
+    from den.model import SystemOne
     from den.prompt import encode
 
     backbone = load_backbone(MODEL, LoraConfig(), 1024, 0, engine="unsloth")

@@ -12,7 +12,7 @@ at its primary source (the pinned dataset card, the licence file shipped in the 
 - `restricted`: the terms forbid redistribution; never uploaded anywhere.
 
 `den licences` writes the notices into `data/` (`LICENSES.md`, `LICENSES/`, `README.md` as the Hub dataset card, and a
-`SOURCE-LICENSE.md` beside every dataset, saying what each file there holds and under what terms); `scripts/mirror.py` uploads only what `allowed` permits. Not legal advice:
+`SOURCE-LICENSE.md` beside every dataset); `scripts/mirror.py` uploads only what `allowed` permits. Not legal advice:
 the classes are conservative readings of each source's own terms.
 """
 
@@ -163,6 +163,9 @@ SOURCES: tuple[Source, ...] = (
            "FitzGerald et al., MASSIVE (ACL 2023)", ("intent/massive-en",), ("CC-BY-4.0",)),
     Source("glaive", "Glaive function calling v2", "Apache-2.0", "open", "https://huggingface.co/datasets/glaiveai/glaive-function-calling-v2",
            "Card at the pinned revision: apache-2.0.", "Glaive AI", ("tools/glaive-function-calling",), ("Apache-2.0",)),
+    Source("typed-decisions", "Typed Decisions", "Apache-2.0", "open", "https://huggingface.co/datasets/LocalLLaMA/typed-decisions/blob/e039ebffcc280174dd354227424fb2b249f191de/README.md",
+           "Card at the pinned revision: license apache-2.0. Synthetic cases labelled by a teacher model the card does not name ('a teacher of roughly 4B-class capability'); no further terms are stated.",
+           "LocalLLaMA, Typed Decisions (huggingface.co/datasets/LocalLLaMA/typed-decisions)", ("decisions/typed-decisions",), ("Apache-2.0",)),
     # ---- breadth-v1 (Kev's mappings; records reproduced byte for byte)
     Source("musr", "MuSR", "CC-BY-4.0", "open", "https://huggingface.co/datasets/TAUR-Lab/MuSR", "Card at the pinned revision: cc-by-4.0.",
            "Sprague et al., MuSR (ICLR 2024)", ("musr", "breadth/knowledge/musr"), ("CC-BY-4.0",)),

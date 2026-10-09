@@ -98,7 +98,7 @@ def test_download_rebuilds_only_what_the_licences_left_out(tmp_path: Path, monke
     from types import SimpleNamespace
 
     from den import cli
-    from scripts import breadth
+    from scripts import build_breadth as breadth
 
     source = data_dir(tmp_path, monkeypatch)
     excluded = {"train/core.jsonl": "restricted: Yelp", "train/sources/yelp/train.jsonl": "restricted: Yelp"}

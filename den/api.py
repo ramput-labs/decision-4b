@@ -5,7 +5,9 @@ A record is a `/v1/systemone` request plus a label on every question:
     {"state": ..., "questions": {"team": {"type": "choice", "criteria": {...}, "label": "billing"}}}
 
 Labels are the option name (choice), a bool (noul) or a level index (score). An optional `target` gives a soft
-distribution over the same keys.
+distribution over the same keys. By default a target marks an unknowable item (no right answer, left out of accuracy);
+with `"target_from": "teacher"` it is a teacher's distribution whose argmax is the label, so the question is trained
+on the distribution and still scored on the label.
 """
 
 from __future__ import annotations
@@ -37,6 +39,11 @@ class Question:
     label: int
     target: tuple[float, ...] | None
     source: str
+    teacher: bool = False  # the target is a teacher's distribution, not an unknowable item's
+
+    @property
+    def unknowable(self) -> bool:
+        return self.target is not None and not self.teacher
 
 
 @dataclass(frozen=True, slots=True)
@@ -126,7 +133,11 @@ def _question(qid: str, raw: Json) -> Question:
     instructions = render(raw.get("instructions"))
     if not instructions.strip():
         raise RecordError(f"{qid}: empty instructions")
-    return Question(qid, qtype, instructions, keys, options, index, _target(qid, raw.get("target"), keys), str(source))
+    target = _target(qid, raw.get("target"), keys)
+    teacher = raw.get("target_from") == "teacher"
+    if teacher and (target is None or max(target) > target[index] + 1e-9):
+        raise RecordError(f"{qid}: a teacher target needs its label among the most likely options")
+    return Question(qid, qtype, instructions, keys, options, index, target, str(source), teacher)
 
 
 def _target(qid: str, raw: Json, keys: tuple[str, ...]) -> tuple[float, ...] | None:

@@ -68,14 +68,15 @@ Training runs in two rounds, each a chain of stages where every stage continues 
   5e-5 with 25% none-of-the-above minimal pairs, then dates, then documents, then skills+devtools, at 2e-5 with
   2k/2k/4k `core` records replayed. One change of ours: stage 1 trains its fresh head at 1e-3 (`--head-lr`), the
   rate the overfit gate passes at, since Kev's card and code give no head rate.
-- **Round 2, `make train-round2`:** continues from round 1 on 17 public sources Kev-4B never trained on (`CAP`
+- **Round 2, `make train-round2`:** continues from round 1 on 18 public sources Kev-4B never trained on (`CAP`
   records each) with `CAP` records replayed from each of Kev's suites. `den compare` ships round 2 only if it beats
   round 1 on dev without losing more than 1 point on any file.
 
 Every stage: one row per question (the state plus one question), Kev's option augmentation, LoRA rank 16 (alpha 32,
 dropout 0) on all 248 text-decoder projections (the attention, Gated DeltaNet and MLP projections, none in the
-vision tower), with fp32 adapters over a bf16 base. Validation on a dev sample runs every `--eval-steps` steps, and
-T is fitted on `calibration/core`. Unsloth needs Linux and an NVIDIA GPU; on a Mac, `--engine peft` runs the same
+vision tower), with fp32 adapters over a bf16 base. Validation on a dev sample runs every `--eval-steps` steps. The
+runs that can ship (round 1's last stage, round 2, `train-next`, `train-rebuild`) fit T on `calibration/core` plus every
+source's calibration split, one T per question type. Unsloth needs Linux and an NVIDIA GPU; on a Mac, `--engine peft` runs the same
 adapters to check the wiring. This follows [Unsloth's Qwen3.5 guide](https://unsloth.ai/docs/models/qwen3.5/fine-tune),
 which advises against QLoRA on Qwen3.5.
 
@@ -141,7 +142,7 @@ true), with `confidence` = (p_max − 1/K)/(1 − 1/K) and every option's probab
 Each question is read with the state alone.
 
 The prompt layout (`den/prompt.py`) is this repo's own, not Kev's serving template. The pointer head
-(`den/model.py`) starts as Kev's, q(question's final token) · k(option's closing token), and adds span pooling, one
+(`den/head.py`) starts as Kev's, q(question's final token) · k(option's closing token), and adds span pooling, one
 cross-option attention block and a per-option prior, all starting at zero (`--head-layers 0` drops the block;
 `--head-kind pointer` is Kev's head exactly). Backbone and head are independent: `MODEL=` picks any Qwen backbone,
 `--head-*` the head. A run exports Hugging Face-style files only: `merged/` (a standard checkpoint), the PEFT
@@ -171,10 +172,14 @@ Kev's robustness checks (option-order flips, contrastive pair flips, confidence 
 carries them, and `--augment permute` measures option-order sensitivity on any file.
 
 Models are versioned: `make release VERSION=v1 RUN=<run> REPO=<org>/<name>` publishes a run, tags the Hub commit `v1`
-and records it in `releases/v1.json`. The next version continues from it on new data
-(`make train-next FROM=v1 OUT=runs/v2 DATA="train/<new>.jsonl"`, replaying Kev's suites so nothing is forgotten) and is
-released with `PARENT=v1`, which refuses it if any dev file fell more than a point below v1. `release:v1` works
-wherever a run does (`--init-from`, `--run`).
+and records it in `releases/v1.json`. v1 is whichever of rounds 1 and 2 wins on dev. A new version is trained when
+enough new data has gathered (thousands of records, or a new skill), not on a schedule: `make train-next FROM=v1
+OUT=runs/v2 DATA="train/<new>.jsonl"` continues from v1 and replays Kev's suites and 500 records of every public source,
+so neither round is forgotten. It is released with `PARENT=v1`, which refuses it if any dev file fell more than a point
+below v1. When the base model, LoRA rank or head shape changes, or after three versions in a chain, `make
+train-rebuild OUT=...` trains one fresh model on everything; it ships only if it beats the chain on dev
+(`den compare --paired`). Every decision comes from dev; test numbers are reported, never used to choose.
+`release:v1` works wherever a run does (`--init-from`, `--run`).
 
 Every evaluation is kept in git: `den evaluate` writes `reports/runs/<run>/` (each file's metrics, every question's
 probabilities, and where they came from), and `den compare --paired A B` says whether B beats A beyond noise, question
@@ -277,11 +282,12 @@ data/
 │   ├── dates-unknowable.jsonl  stage 2   1,425  date policies + deciding sentence removed
 │   ├── documents.jsonl         stage 3   5,219  CFPB complaint narratives (up to ~7k tokens)
 │   ├── skills.jsonl            stage 4   6,000  long policies, trade-offs, probability, multi-hop, dates, judging, abstention
-│   └── devtools.jsonl          stage 4   5,320  code review, commit type, flaky tests, content safety
+│   ├── devtools.jsonl          stage 4   5,320  code review, commit type, flaky tests, content safety
+│   └── sources/<skill>/<ds>.jsonl  normalized from sources/train (make data-normalize)
 ├── calibration/            fit the temperature only
 │   ├── core.jsonl              in-distribution
-│   └── heldout.jsonl           held-out sources (the honest choice)
-│   └── sources/<skill>/<ds>.jsonl  normalized from sources/train (make data-normalize)
+│   ├── heldout.jsonl           held-out sources (the honest choice)
+│   └── sources/<skill>/<ds>.jsonl  at most 500 records carved from each trainable source's train
 ├── dev/                    model selection: core, documents, skills, devtools, transfer, probes
 │   └── sources/…               normalized dev splits, trainable and eval-only sources
 ├── test/                   locked, read once per release candidate: same suites as dev/
@@ -317,7 +323,7 @@ data/
 |---|---|---|
 | `suites` | ~100 MB | `train/ calibration/ dev/ test/ manifests/` |
 | `raw-train` | ~0.8 GB | `sources/train/{intent,topic,reading,sentiment,safety}` |
-| `raw-new` | ~0.3 GB | `sources/train/{knowledge,intent,tools}` |
+| `raw-new` | ~0.3 GB | `sources/train/{knowledge,intent,tools,decisions}` |
 | `raw-eval` | ~0.6 GB | `sources/eval/` |
 | `raw-bulk` | ~5 GB | `sources/train/{documents,devtools}` |
 
@@ -363,33 +369,53 @@ Its weak spots are knowledge, dates, held-out breadth (tools, retrieval) and lon
 ## Layout
 
 ```
-den/                  the package, one module per concern (flat, like kev/)
-├── api.py                    the record format: Kev's /v1/systemone request + labels, `render`
-├── pins.py                   every model and dataset, pinned to a commit and a sha256
-├── catalog.py                catalog types and rules (pins, roles, contamination)
-├── fetch.py                  verified downloads and lock files
-├── sources.py                per-source mappings from raw rows to records
-├── text.py                   text repair shared by normalize and clean (NFC, escapes, entities)
-├── normalize.py              raw sources -> canonical, leakage-free records (`make data-normalize`)
-├── clean.py                  cleaned, deduplicated training copies in data/clean/ (`make data-clean`)
-├── audit.py                  dataset checks (`make data-audit`)
-├── prompt.py                 records -> token ids and pointer positions, option shuffling
-├── model.py                  LoRA backbone (Unsloth, or PEFT for checks) and the pointer head
-├── calibrate.py              temperature fit on the calibration split
-├── train.py                  training: data, Trainer, run.json (`make train`)
-├── evaluate.py               load a run; `den evaluate` and `den predict`
-├── publish.py                `den publish`: model card, stages, data, logs -> private Hub upload
-├── serve.py                  `den serve`: POST /v1/systemone (Kev's API)
-├── paths.py                  where data/, models/, locks/ and reports/ live: one place to change the layout
-├── device.py                 backend choice (mlx | cuda | cpu) and the backbone interface
-├── mlx_model.py              MLX backbone (Apple Silicon)
-├── torch_model.py            PyTorch backbone (CUDA, CPU)
-└── cli.py                    `den <command>`: built-ins, plus every module's own CLI in one `DELEGATED` table
-tests/                      one test file per module it covers
-data/                       suites and normalized sources, by role (see Data layout)
-locks/                      sha256 of every placed file
-reports/                    audit, normalize and clean results
-runs/                       training outputs (gitignored)
+den/                  the package: one flat module per concern, grouped here by stage
+│   shared
+├── api.py            the record format: Kev's /v1/systemone request + labels, `render`
+├── prompt.py         records -> token ids and pointer positions; option shuffling and Kev's augmentation
+├── paths.py          where data/, models/, locks/, reports/, releases/ live; run specs -> directories
+├── doctor.py         `den doctor` and the provenance every run records (commit, versions, GPU)
+├── cli.py            `den <command>`: built-ins plus one `DELEGATED` table of every module's CLI
+│   data
+├── pins.py           every model and dataset, pinned to a commit and a sha256
+├── catalog.py        catalog types and rules (pins, roles, contamination)
+├── fetch.py          verified downloads and lock files
+├── sources.py        per-source mappings from raw rows to records
+├── text.py           text repair shared by normalize and clean
+├── normalize.py      raw sources -> canonical, leakage-free records (`make data-normalize`)
+├── clean.py          cleaned, deduplicated copies in data/clean/ (`make data-clean`)
+├── audit.py          dataset checks (`make data-audit`)
+├── licences.py       every source's licence and evidence; the notices in data/ (`make data-licences`)
+│   model
+├── head.py           the heads (set, pointer, letters), the loss, head.safetensors + head.json
+├── lora.py           LoRA backbone (Unsloth, or PEFT for checks), merge, warm start
+├── model.py          backbone + head as one module (`SystemOne`) for the Trainer
+├── device.py         inference backbones: MLX (mlx_model.py), CUDA and CPU (torch_model.py)
+│   training
+├── data.py           what a run trains on: sampling, replay, licences, `Shuffled` augmented items
+├── train.py          `den train`: the Trainer run, validation, best/, calibration, run.json
+├── trainer.py        the Trainer subclass: length groups, head learning rate, trainable-only checkpoints
+├── calibrate.py      temperature fit on the calibration split
+├── overfit.py        `den overfit`: the gate before any long run
+├── probe.py          `den probe`: modes A and C on cached frozen features
+│   evaluation
+├── metrics.py        every number (`summarize`, robustness, paired bootstrap)
+├── evaluate.py       `den evaluate`
+├── compare.py        `den compare` (which run ships) and `den baselines`
+├── evidence.py       reports/runs/<run>/: committed rows and reports
+│   serving
+├── runtime.py        a run ready to answer: `den.load(run).predict(request)`
+├── serve.py          `den serve` (POST /v1/systemone, Kev's API) and `den predict`
+│   release
+├── integrity.py      `den check-run`
+├── publish.py        `den publish`: model card, stages, data, logs -> private Hub upload
+└── release.py        `den release`: v1, v2, ... tagged on the Hub, recorded in releases/
+scripts/              operational tools beside the library (data mirror, breadth builder, runbook checks)
+tests/                one test file per area
+data/                 suites and normalized sources, by role (see Data layout)
+locks/                sha256 of every placed file
+reports/              audit, normalize and clean results; evaluation evidence
+runs/                 training outputs (gitignored)
 ```
 
 ## Next

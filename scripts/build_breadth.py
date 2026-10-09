@@ -11,7 +11,7 @@ Never trained on: the files sit beside Kev's suites, so `normalize` keeps their 
 Build it before `make data-normalize`. Keep the logic byte-faithful to Kev's: every seed, sort and key order shows in
 the sha256.
 
-    uv run python -m scripts.breadth        # ~10 minutes (BM25 over BRIGHT); `make data-breadth`
+    uv run python -m scripts.build_breadth        # ~10 minutes (BM25 over BRIGHT); `make data-breadth`
 """
 
 from __future__ import annotations
@@ -1326,7 +1326,7 @@ def verify_raw(raw: Path, lock: Path = Path("locks/raw-eval.json")) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    p = argparse.ArgumentParser(prog="scripts.breadth")
+    p = argparse.ArgumentParser(prog="scripts.build_breadth")
     p.add_argument("--raw", type=Path, default=RAW, help="the pinned breadth raw files (`make data-download`)")
     p.add_argument("--only", help="comma-separated datasets: a dry run that prints counts and writes nothing")
     p.add_argument("--staging", type=Path, default=Path("data/.breadth"), help="where a mismatching build is left")

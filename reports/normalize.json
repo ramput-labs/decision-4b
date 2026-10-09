@@ -19,18 +19,107 @@
       "conflicting": 0,
       "duplicates": 12,
       "carved": {
-        "dev": 1003
+        "dev": 1003,
+        "calibration": 460
       },
       "capped": {
+        "calibration": 0,
         "dev": 0,
         "test": 0
       },
       "leaked": {
         "test": 81,
         "dev": 105,
-        "train": 52
+        "calibration": 44,
+        "train": 51
       },
       "splits": {
+        "calibration": {
+          "records": 416,
+          "questions": 416,
+          "sha256": "9947c02062193b53a372348efda9a30121bf7016e23853b452d41fc697d9955c",
+          "labels": {
+            "intent": {
+              "exchange_via_app": 10,
+              "transfer_fee_charged": 6,
+              "why_verify_identity": 3,
+              "top_up_by_cash_or_cheque": 4,
+              "exchange_charge": 6,
+              "atm_support": 7,
+              "card_about_to_expire": 12,
+              "pending_top_up": 6,
+              "unable_to_verify_identity": 4,
+              "verify_top_up": 6,
+              "declined_transfer": 9,
+              "cash_withdrawal_charge": 7,
+              "lost_or_stolen_phone": 6,
+              "pending_cash_withdrawal": 8,
+              "order_physical_card": 6,
+              "verify_source_of_funds": 6,
+              "top_up_failed": 7,
+              "failed_transfer": 3,
+              "pending_transfer": 10,
+              "edit_personal_details": 5,
+              "reverted_card_payment?": 5,
+              "transfer_not_received_by_recipient": 8,
+              "card_payment_fee_charged": 5,
+              "passcode_forgotten": 4,
+              "direct_debit_payment_not_recognised": 11,
+              "top_up_by_card_charge": 5,
+              "card_payment_wrong_exchange_rate": 4,
+              "getting_virtual_card": 3,
+              "card_linking": 11,
+              "extra_charge_on_statement": 7,
+              "cash_withdrawal_not_recognised": 8,
+              "wrong_amount_of_cash_received": 5,
+              "card_arrival": 3,
+              "supported_cards_and_currencies": 5,
+              "declined_card_payment": 4,
+              "age_limit": 6,
+              "activate_my_card": 6,
+              "transfer_timing": 4,
+              "balance_not_updated_after_bank_transfer": 7,
+              "declined_cash_withdrawal": 7,
+              "exchange_rate": 7,
+              "contactless_not_working": 2,
+              "card_payment_not_recognised": 6,
+              "virtual_card_not_working": 2,
+              "request_refund": 7,
+              "topping_up_by_card": 2,
+              "transaction_charged_twice": 6,
+              "lost_or_stolen_card": 5,
+              "automatic_top_up": 9,
+              "pending_card_payment": 4,
+              "refund_not_showing_up": 10,
+              "card_swallowed": 4,
+              "country_support": 3,
+              "cancel_transfer": 10,
+              "beneficiary_not_allowed": 5,
+              "disposable_card_limits": 6,
+              "top_up_reverted": 4,
+              "fiat_currency_support": 6,
+              "wrong_exchange_rate_for_cash_withdrawal": 3,
+              "getting_spare_card": 4,
+              "verify_my_identity": 4,
+              "card_not_working": 7,
+              "change_pin": 6,
+              "card_delivery_estimate": 6,
+              "balance_not_updated_after_cheque_or_cash_deposit": 9,
+              "terminate_account": 4,
+              "receiving_money": 4,
+              "compromised_card": 2,
+              "visa_or_mastercard": 3,
+              "card_acceptance": 1,
+              "transfer_into_account": 1,
+              "apple_pay_or_google_pay": 5,
+              "get_disposable_virtual_card": 4,
+              "top_up_by_bank_transfer_charge": 1,
+              "pin_blocked": 1,
+              "get_physical_card": 1,
+              "top_up_limits": 3
+            }
+          }
+        },
         "dev": {
           "records": 898,
           "questions": 898,
@@ -204,88 +293,88 @@
           }
         },
         "train": {
-          "records": 8937,
-          "questions": 8937,
-          "sha256": "c408370b4099e8284df5eb35b1c3400e28def6766532ed683efb6ee5456a815d",
+          "records": 8478,
+          "questions": 8478,
+          "sha256": "8e366d10196b35ae4912535e3c4439b28d5febbb3016341d39a0826ea157de06",
           "labels": {
             "intent": {
-              "card_arrival": 140,
-              "card_linking": 130,
-              "exchange_rate": 99,
-              "card_payment_wrong_exchange_rate": 143,
-              "extra_charge_on_statement": 139,
-              "pending_cash_withdrawal": 123,
-              "fiat_currency_support": 112,
-              "card_delivery_estimate": 96,
-              "automatic_top_up": 120,
-              "card_not_working": 102,
-              "exchange_via_app": 104,
-              "lost_or_stolen_card": 74,
-              "age_limit": 99,
-              "pin_blocked": 100,
-              "contactless_not_working": 34,
-              "top_up_by_bank_transfer_charge": 102,
-              "pending_top_up": 135,
-              "cancel_transfer": 139,
-              "top_up_limits": 89,
-              "wrong_amount_of_cash_received": 162,
-              "card_payment_fee_charged": 162,
-              "transfer_not_received_by_recipient": 155,
-              "supported_cards_and_currencies": 113,
-              "getting_virtual_card": 85,
-              "card_acceptance": 53,
-              "top_up_reverted": 138,
-              "balance_not_updated_after_cheque_or_cash_deposit": 164,
-              "card_payment_not_recognised": 146,
-              "edit_personal_details": 106,
-              "why_verify_identity": 98,
-              "unable_to_verify_identity": 95,
-              "get_physical_card": 98,
-              "visa_or_mastercard": 124,
-              "topping_up_by_card": 92,
-              "disposable_card_limits": 108,
-              "compromised_card": 76,
-              "atm_support": 72,
-              "direct_debit_payment_not_recognised": 160,
-              "passcode_forgotten": 87,
-              "declined_cash_withdrawal": 160,
-              "pending_card_payment": 141,
-              "lost_or_stolen_phone": 109,
-              "request_refund": 150,
-              "declined_transfer": 121,
-              "refund_not_showing_up": 142,
-              "declined_card_payment": 139,
-              "pending_transfer": 131,
-              "terminate_account": 94,
-              "card_swallowed": 54,
-              "transaction_charged_twice": 155,
-              "verify_source_of_funds": 99,
-              "transfer_timing": 119,
-              "reverted_card_payment?": 148,
-              "change_pin": 107,
-              "beneficiary_not_allowed": 140,
-              "transfer_fee_charged": 156,
-              "receiving_money": 89,
-              "failed_transfer": 125,
-              "transfer_into_account": 102,
-              "verify_top_up": 117,
-              "getting_spare_card": 115,
-              "top_up_by_cash_or_cheque": 100,
-              "order_physical_card": 103,
-              "virtual_card_not_working": 36,
-              "wrong_exchange_rate_for_cash_withdrawal": 147,
-              "get_disposable_virtual_card": 82,
-              "top_up_failed": 132,
-              "balance_not_updated_after_bank_transfer": 151,
-              "cash_withdrawal_not_recognised": 144,
-              "exchange_charge": 112,
-              "top_up_by_card_charge": 104,
-              "activate_my_card": 145,
-              "cash_withdrawal_charge": 153,
-              "card_about_to_expire": 120,
-              "apple_pay_or_google_pay": 113,
-              "verify_my_identity": 92,
-              "country_support": 116
+              "card_arrival": 136,
+              "card_linking": 119,
+              "exchange_rate": 92,
+              "card_payment_wrong_exchange_rate": 138,
+              "extra_charge_on_statement": 131,
+              "pending_cash_withdrawal": 115,
+              "fiat_currency_support": 105,
+              "card_delivery_estimate": 90,
+              "automatic_top_up": 111,
+              "card_not_working": 94,
+              "exchange_via_app": 94,
+              "lost_or_stolen_card": 69,
+              "age_limit": 93,
+              "pin_blocked": 98,
+              "contactless_not_working": 32,
+              "top_up_by_bank_transfer_charge": 101,
+              "pending_top_up": 129,
+              "cancel_transfer": 127,
+              "top_up_limits": 86,
+              "wrong_amount_of_cash_received": 155,
+              "card_payment_fee_charged": 157,
+              "transfer_not_received_by_recipient": 147,
+              "supported_cards_and_currencies": 108,
+              "getting_virtual_card": 82,
+              "card_acceptance": 52,
+              "top_up_reverted": 133,
+              "balance_not_updated_after_cheque_or_cash_deposit": 155,
+              "card_payment_not_recognised": 139,
+              "edit_personal_details": 101,
+              "why_verify_identity": 95,
+              "unable_to_verify_identity": 89,
+              "get_physical_card": 95,
+              "visa_or_mastercard": 120,
+              "topping_up_by_card": 88,
+              "disposable_card_limits": 101,
+              "compromised_card": 74,
+              "atm_support": 65,
+              "direct_debit_payment_not_recognised": 149,
+              "passcode_forgotten": 83,
+              "declined_cash_withdrawal": 150,
+              "pending_card_payment": 137,
+              "lost_or_stolen_phone": 103,
+              "request_refund": 143,
+              "declined_transfer": 111,
+              "refund_not_showing_up": 130,
+              "declined_card_payment": 134,
+              "pending_transfer": 121,
+              "terminate_account": 90,
+              "card_swallowed": 50,
+              "transaction_charged_twice": 147,
+              "verify_source_of_funds": 93,
+              "transfer_timing": 115,
+              "reverted_card_payment?": 142,
+              "change_pin": 101,
+              "beneficiary_not_allowed": 133,
+              "transfer_fee_charged": 150,
+              "receiving_money": 84,
+              "failed_transfer": 121,
+              "transfer_into_account": 100,
+              "verify_top_up": 110,
+              "getting_spare_card": 111,
+              "top_up_by_cash_or_cheque": 95,
+              "order_physical_card": 96,
+              "virtual_card_not_working": 34,
+              "wrong_exchange_rate_for_cash_withdrawal": 143,
+              "get_disposable_virtual_card": 78,
+              "top_up_failed": 125,
+              "balance_not_updated_after_bank_transfer": 144,
+              "cash_withdrawal_not_recognised": 136,
+              "exchange_charge": 105,
+              "top_up_by_card_charge": 99,
+              "activate_my_card": 138,
+              "cash_withdrawal_charge": 144,
+              "card_about_to_expire": 108,
+              "apple_pay_or_google_pay": 108,
+              "verify_my_identity": 88,
+              "country_support": 113
             }
           }
         }
@@ -309,17 +398,106 @@
       "rejected": 0,
       "conflicting": 14,
       "duplicates": 82,
-      "carved": {},
+      "carved": {
+        "calibration": 510
+      },
       "capped": {
+        "calibration": 10,
         "dev": 0,
         "test": 0
       },
       "leaked": {
         "test": 0,
         "dev": 0,
+        "calibration": 1,
         "train": 3
       },
       "splits": {
+        "calibration": {
+          "records": 499,
+          "questions": 998,
+          "sha256": "c0fc9baaca060eacb0d35f29d54a611923cfddc21c96d2f5f6c2c9d54402f027",
+          "labels": {
+            "intent": {
+              "transport_query": 15,
+              "email_querycontact": 7,
+              "calendar_query": 24,
+              "qa_factoid": 28,
+              "news_query": 29,
+              "iot_hue_lightchange": 6,
+              "audio_volume_other": 2,
+              "recommendation_locations": 12,
+              "iot_hue_lightup": 3,
+              "iot_hue_lightoff": 11,
+              "play_music": 28,
+              "weather_query": 31,
+              "qa_definition": 12,
+              "calendar_set": 31,
+              "takeaway_query": 6,
+              "takeaway_order": 7,
+              "alarm_query": 9,
+              "transport_ticket": 4,
+              "iot_cleaning": 6,
+              "general_greet": 1,
+              "email_query": 25,
+              "iot_wemo_off": 1,
+              "social_post": 10,
+              "alarm_set": 7,
+              "iot_coffee": 6,
+              "play_podcasts": 7,
+              "calendar_remove": 14,
+              "general_quirky": 21,
+              "qa_stock": 11,
+              "qa_currency": 1,
+              "general_joke": 2,
+              "play_game": 5,
+              "email_sendemail": 12,
+              "play_radio": 6,
+              "recommendation_events": 10,
+              "cooking_recipe": 6,
+              "datetime_query": 18,
+              "play_audiobook": 10,
+              "audio_volume_up": 5,
+              "lists_remove": 7,
+              "social_query": 4,
+              "music_query": 2,
+              "music_likeness": 4,
+              "datetime_convert": 1,
+              "email_addcontact": 1,
+              "lists_query": 4,
+              "music_dislikeness": 2,
+              "lists_createoradd": 6,
+              "transport_taxi": 4,
+              "alarm_remove": 2,
+              "qa_maths": 2,
+              "audio_volume_mute": 3,
+              "music_settings": 1,
+              "audio_volume_down": 2,
+              "recommendation_movies": 3,
+              "transport_traffic": 2
+            },
+            "scenario": {
+              "transport": 25,
+              "email": 45,
+              "calendar": 69,
+              "qa": 54,
+              "news": 29,
+              "iot": 33,
+              "audio": 12,
+              "recommendation": 25,
+              "play": 56,
+              "weather": 31,
+              "takeaway": 13,
+              "alarm": 18,
+              "general": 24,
+              "social": 14,
+              "cooking": 6,
+              "datetime": 19,
+              "lists": 17,
+              "music": 9
+            }
+          }
+        },
         "dev": {
           "records": 2025,
           "questions": 4050,
@@ -497,91 +675,91 @@
           }
         },
         "train": {
-          "records": 11429,
-          "questions": 22858,
-          "sha256": "86ec23c3f81c76bfe2f139526489f2f64fe65a7fae7e3ec5d78d159f7dbeb1c1",
+          "records": 10919,
+          "questions": 21838,
+          "sha256": "679bb15ec67cb6dfb9727995d58711af75815ade7dc4cf5ce0f75dae72f1f25d",
           "labels": {
             "intent": {
-              "alarm_set": 181,
-              "audio_volume_mute": 108,
-              "iot_hue_lightchange": 124,
-              "iot_hue_lightoff": 151,
+              "alarm_set": 174,
+              "audio_volume_mute": 105,
+              "iot_hue_lightchange": 118,
+              "iot_hue_lightoff": 140,
               "iot_hue_lightdim": 76,
-              "iot_cleaning": 93,
-              "calendar_query": 564,
-              "play_music": 634,
-              "general_quirky": 553,
-              "datetime_query": 342,
-              "datetime_convert": 52,
-              "takeaway_query": 121,
-              "alarm_remove": 78,
-              "alarm_query": 130,
-              "news_query": 501,
-              "music_likeness": 113,
-              "music_query": 153,
-              "iot_hue_lightup": 76,
-              "takeaway_order": 132,
-              "weather_query": 567,
-              "music_settings": 51,
-              "general_joke": 71,
-              "music_dislikeness": 14,
-              "audio_volume_other": 18,
-              "iot_coffee": 123,
-              "general_greet": 23,
-              "audio_volume_up": 109,
+              "iot_cleaning": 87,
+              "calendar_query": 539,
+              "play_music": 606,
+              "general_quirky": 530,
+              "datetime_query": 324,
+              "datetime_convert": 51,
+              "takeaway_query": 115,
+              "alarm_remove": 76,
+              "alarm_query": 121,
+              "news_query": 472,
+              "music_likeness": 109,
+              "music_query": 151,
+              "iot_hue_lightup": 73,
+              "takeaway_order": 125,
+              "weather_query": 536,
+              "music_settings": 50,
+              "general_joke": 69,
+              "music_dislikeness": 12,
+              "audio_volume_other": 16,
+              "iot_coffee": 117,
+              "general_greet": 21,
+              "audio_volume_up": 104,
               "iot_wemo_on": 48,
               "iot_hue_lighton": 22,
-              "iot_wemo_off": 52,
-              "audio_volume_down": 52,
-              "qa_stock": 150,
-              "play_radio": 283,
-              "recommendation_locations": 173,
-              "qa_factoid": 539,
-              "calendar_set": 806,
-              "play_audiobook": 150,
-              "play_podcasts": 191,
-              "social_query": 108,
-              "transport_query": 226,
-              "email_sendemail": 353,
-              "recommendation_movies": 69,
-              "lists_query": 196,
-              "play_game": 111,
-              "transport_ticket": 126,
-              "recommendation_events": 189,
-              "email_query": 412,
-              "transport_traffic": 117,
+              "iot_wemo_off": 51,
+              "audio_volume_down": 50,
+              "qa_stock": 139,
+              "play_radio": 276,
+              "recommendation_locations": 160,
+              "qa_factoid": 511,
+              "calendar_set": 775,
+              "play_audiobook": 139,
+              "play_podcasts": 184,
+              "social_query": 104,
+              "transport_query": 211,
+              "email_sendemail": 340,
+              "recommendation_movies": 66,
+              "lists_query": 192,
+              "play_game": 106,
+              "transport_ticket": 122,
+              "recommendation_events": 179,
+              "email_query": 387,
+              "transport_traffic": 115,
               "cooking_query": 4,
-              "qa_definition": 266,
-              "calendar_remove": 307,
-              "lists_remove": 162,
-              "cooking_recipe": 204,
-              "email_querycontact": 127,
-              "lists_createoradd": 177,
-              "transport_taxi": 99,
-              "qa_maths": 78,
-              "social_post": 278,
-              "qa_currency": 142,
-              "email_addcontact": 54
+              "qa_definition": 254,
+              "calendar_remove": 293,
+              "lists_remove": 155,
+              "cooking_recipe": 198,
+              "email_querycontact": 120,
+              "lists_createoradd": 171,
+              "transport_taxi": 95,
+              "qa_maths": 76,
+              "social_post": 266,
+              "qa_currency": 141,
+              "email_addcontact": 52
             },
             "scenario": {
-              "alarm": 389,
-              "audio": 287,
-              "iot": 765,
-              "calendar": 1677,
-              "play": 1369,
-              "general": 647,
-              "datetime": 394,
-              "takeaway": 253,
-              "news": 501,
-              "music": 331,
-              "weather": 567,
-              "qa": 1175,
-              "recommendation": 431,
-              "social": 386,
-              "transport": 568,
-              "email": 946,
-              "lists": 535,
-              "cooking": 208
+              "alarm": 371,
+              "audio": 275,
+              "iot": 732,
+              "calendar": 1607,
+              "play": 1311,
+              "general": 620,
+              "datetime": 375,
+              "takeaway": 240,
+              "news": 472,
+              "music": 322,
+              "weather": 536,
+              "qa": 1121,
+              "recommendation": 405,
+              "social": 370,
+              "transport": 543,
+              "email": 899,
+              "lists": 518,
+              "cooking": 202
             }
           }
         }
@@ -604,18 +782,34 @@
       "conflicting": 52,
       "duplicates": 144,
       "carved": {
-        "dev": 4997
+        "dev": 4997,
+        "calibration": 494
       },
       "capped": {
+        "calibration": 0,
         "dev": 0,
         "test": 2599
       },
       "leaked": {
         "test": 55,
         "dev": 39,
-        "train": 60
+        "calibration": 3,
+        "train": 59
       },
       "splits": {
+        "calibration": {
+          "records": 491,
+          "questions": 491,
+          "sha256": "40f3da2f5e1ce81da4b41c608e784d54b23f78b03baafebebae5b06d6f90dc5c",
+          "labels": {
+            "topic": {
+              "business": 109,
+              "world": 139,
+              "sports": 109,
+              "scitech": 134
+            }
+          }
+        },
         "dev": {
           "records": 4958,
           "questions": 4958,
@@ -643,15 +837,15 @@
           }
         },
         "train": {
-          "records": 114748,
-          "questions": 114748,
-          "sha256": "43448c6f055b71d199b1294cb57c7d8841eb606c1eef6f77ecca601c28a68ab3",
+          "records": 114255,
+          "questions": 114255,
+          "sha256": "68d48166804ea4a201f613632ab96f9702fb2f214a3ae4db2ab22b404b9c621b",
           "labels": {
             "topic": {
-              "business": 28695,
-              "scitech": 28664,
-              "sports": 28703,
-              "world": 28686
+              "business": 28586,
+              "scitech": 28528,
+              "sports": 28594,
+              "world": 28547
             }
           }
         }
@@ -674,18 +868,36 @@
       "conflicting": 2,
       "duplicates": 82,
       "carved": {
-        "dev": 551
+        "dev": 551,
+        "calibration": 248
       },
       "capped": {
+        "calibration": 0,
         "dev": 0,
         "test": 0
       },
       "leaked": {
         "test": 80,
         "dev": 97,
-        "train": 54
+        "calibration": 74,
+        "train": 51
       },
       "splits": {
+        "calibration": {
+          "records": 174,
+          "questions": 174,
+          "sha256": "4f23aee8c5741d1be0f813d858d59d1ba23fea1821e1f52b5924df4d0a3b558f",
+          "labels": {
+            "answer_type": {
+              "description": 41,
+              "human": 35,
+              "location": 24,
+              "entity": 46,
+              "number": 24,
+              "abbreviation": 4
+            }
+          }
+        },
         "dev": {
           "records": 454,
           "questions": 454,
@@ -717,17 +929,17 @@
           }
         },
         "train": {
-          "records": 4764,
-          "questions": 4764,
-          "sha256": "9009e2e06269ae64c6b1786676032e9158b8dc53ee8a26747f42677b5318f791",
+          "records": 4519,
+          "questions": 4519,
+          "sha256": "a99f540697d84c541b832bc91ecdf0e02ca8f1ae1f88147ca8828eabf0ddcfb6",
           "labels": {
             "answer_type": {
-              "description": 1005,
-              "entity": 1090,
-              "abbreviation": 77,
-              "human": 1094,
-              "number": 770,
-              "location": 728
+              "description": 950,
+              "entity": 1026,
+              "abbreviation": 71,
+              "human": 1043,
+              "number": 730,
+              "location": 699
             }
           }
         }
@@ -750,18 +962,44 @@
       "conflicting": 0,
       "duplicates": 140,
       "carved": {
-        "dev": 4934
+        "dev": 4934,
+        "calibration": 501
       },
       "capped": {
+        "calibration": 1,
         "dev": 0,
         "test": 65000
       },
       "leaked": {
         "test": 8,
         "dev": 10,
+        "calibration": 0,
         "train": 60
       },
       "splits": {
+        "calibration": {
+          "records": 500,
+          "questions": 500,
+          "sha256": "20779c073639641dd4175c4e122b874f5df2ebbfbd933e3fce3bd7a5e244609c",
+          "labels": {
+            "category": {
+              "animal": 44,
+              "film": 29,
+              "album": 36,
+              "company": 28,
+              "building": 30,
+              "written_work": 42,
+              "plant": 36,
+              "mean_of_transportation": 39,
+              "village": 35,
+              "natural_place": 43,
+              "artist": 27,
+              "educational_institution": 44,
+              "office_holder": 33,
+              "athlete": 34
+            }
+          }
+        },
         "dev": {
           "records": 4924,
           "questions": 4924,
@@ -809,25 +1047,25 @@
           }
         },
         "train": {
-          "records": 554866,
-          "questions": 554866,
-          "sha256": "831bfb222b3fd007effa8bfd5ae9f8c8716adceec3bb861452ad5747506ed601",
+          "records": 554365,
+          "questions": 554365,
+          "sha256": "1f80a57234cd3a928ff173b6c8109927f91bf3b9a48330a19b4c083500ea45f9",
           "labels": {
             "category": {
-              "company": 39628,
-              "educational_institution": 39637,
-              "artist": 39637,
-              "athlete": 39645,
-              "office_holder": 39633,
-              "mean_of_transportation": 39638,
-              "building": 39663,
-              "natural_place": 39519,
-              "village": 39681,
-              "animal": 39625,
-              "plant": 39628,
-              "album": 39642,
-              "film": 39633,
-              "written_work": 39657
+              "company": 39600,
+              "educational_institution": 39593,
+              "artist": 39610,
+              "athlete": 39611,
+              "office_holder": 39600,
+              "mean_of_transportation": 39599,
+              "building": 39633,
+              "natural_place": 39476,
+              "village": 39646,
+              "animal": 39581,
+              "plant": 39592,
+              "album": 39605,
+              "film": 39604,
+              "written_work": 39615
             }
           }
         }
@@ -850,18 +1088,32 @@
       "conflicting": 0,
       "duplicates": 0,
       "carved": {
-        "dev": 946
+        "dev": 946,
+        "calibration": 429
       },
       "capped": {
+        "calibration": 0,
         "dev": 0,
         "test": 0
       },
       "leaked": {
         "test": 354,
         "dev": 233,
-        "train": 881
+        "calibration": 116,
+        "train": 836
       },
       "splits": {
+        "calibration": {
+          "records": 313,
+          "questions": 313,
+          "sha256": "940a1e7af29fc8ffbbe7ce46e7509b6353e06a7060b730aa161a7527b597b44c",
+          "labels": {
+            "answer": {
+              "true": 197,
+              "false": 116
+            }
+          }
+        },
         "dev": {
           "records": 713,
           "questions": 713,
@@ -885,13 +1137,13 @@
           }
         },
         "train": {
-          "records": 7600,
-          "questions": 7600,
-          "sha256": "8257bf105350452c33c347222a5d602cc28b78d1b31d2dbe5e01c1514488c383",
+          "records": 7216,
+          "questions": 7216,
+          "sha256": "5554f9a94b1492b1992925b2059798943a905f3e3cf0eb9d9dd58eb60cd77dd2",
           "labels": {
             "answer": {
-              "true": 4723,
-              "false": 2877
+              "true": 4483,
+              "false": 2733
             }
           }
         }
@@ -915,17 +1167,33 @@
       "rejected": 0,
       "conflicting": 188,
       "duplicates": 32,
-      "carved": {},
+      "carved": {
+        "calibration": 1432
+      },
       "capped": {
+        "calibration": 932,
         "dev": 4815,
         "test": 4830
       },
       "leaked": {
         "test": 2,
         "dev": 117,
-        "train": 546
+        "calibration": 1,
+        "train": 543
       },
       "splits": {
+        "calibration": {
+          "records": 499,
+          "questions": 499,
+          "sha256": "69b008b5bd1aabbd83219f960d107bb73bf523cbb7185f033992fd4c95b6112e",
+          "labels": {
+            "relation": {
+              "neutral": 177,
+              "entailment": 176,
+              "contradiction": 146
+            }
+          }
+        },
         "dev": {
           "records": 4883,
           "questions": 4883,
@@ -951,14 +1219,14 @@
           }
         },
         "train": {
-          "records": 391938,
-          "questions": 391938,
-          "sha256": "46ea18d0b5a5b7c0b1e45bccfa789b2aa913243d23fa5ad819d23a4bff8ef70a",
+          "records": 390509,
+          "questions": 390509,
+          "sha256": "8f8af57b092015dcef2e74d4e075a75449cfd40dfcaf67c5380914ef1d6ba1e2",
           "labels": {
             "relation": {
-              "neutral": 130640,
-              "entailment": 130617,
-              "contradiction": 130681
+              "neutral": 130164,
+              "entailment": 130141,
+              "contradiction": 130204
             }
           }
         }
@@ -982,17 +1250,35 @@
       "rejected": 0,
       "conflicting": 0,
       "duplicates": 14,
-      "carved": {},
+      "carved": {
+        "calibration": 405
+      },
       "capped": {
+        "calibration": 0,
         "dev": 0,
         "test": 0
       },
       "leaked": {
         "test": 80,
         "dev": 0,
-        "train": 60
+        "calibration": 42,
+        "train": 57
       },
       "splits": {
+        "calibration": {
+          "records": 363,
+          "questions": 363,
+          "sha256": "6f4d0b8f1d3b6bc3833249704890d584fc56d18248460e9278ae682a8c6062b0",
+          "labels": {
+            "rating": {
+              "2": 81,
+              "4": 56,
+              "0": 46,
+              "3": 80,
+              "1": 100
+            }
+          }
+        },
         "dev": {
           "records": 1100,
           "questions": 1100,
@@ -1022,16 +1308,16 @@
           }
         },
         "train": {
-          "records": 8471,
-          "questions": 8471,
-          "sha256": "3c29c1cfb012a5840d929e3ef82c56082d8ee3b88feaecbf3f9fe1688d895925",
+          "records": 8069,
+          "questions": 8069,
+          "sha256": "b1581d16c9ae642f55517eae09424fa8e2549bba3c7ead2fce557fd56dd4c298",
           "labels": {
             "rating": {
-              "4": 1279,
-              "1": 2197,
-              "2": 1614,
-              "3": 2302,
-              "0": 1079
+              "4": 1216,
+              "1": 2088,
+              "2": 1528,
+              "3": 2209,
+              "0": 1028
             }
           }
         }
@@ -1054,18 +1340,35 @@
       "conflicting": 63,
       "duplicates": 108,
       "carved": {
-        "dev": 5182
+        "dev": 5182,
+        "calibration": 541
       },
       "capped": {
+        "calibration": 41,
         "dev": 182,
         "test": 44995
       },
       "leaked": {
         "test": 5,
         "dev": 12,
-        "train": 61
+        "calibration": 0,
+        "train": 60
       },
       "splits": {
+        "calibration": {
+          "records": 500,
+          "questions": 500,
+          "sha256": "5685dbadaf6643e4d2ecc4d0fc0a1a98725e6db987c196575cce6273726274a5",
+          "labels": {
+            "rating": {
+              "0": 100,
+              "3": 90,
+              "2": 92,
+              "4": 115,
+              "1": 103
+            }
+          }
+        },
         "dev": {
           "records": 4988,
           "questions": 4988,
@@ -1095,16 +1398,16 @@
           }
         },
         "train": {
-          "records": 644591,
-          "questions": 644591,
-          "sha256": "50887deaf0f54ed4de9e0f33f267b0fdff44f28d8066204a118f2bd981fb5630",
+          "records": 644051,
+          "questions": 644051,
+          "sha256": "3dce5f52a1615992e1de032a8850cede7aca1295b7f405b4abfcfab1e764a3aa",
           "labels": {
             "rating": {
-              "4": 128904,
-              "1": 128912,
-              "3": 128888,
-              "0": 128917,
-              "2": 128970
+              "4": 128778,
+              "1": 128800,
+              "3": 128791,
+              "0": 128811,
+              "2": 128871
             }
           }
         }
@@ -1128,17 +1431,35 @@
       "rejected": 0,
       "conflicting": 677,
       "duplicates": 251,
-      "carved": {},
+      "carved": {
+        "calibration": 469
+      },
       "capped": {
+        "calibration": 0,
         "dev": 0,
         "test": 0
       },
       "leaked": {
         "test": 80,
         "dev": 0,
+        "calibration": 5,
         "train": 60
       },
       "splits": {
+        "calibration": {
+          "records": 464,
+          "questions": 464,
+          "sha256": "7a7d31914667075f3c24f3918f0335bdb454dd4e5ec8426b507e27bf9d2c38e0",
+          "labels": {
+            "rating": {
+              "2": 96,
+              "1": 93,
+              "0": 99,
+              "4": 88,
+              "3": 88
+            }
+          }
+        },
         "dev": {
           "records": 4988,
           "questions": 4988,
@@ -1168,16 +1489,16 @@
           }
         },
         "train": {
-          "records": 199034,
-          "questions": 199034,
-          "sha256": "1c20773096a06ab9e325009885393ed67b6a69fe90460b66269a64f964404362",
+          "records": 198565,
+          "questions": 198565,
+          "sha256": "a67c4c34e815a13951e56cf04af0380289233b95253cbbbd98d1074d186cf8b5",
           "labels": {
             "rating": {
-              "0": 39787,
-              "1": 39866,
-              "2": 39858,
-              "3": 39792,
-              "4": 39731
+              "0": 39688,
+              "1": 39773,
+              "2": 39760,
+              "3": 39701,
+              "4": 39643
             }
           }
         }
@@ -1200,18 +1521,32 @@
       "conflicting": 0,
       "duplicates": 422,
       "carved": {
-        "dev": 2465
+        "dev": 2465,
+        "calibration": 494
       },
       "capped": {
+        "calibration": 0,
         "dev": 0,
         "test": 19799
       },
       "leaked": {
         "test": 15,
         "dev": 89,
-        "train": 59
+        "calibration": 22,
+        "train": 57
       },
       "splits": {
+        "calibration": {
+          "records": 472,
+          "questions": 472,
+          "sha256": "b9533dc8494c4684fce057e3a2b7bdd80c5defbc565a280eca68d50dc679bdda",
+          "labels": {
+            "positive": {
+              "false": 245,
+              "true": 227
+            }
+          }
+        },
         "dev": {
           "records": 2376,
           "questions": 2376,
@@ -1235,13 +1570,13 @@
           }
         },
         "train": {
-          "records": 22255,
-          "questions": 22255,
-          "sha256": "cc03bba2f83bba5072ceded04b0b97bb4ffa5e9ce6e650e37ab2baef20c55362",
+          "records": 21763,
+          "questions": 21763,
+          "sha256": "ab725081e04ae338b23a26f62d4644a7c5c2101e8d8374a5af99c5e420099704",
           "labels": {
             "positive": {
-              "false": 11078,
-              "true": 11177
+              "false": 10819,
+              "true": 10944
             }
           }
         }
@@ -1265,17 +1600,47 @@
       "rejected": 4216,
       "conflicting": 432,
       "duplicates": 1152,
-      "carved": {},
+      "carved": {
+        "calibration": 493
+      },
       "capped": {
+        "calibration": 0,
         "dev": 0,
         "test": 0
       },
       "leaked": {
         "test": 0,
         "dev": 3,
+        "calibration": 34,
         "train": 47
       },
       "splits": {
+        "calibration": {
+          "records": 459,
+          "questions": 515,
+          "sha256": "c9a5d93411543f8f1c8b45f1e0990adcad6c2c12b32ea516ba65eafcbcdacd2f",
+          "labels": {
+            "unsafe": {
+              "true": 203,
+              "false": 256
+            },
+            "category": {
+              "hate_identity_hate": 5,
+              "harassment": 7,
+              "unauthorized_advice": 10,
+              "criminal_planning_confessions": 13,
+              "profanity": 6,
+              "fraud_deception": 1,
+              "pii_privacy": 2,
+              "violence": 3,
+              "sexual": 4,
+              "malware": 1,
+              "suicide_and_self_harm": 1,
+              "controlled_regulated_substances": 1,
+              "political_misinformation_conspiracy": 2
+            }
+          }
+        },
         "dev": {
           "records": 1026,
           "questions": 1132,
@@ -1333,35 +1698,441 @@
           }
         },
         "train": {
-          "records": 19626,
-          "questions": 21826,
-          "sha256": "33bd1c0e29990997d2fc781abbd0e3b8398c14b8b440a414096c765708404238",
+          "records": 19133,
+          "questions": 21273,
+          "sha256": "06b812430151f07fb16612d09f8ab3e4b3880033a93d93076a03c7926ae96d37",
           "labels": {
             "unsafe": {
-              "true": 8784,
-              "false": 10842
+              "true": 8560,
+              "false": 10573
             },
             "category": {
-              "hate_identity_hate": 210,
+              "hate_identity_hate": 204,
               "copyright_trademark_plagiarism": 13,
-              "criminal_planning_confessions": 423,
-              "suicide_and_self_harm": 114,
-              "controlled_regulated_substances": 77,
-              "unauthorized_advice": 361,
-              "sexual": 155,
-              "violence": 89,
-              "fraud_deception": 21,
-              "pii_privacy": 219,
-              "harassment": 190,
-              "malware": 16,
-              "profanity": 179,
+              "criminal_planning_confessions": 409,
+              "suicide_and_self_harm": 113,
+              "controlled_regulated_substances": 76,
+              "unauthorized_advice": 349,
+              "sexual": 151,
+              "violence": 86,
+              "fraud_deception": 20,
+              "pii_privacy": 217,
+              "harassment": 183,
+              "malware": 15,
+              "profanity": 173,
               "guns_and_illegal_weapons": 36,
               "illegal_activity": 10,
               "immoral_unethical": 20,
-              "political_misinformation_conspiracy": 52,
+              "political_misinformation_conspiracy": 50,
               "threat": 2,
               "high_risk_gov_decision_making": 5,
               "sexual_minor": 8
+            }
+          }
+        }
+      }
+    },
+    "decisions/typed-decisions": {
+      "raw": "sources/train/decisions/typed-decisions",
+      "trainable": true,
+      "plan": {
+        "train": [
+          "train"
+        ],
+        "dev": [],
+        "test": [
+          "test"
+        ]
+      },
+      "rows": 1600,
+      "rejected": 0,
+      "conflicting": 0,
+      "duplicates": 0,
+      "carved": {
+        "dev": 113,
+        "calibration": 51
+      },
+      "capped": {
+        "calibration": 0,
+        "dev": 0,
+        "test": 0
+      },
+      "leaked": {
+        "test": 0,
+        "dev": 0,
+        "calibration": 0,
+        "train": 0
+      },
+      "splits": {
+        "calibration": {
+          "records": 51,
+          "questions": 255,
+          "sha256": "f55010bb2f1de7f7a57065dd97df51ec6dea325952e6afaf028f2d523476dcc5",
+          "labels": {
+            "action": {
+              "answer_directly": 4,
+              "observe": 5,
+              "escalate_to_human": 7,
+              "request_information": 3,
+              "continue": 1,
+              "human_review": 4
+            },
+            "category": {
+              "delivery": 6,
+              "account": 5,
+              "billing": 2,
+              "technical": 1
+            },
+            "churn_risk": {
+              "1": 4,
+              "3": 6,
+              "2": 4
+            },
+            "needs_human": {
+              "false": 5,
+              "true": 9
+            },
+            "urgency": {
+              "2": 20,
+              "1": 16,
+              "3": 12,
+              "0": 3
+            },
+            "credential_compromise": {
+              "false": 9,
+              "true": 6
+            },
+            "disposition": {
+              "close_benign": 1,
+              "investigate": 11,
+              "hold": 4,
+              "manual_review": 4,
+              "approve": 2,
+              "reject": 2,
+              "monitor": 2,
+              "contain": 1
+            },
+            "severity": {
+              "3": 6,
+              "4": 2,
+              "2": 4,
+              "1": 3
+            },
+            "true_positive": {
+              "false": 8,
+              "true": 7
+            },
+            "needs_review": {
+              "false": 5,
+              "true": 5
+            },
+            "outcome": {
+              "success": 4,
+              "partial": 4,
+              "harmful": 2
+            },
+            "risk": {
+              "0": 2,
+              "1": 3,
+              "3": 2,
+              "2": 3
+            },
+            "discrepancy_severity": {
+              "2": 3,
+              "3": 5,
+              "0": 4
+            },
+            "duplicate": {
+              "false": 10,
+              "true": 2
+            },
+            "matches_order": {
+              "false": 7,
+              "true": 5
+            }
+          }
+        },
+        "dev": {
+          "records": 113,
+          "questions": 565,
+          "sha256": "d84cdfcef4bc6333cda534a2a887caab4839245a6433892d4421ff097d8856dd",
+          "labels": {
+            "action": {
+              "human_review": 15,
+              "escalate_to_human": 23,
+              "execute_refund": 1,
+              "request_information": 6,
+              "observe": 6,
+              "continue": 4,
+              "answer_directly": 5,
+              "stop": 1
+            },
+            "needs_review": {
+              "true": 17,
+              "false": 9
+            },
+            "outcome": {
+              "harmful": 10,
+              "partial": 9,
+              "success": 5,
+              "failure": 2
+            },
+            "risk": {
+              "3": 10,
+              "2": 7,
+              "1": 3,
+              "0": 6
+            },
+            "urgency": {
+              "3": 52,
+              "2": 23,
+              "1": 32,
+              "0": 6
+            },
+            "category": {
+              "billing": 8,
+              "account": 5,
+              "technical": 11,
+              "delivery": 8,
+              "refund": 3
+            },
+            "churn_risk": {
+              "2": 16,
+              "3": 7,
+              "1": 11,
+              "0": 1
+            },
+            "needs_human": {
+              "true": 26,
+              "false": 9
+            },
+            "discrepancy_severity": {
+              "0": 11,
+              "2": 8,
+              "3": 8,
+              "1": 1
+            },
+            "disposition": {
+              "approve": 10,
+              "investigate": 19,
+              "hold": 9,
+              "contain": 3,
+              "manual_review": 9,
+              "monitor": 1,
+              "close_benign": 1
+            },
+            "duplicate": {
+              "false": 26,
+              "true": 2
+            },
+            "matches_order": {
+              "true": 13,
+              "false": 15
+            },
+            "credential_compromise": {
+              "true": 14,
+              "false": 10
+            },
+            "severity": {
+              "3": 11,
+              "2": 7,
+              "4": 3,
+              "0": 2,
+              "1": 1
+            },
+            "true_positive": {
+              "true": 17,
+              "false": 7
+            }
+          }
+        },
+        "test": {
+          "records": 400,
+          "questions": 2000,
+          "sha256": "fa17c17ed71771a3569c7e828f987ca50796c2e25f28fa2f18160711c0b0eec0",
+          "labels": {
+            "discrepancy_severity": {
+              "0": 47,
+              "3": 36,
+              "2": 16,
+              "1": 1
+            },
+            "disposition": {
+              "approve": 45,
+              "investigate": 74,
+              "manual_review": 38,
+              "hold": 12,
+              "reject": 5,
+              "monitor": 8,
+              "contain": 15,
+              "close_benign": 3
+            },
+            "duplicate": {
+              "false": 89,
+              "true": 11
+            },
+            "matches_order": {
+              "true": 54,
+              "false": 46
+            },
+            "urgency": {
+              "1": 97,
+              "3": 126,
+              "2": 138,
+              "0": 39
+            },
+            "credential_compromise": {
+              "false": 45,
+              "true": 55
+            },
+            "severity": {
+              "4": 10,
+              "3": 49,
+              "2": 31,
+              "1": 9,
+              "0": 1
+            },
+            "true_positive": {
+              "false": 27,
+              "true": 73
+            },
+            "action": {
+              "continue": 31,
+              "observe": 31,
+              "answer_directly": 17,
+              "human_review": 36,
+              "escalate_to_human": 52,
+              "request_information": 24,
+              "stop": 2,
+              "execute_refund": 7
+            },
+            "needs_review": {
+              "false": 55,
+              "true": 45
+            },
+            "outcome": {
+              "success": 50,
+              "partial": 26,
+              "harmful": 19,
+              "failure": 5
+            },
+            "risk": {
+              "1": 28,
+              "2": 20,
+              "0": 34,
+              "3": 18
+            },
+            "category": {
+              "delivery": 20,
+              "account": 18,
+              "billing": 38,
+              "technical": 20,
+              "refund": 4
+            },
+            "churn_risk": {
+              "2": 47,
+              "3": 25,
+              "1": 25,
+              "0": 3
+            },
+            "needs_human": {
+              "false": 33,
+              "true": 67
+            }
+          }
+        },
+        "train": {
+          "records": 1036,
+          "questions": 5180,
+          "sha256": "8a68b6d80a9a4834e166113e1a647628cf2bd14bd38090029ae1a558a177a659",
+          "labels": {
+            "action": {
+              "human_review": 116,
+              "continue": 35,
+              "observe": 111,
+              "stop": 2,
+              "answer_directly": 56,
+              "request_information": 50,
+              "escalate_to_human": 137,
+              "execute_refund": 8
+            },
+            "needs_review": {
+              "true": 124,
+              "false": 140
+            },
+            "outcome": {
+              "partial": 128,
+              "success": 73,
+              "harmful": 50,
+              "failure": 13
+            },
+            "risk": {
+              "0": 59,
+              "3": 50,
+              "2": 55,
+              "1": 100
+            },
+            "urgency": {
+              "1": 349,
+              "0": 72,
+              "3": 314,
+              "2": 301
+            },
+            "category": {
+              "account": 67,
+              "delivery": 46,
+              "refund": 24,
+              "technical": 56,
+              "billing": 58
+            },
+            "churn_risk": {
+              "3": 52,
+              "0": 14,
+              "2": 126,
+              "1": 59
+            },
+            "needs_human": {
+              "true": 166,
+              "false": 85
+            },
+            "discrepancy_severity": {
+              "3": 71,
+              "0": 118,
+              "2": 69,
+              "1": 2
+            },
+            "disposition": {
+              "manual_review": 98,
+              "hold": 43,
+              "reject": 11,
+              "approve": 108,
+              "investigate": 184,
+              "contain": 31,
+              "monitor": 18,
+              "close_benign": 28
+            },
+            "duplicate": {
+              "false": 236,
+              "true": 24
+            },
+            "matches_order": {
+              "false": 129,
+              "true": 131
+            },
+            "credential_compromise": {
+              "false": 113,
+              "true": 148
+            },
+            "severity": {
+              "1": 33,
+              "3": 116,
+              "2": 80,
+              "4": 28,
+              "0": 4
+            },
+            "true_positive": {
+              "true": 181,
+              "false": 80
             }
           }
         }
@@ -1385,17 +2156,34 @@
       "rejected": 0,
       "conflicting": 0,
       "duplicates": 3,
-      "carved": {},
+      "carved": {
+        "calibration": 168
+      },
       "capped": {
+        "calibration": 0,
         "dev": 0,
         "test": 0
       },
       "leaked": {
         "test": 0,
         "dev": 2,
+        "calibration": 0,
         "train": 19
       },
       "splits": {
+        "calibration": {
+          "records": 168,
+          "questions": 168,
+          "sha256": "e1a09273c449fbf126cbd7190d0c38067b676f0cca3657f3b024f8a0f0f3b8a7",
+          "labels": {
+            "answer": {
+              "opt_2": 43,
+              "opt_3": 49,
+              "opt_1": 32,
+              "opt_4": 44
+            }
+          }
+        },
         "dev": {
           "records": 867,
           "questions": 867,
@@ -1425,15 +2213,15 @@
           }
         },
         "train": {
-          "records": 3348,
-          "questions": 3348,
-          "sha256": "725180ec659ff9f45a8843b2640ac3df039ce1cbfb85efbc78ff43b666f9fc24",
+          "records": 3180,
+          "questions": 3180,
+          "sha256": "073a128e31d388d47d983ae528ed9ebd2714b1d4984e094548d5299221282204",
           "labels": {
             "answer": {
-              "opt_1": 780,
-              "opt_2": 879,
-              "opt_4": 823,
-              "opt_3": 864,
+              "opt_1": 748,
+              "opt_2": 836,
+              "opt_4": 779,
+              "opt_3": 815,
               "opt_5": 2
             }
           }
@@ -1458,17 +2246,34 @@
       "rejected": 0,
       "conflicting": 0,
       "duplicates": 5,
-      "carved": {},
+      "carved": {
+        "calibration": 231
+      },
       "capped": {
+        "calibration": 0,
         "dev": 0,
         "test": 0
       },
       "leaked": {
         "test": 0,
         "dev": 0,
-        "train": 46
+        "calibration": 3,
+        "train": 60
       },
       "splits": {
+        "calibration": {
+          "records": 228,
+          "questions": 228,
+          "sha256": "a15e2d16dc41b4af7237a14e1111102240997db7949943df06d78cefbada568b",
+          "labels": {
+            "answer": {
+              "opt_4": 55,
+              "opt_1": 68,
+              "opt_3": 49,
+              "opt_2": 56
+            }
+          }
+        },
         "dev": {
           "records": 500,
           "questions": 500,
@@ -1496,15 +2301,15 @@
           }
         },
         "train": {
-          "records": 4906,
-          "questions": 4906,
-          "sha256": "ccd384131dc3e5fffa2f3e72b2c4091eb5d48152612203f76851dccb56866da8",
+          "records": 4661,
+          "questions": 4661,
+          "sha256": "f70d2ddc2cf7d717163cf5c1ea8055420afa6d63948454479b836fbf9215094f",
           "labels": {
             "answer": {
-              "opt_4": 1209,
-              "opt_3": 1135,
-              "opt_1": 1366,
-              "opt_2": 1196
+              "opt_4": 1149,
+              "opt_3": 1083,
+              "opt_1": 1291,
+              "opt_2": 1138
             }
           }
         }
@@ -1527,18 +2332,35 @@
       "conflicting": 0,
       "duplicates": 0,
       "carved": {
-        "dev": 942
+        "dev": 942,
+        "calibration": 460
       },
       "capped": {
+        "calibration": 0,
         "dev": 0,
         "test": 0
       },
       "leaked": {
         "test": 0,
         "dev": 0,
+        "calibration": 0,
         "train": 0
       },
       "splits": {
+        "calibration": {
+          "records": 460,
+          "questions": 460,
+          "sha256": "240b0a6f5902d03978f526639eb41f005ef127e4d9069c7b616ecc39e59b8b63",
+          "labels": {
+            "answer": {
+              "opt_5": 101,
+              "opt_1": 89,
+              "opt_2": 85,
+              "opt_3": 90,
+              "opt_4": 95
+            }
+          }
+        },
         "dev": {
           "records": 942,
           "questions": 942,
@@ -1568,16 +2390,16 @@
           }
         },
         "train": {
-          "records": 8757,
-          "questions": 8757,
-          "sha256": "32c224947cf2581c2cec8c4dfe05b15b2959b1bbece3f326c7b1d9358d8181f6",
+          "records": 8297,
+          "questions": 8297,
+          "sha256": "5d6d20e45ad7438f55c42a36246f5f2d64d7a3c0a08fa1d41f0112ec869f49e3",
           "labels": {
             "answer": {
-              "opt_1": 1708,
-              "opt_2": 1786,
-              "opt_4": 1789,
-              "opt_3": 1752,
-              "opt_5": 1722
+              "opt_1": 1619,
+              "opt_2": 1701,
+              "opt_4": 1694,
+              "opt_3": 1662,
+              "opt_5": 1621
             }
           }
         }
@@ -1600,18 +2422,38 @@
       "conflicting": 0,
       "duplicates": 0,
       "carved": {
-        "dev": 801
+        "dev": 801,
+        "calibration": 351
       },
       "capped": {
+        "calibration": 0,
         "dev": 0,
         "test": 0
       },
       "leaked": {
         "test": 0,
         "dev": 0,
+        "calibration": 0,
         "train": 8
       },
       "splits": {
+        "calibration": {
+          "records": 351,
+          "questions": 351,
+          "sha256": "5fd61b4c026f4a3efa2c1857f0059737eac90f88cff4da6f92a7425b47267881",
+          "labels": {
+            "answer": {
+              "opt_3": 55,
+              "opt_4": 46,
+              "opt_5": 43,
+              "opt_1": 44,
+              "opt_8": 43,
+              "opt_6": 41,
+              "opt_2": 39,
+              "opt_7": 40
+            }
+          }
+        },
         "dev": {
           "records": 801,
           "questions": 801,
@@ -1647,19 +2489,19 @@
           }
         },
         "train": {
-          "records": 7325,
-          "questions": 7325,
-          "sha256": "bea6af4174081f7873fa53dd657fb2a2533f40c73e7c5f5df3116a20d95a184f",
+          "records": 6974,
+          "questions": 6974,
+          "sha256": "5ac02d059a84c97de873290a79b1588516daeb00ae172e54f6fcd05c7bb5c65f",
           "labels": {
             "answer": {
-              "opt_6": 944,
-              "opt_5": 930,
-              "opt_2": 915,
-              "opt_3": 925,
-              "opt_1": 903,
-              "opt_8": 874,
-              "opt_7": 895,
-              "opt_4": 939
+              "opt_6": 903,
+              "opt_5": 887,
+              "opt_2": 876,
+              "opt_3": 870,
+              "opt_1": 859,
+              "opt_8": 831,
+              "opt_7": 855,
+              "opt_4": 893
             }
           }
         }
@@ -1681,18 +2523,102 @@
       "duplicates": 32675,
       "carved": {
         "dev": 3666,
-        "test": 3586
+        "test": 3586,
+        "calibration": 528
       },
       "capped": {
+        "calibration": 28,
         "dev": 0,
         "test": 0
       },
       "leaked": {
         "test": 0,
         "dev": 0,
+        "calibration": 0,
         "train": 0
       },
       "splits": {
+        "calibration": {
+          "records": 500,
+          "questions": 997,
+          "sha256": "5d6a733b8608c59f620683f7ad21a9ed28106e6273f1e3f527c3acc247c1bf1c",
+          "labels": {
+            "call": {
+              "true": 310,
+              "false": 190
+            },
+            "ready": {
+              "false": 100,
+              "true": 210
+            },
+            "function": {
+              "none": 43,
+              "calculate_discount": 5,
+              "search_books": 7,
+              "search_recipes": 3,
+              "generate_random_password": 4,
+              "calculate_interest": 1,
+              "calculate_tip": 4,
+              "track_calories": 1,
+              "calculate_area": 4,
+              "searchmovies": 1,
+              "send_sms": 1,
+              "calculate_tax": 2,
+              "generate_report": 1,
+              "check_palindrome": 2,
+              "add_contacts": 1,
+              "generate_random_number": 4,
+              "create_user": 2,
+              "calculate_age_difference": 1,
+              "search_restaurants": 3,
+              "convert_currency": 8,
+              "get_movie_details": 7,
+              "get_random_fact": 2,
+              "generate_password": 4,
+              "calculate_age": 5,
+              "calculate_distance": 6,
+              "create_note": 1,
+              "play_music": 2,
+              "calculate_loan_payment": 6,
+              "calculate_average": 1,
+              "create_task": 1,
+              "get_stock_price": 4,
+              "search_movies": 4,
+              "calculate_fibonacci_sequence": 1,
+              "create_calendar_event": 1,
+              "calculate_rectangle_area": 1,
+              "translate_text": 2,
+              "execute_program": 1,
+              "get_recipe": 1,
+              "find_nearby_restaurants": 1,
+              "search_albums": 1,
+              "count_occurrences": 1,
+              "calculate_bmi": 6,
+              "get_definition": 1,
+              "check_road_conditions": 1,
+              "search_movie": 2,
+              "analyze_sentiment": 1,
+              "send_email": 4,
+              "check_email_availability": 1,
+              "create_todo": 1,
+              "get_news": 2,
+              "search_news": 1,
+              "check_website_status": 1,
+              "calculate_salary": 1,
+              "check_spelling": 1,
+              "generate_random_color": 1,
+              "generate_qr_code": 2,
+              "calculate_discounted_price": 2,
+              "get_random_quote": 1,
+              "search_recipe": 1,
+              "find_max_value": 1,
+              "calculate_mortgage_payment": 1,
+              "create_user_account": 1,
+              "get_random_joke": 2,
+              "generate_random_quote": 1
+            }
+          }
+        },
         "dev": {
           "records": 3666,
           "questions": 7396,
@@ -2045,84 +2971,83 @@
           }
         },
         "train": {
-          "records": 28617,
-          "questions": 57160,
-          "sha256": "1de474a94e1bcceb9b31b9c4bac65c702d9475e19b3019c47cb7029a7a4d9838",
+          "records": 28089,
+          "questions": 56107,
+          "sha256": "d98e12c40ce375b5bacc7c5fccc2814f89d22f0cad6c8ca5ae4cb06f1133b4fa",
           "labels": {
             "call": {
-              "false": 10719,
-              "true": 17898
+              "false": 10519,
+              "true": 17570
             },
             "ready": {
-              "true": 12418,
-              "false": 5480
+              "true": 12196,
+              "false": 5374
             },
             "function": {
-              "generate_password": 225,
-              "get_stock_price": 238,
-              "calculate_loan_payment": 236,
-              "none": 2204,
-              "search_recipe": 112,
-              "send_email": 192,
-              "convert_currency": 361,
+              "generate_password": 221,
+              "get_stock_price": 234,
+              "calculate_loan_payment": 230,
+              "none": 2159,
+              "search_recipe": 111,
+              "send_email": 187,
+              "convert_currency": 353,
               "generate_username": 29,
-              "calculate_age": 379,
-              "search_books": 229,
-              "get_movie_details": 188,
+              "calculate_age": 373,
+              "search_books": 221,
+              "get_movie_details": 181,
               "get_current_time": 25,
-              "calculate_discount": 366,
+              "calculate_discount": 361,
               "update_calendar": 1,
-              "calculate_tip": 405,
-              "generate_random_number": 207,
-              "generate_qr_code": 243,
-              "generate_random_password": 175,
+              "calculate_tip": 401,
+              "generate_random_number": 203,
+              "generate_qr_code": 241,
+              "generate_random_password": 171,
               "get_quote_of_the_day": 9,
               "generate_invoice": 87,
-              "calculate_bmi": 386,
+              "calculate_bmi": 380,
               "generate_random_name": 11,
-              "analyze_sentiment": 113,
-              "search_recipes": 248,
-              "get_definition": 78,
-              "calculate_area": 184,
-              "calculate_distance": 301,
-              "get_song_lyrics": 27,
-              "calculate_average": 54,
+              "analyze_sentiment": 112,
+              "search_recipes": 245,
+              "get_definition": 76,
+              "calculate_area": 180,
+              "calculate_distance": 295,
+              "get_song_lyrics": 26,
+              "calculate_average": 53,
               "calculate_fahrenheit_to_celsius": 2,
               "book_flight": 10,
               "search_movie_theater": 1,
-              "create_note": 44,
+              "create_note": 43,
               "calculate_fibonacci": 4,
-              "generate_random_quote": 50,
+              "generate_random_quote": 49,
               "validate_email": 4,
               "create_invoice": 60,
               "get_stock_prices": 6,
-              "search_movies": 170,
+              "search_movies": 166,
               "calculate_shipping_cost": 47,
-              "get_lyrics": 29,
+              "get_lyrics": 28,
               "calculate_gpa": 52,
-              "search_news": 33,
-              "create_calendar_event": 166,
-              "calculate_interest": 42,
+              "search_news": 32,
+              "create_calendar_event": 165,
               "calculate_tip_percentage": 6,
-              "check_email_availability": 31,
+              "check_email_availability": 30,
               "calculate_profit": 18,
-              "send_sms": 10,
+              "send_sms": 9,
               "create_account": 14,
-              "get_random_joke": 53,
-              "translate_text": 103,
-              "calculate_discounted_price": 44,
-              "play_music": 68,
-              "search_movie": 64,
-              "create_todo": 144,
-              "search_restaurants": 96,
+              "get_random_joke": 51,
+              "translate_text": 101,
+              "calculate_discounted_price": 42,
+              "play_music": 66,
+              "search_movie": 62,
+              "create_todo": 143,
+              "search_restaurants": 92,
               "search_definition": 2,
               "create_event": 27,
               "send_notification": 2,
               "recommend_books": 5,
-              "execute_program": 13,
-              "create_user": 52,
+              "execute_program": 12,
+              "create_user": 50,
               "get_random_number": 16,
-              "calculate_mortgage_payment": 100,
+              "calculate_mortgage_payment": 99,
               "find_nearby_places": 11,
               "add_contact": 6,
               "generate_barcode": 42,
@@ -2130,7 +3055,6 @@
               "search_music": 12,
               "get_translation": 8,
               "create_playlist": 14,
-              "create_task": 13,
               "search_contacts": 1,
               "analyze_social_media_posts": 1,
               "search_book_recommendations": 1,
@@ -2139,14 +3063,15 @@
               "calculate_tip_split": 8,
               "schedule_meeting": 44,
               "search_videos": 2,
+              "calculate_interest": 41,
               "search_lyrics": 3,
               "calculate_loan_repayment": 15,
               "search_book": 23,
               "search_articles": 4,
-              "calculate_tax": 93,
+              "calculate_tax": 91,
               "calculate_distance_traveled": 1,
               "get_calendar_events": 2,
-              "get_news": 84,
+              "get_news": 82,
               "calculate_fuel_consumption": 7,
               "analyze_product_reviews": 3,
               "find_nearest_gas_station": 11,
@@ -2158,14 +3083,13 @@
               "create_poll": 1,
               "add_task": 6,
               "create_user_profile": 13,
-              "find_nearby_restaurants": 24,
-              "check_palindrome": 30,
-              "generate_random_color": 14,
+              "find_nearby_restaurants": 23,
+              "check_palindrome": 28,
+              "generate_random_color": 13,
               "calculate_duration": 5,
               "generate_qrcode": 8,
               "track_package": 13,
               "create_todo_list": 14,
-              "find_max_value": 1,
               "find_hotels": 5,
               "validate_email_address": 1,
               "calculate_future_value": 5,
@@ -2176,7 +3100,7 @@
               "create_contact": 13,
               "calculate_route": 5,
               "generate_random_password_strength": 2,
-              "create_user_account": 18,
+              "create_user_account": 17,
               "search_restaurant": 7,
               "encrypt_text": 17,
               "get_road_traffic": 1,
@@ -2189,13 +3113,13 @@
               "calculate_percentage": 6,
               "calculate_loan_interest": 14,
               "calculate_gross_salary": 10,
-              "calculate_age_difference": 16,
-              "get_recipe": 15,
+              "calculate_age_difference": 15,
+              "get_recipe": 14,
               "evaluate_expression": 1,
               "encrypt_message": 2,
               "search_images": 24,
               "check_movie_showtimes": 3,
-              "get_random_fact": 47,
+              "get_random_fact": 45,
               "verify_email_address": 1,
               "calculate_calories_burned": 2,
               "search_song": 14,
@@ -2212,11 +3136,11 @@
               "search_events": 6,
               "calculate_gas_cost": 1,
               "play_sound": 6,
-              "check_spelling": 10,
-              "check_website_status": 7,
+              "create_task": 12,
+              "check_spelling": 9,
+              "check_website_status": 6,
               "calculate_emission": 1,
               "get_traffic_status": 1,
-              "calculate_rectangle_area": 8,
               "analyze_website_performance": 5,
               "analyze_stock": 2,
               "calculate_body_mass_index": 3,
@@ -2248,12 +3172,11 @@
               "find_nearest_restaurant": 6,
               "get_word_synonyms": 2,
               "get_movie_info": 5,
-              "calculate_fibonacci_sequence": 11,
-              "track_calories": 6,
+              "calculate_fibonacci_sequence": 10,
               "find_shortest_path": 9,
               "sort_numbers": 1,
               "calculate_square_root": 8,
-              "get_random_quote": 16,
+              "get_random_quote": 15,
               "delete_folder": 1,
               "calculate_square_area": 1,
               "calculate_fuel_cost": 5,
@@ -2271,9 +3194,9 @@
               "calculate_calories": 2,
               "find_restaurant": 2,
               "find_restaurants": 10,
-              "add_contacts": 4,
+              "add_contacts": 3,
               "calculate_loan_emi": 3,
-              "calculate_salary": 3,
+              "calculate_salary": 2,
               "calculate_fuel_efficiency": 6,
               "get_product_details": 1,
               "calculateinterest": 1,
@@ -2290,6 +3213,7 @@
               "get_exercise_recommendations": 1,
               "calculate_time_difference": 4,
               "search_songs": 1,
+              "calculate_rectangle_area": 7,
               "calculate_gcd": 6,
               "get_quote": 1,
               "book_hotel": 6,
@@ -2305,7 +3229,6 @@
               "search_hotel": 1,
               "search_movies_by_genre": 4,
               "check_domain_availability": 1,
-              "count_occurrences": 4,
               "calculate_age_in_days": 1,
               "calculate_sum": 3,
               "add_numbers": 8,
@@ -2318,6 +3241,7 @@
               "search_holidays": 1,
               "check_stock_price": 2,
               "calculate_route_distance": 6,
+              "count_occurrences": 3,
               "analyze_text": 5,
               "calculate_car_loan": 1,
               "calculate_car_fuel_cost": 1,
@@ -2329,7 +3253,6 @@
               "search_for_movies": 1,
               "generate_password_strength": 3,
               "calculate_repayment_schedule": 1,
-              "check_road_conditions": 1,
               "get_location_coordinates": 1,
               "recommend_movies": 1,
               "encrypt_data": 4,
@@ -2342,7 +3265,6 @@
               "search_job": 1,
               "upload_file": 2,
               "create_email": 1,
-              "generate_report": 3,
               "calculate_pension": 1,
               "count_characters": 1,
               "get_user_profile": 3,
@@ -2385,6 +3307,7 @@
               "create_task_reminder": 1,
               "find_nearby_hotels": 1,
               "generate_random_numbers": 1,
+              "generate_report": 2,
               "check_username_availability": 2,
               "get_pokemon_details": 1,
               "get_recipe_instructions": 1,
@@ -2393,16 +3316,15 @@
               "get_user_data": 1,
               "calculate_car_loan_emis": 1,
               "create_random_password": 1,
+              "track_calories": 5,
               "set_reminder": 1,
               "search_nearest_gas_station": 1,
               "analyze_customer_sentiment": 2,
-              "searchmovies": 1,
               "get_time": 2,
               "calculate_daily_calorie_intake": 1,
               "calculate_age_in_months": 1,
               "find_max": 1,
               "search_for_restaurants": 1,
-              "search_albums": 1,
               "verify_email": 1,
               "analyze_traffic": 1,
               "generate_random_password_with_constraints": 1,
@@ -2423,7 +3345,6 @@
               "play_video": 1,
               "find_nearby_parks": 1,
               "get_quotations": 1,
-              "get_sunrise_sunset": 1,
               "get_holidays": 1,
               "find_largest_number": 1,
               "create_new_note": 1,
@@ -2482,12 +3403,14 @@
       "duplicates": 22,
       "carved": {},
       "capped": {
+        "calibration": 0,
         "dev": 99721,
         "test": 463
       },
       "leaked": {
         "test": 237,
-        "dev": 1
+        "dev": 1,
+        "calibration": 0
       },
       "splits": {
         "dev": {
@@ -2531,12 +3454,14 @@
       "duplicates": 21,
       "carved": {},
       "capped": {
+        "calibration": 0,
         "dev": 2993,
         "test": 2976
       },
       "leaked": {
         "test": 136,
-        "dev": 0
+        "dev": 0,
+        "calibration": 0
       },
       "splits": {
         "dev": {
@@ -2580,12 +3505,14 @@
       "duplicates": 0,
       "carved": {},
       "capped": {
+        "calibration": 0,
         "dev": 0,
         "test": 0
       },
       "leaked": {
         "test": 139,
-        "dev": 0
+        "dev": 0,
+        "calibration": 0
       },
       "splits": {
         "dev": {
@@ -2633,12 +3560,14 @@
       "duplicates": 41,
       "carved": {},
       "capped": {
+        "calibration": 0,
         "dev": 0,
         "test": 9011
       },
       "leaked": {
         "test": 90,
-        "dev": 11
+        "dev": 11,
+        "calibration": 0
       },
       "splits": {
         "dev": {
@@ -2686,12 +3615,14 @@
       "duplicates": 0,
       "carved": {},
       "capped": {
+        "calibration": 0,
         "dev": 0,
         "test": 7032
       },
       "leaked": {
         "test": 124,
-        "dev": 0
+        "dev": 0,
+        "calibration": 0
       },
       "splits": {
         "dev": {
@@ -2751,12 +3682,14 @@
       "duplicates": 0,
       "carved": {},
       "capped": {
+        "calibration": 0,
         "dev": 0,
         "test": 0
       },
       "leaked": {
         "test": 140,
-        "dev": 0
+        "dev": 0,
+        "calibration": 0
       },
       "splits": {
         "dev": {
@@ -2808,12 +3741,14 @@
       "duplicates": 14,
       "carved": {},
       "capped": {
+        "calibration": 0,
         "dev": 0,
         "test": 0
       },
       "leaked": {
         "test": 140,
-        "dev": 0
+        "dev": 0,
+        "calibration": 0
       },
       "splits": {
         "dev": {
@@ -2857,12 +3792,14 @@
         "dev": 1821
       },
       "capped": {
+        "calibration": 0,
         "dev": 0,
         "test": 0
       },
       "leaked": {
         "test": 0,
-        "dev": 0
+        "dev": 0,
+        "calibration": 0
       },
       "splits": {
         "dev": {
@@ -2908,12 +3845,14 @@
       "duplicates": 1,
       "carved": {},
       "capped": {
+        "calibration": 0,
         "dev": 0,
         "test": 0
       },
       "leaked": {
         "test": 20,
-        "dev": 131
+        "dev": 131,
+        "calibration": 0
       },
       "splits": {
         "dev": {

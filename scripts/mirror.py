@@ -36,7 +36,9 @@ from den.pins import ITEMS, MODELS
 MANIFEST = "MANIFEST.json"
 REBUILD = "make data-download (fetch, breadth, normalize, clean: only the steps whose files are missing)"
 STEPS = ("fetch", "breadth", "normalize", "clean")
-BREADTH_MODEL = "qwen3.5-4b"  # scripts.breadth admits records with Kev's tokenizer, models/qwen3.5-4b/tokenizer.json
+BREADTH_MODEL = (
+    "qwen3.5-4b"  # scripts.build_breadth admits records with Kev's tokenizer, models/qwen3.5-4b/tokenizer.json
+)
 
 
 def files(root: Path, leave_out: Iterable[str] = ()) -> dict[str, dict[str, Any]]:
@@ -195,7 +197,7 @@ def fetch(root: Path, rels: Iterable[str]) -> int:
 def rebuild(root: Path, missing: list[str]) -> None:
     """The steps that write `missing`, in order, and nothing else. Needs no model: breadth's tokenizer is fetched."""
     from den.cli import main as den
-    from scripts import breadth
+    from scripts import build_breadth as breadth
 
     pins = locked()
     needed = {step(rel, pins) for rel in missing}

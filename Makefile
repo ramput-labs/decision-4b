@@ -25,6 +25,11 @@ DEV := $(SUITES_SCORED:%=dev/%.jsonl) dev/binding.jsonl dev/semif.jsonl
 TEST := $(SUITES_SCORED:%=test/%.jsonl)
 SHIP_DEV := dev/core.jsonl dev/documents.jsonl dev/skills.jsonl dev/devtools.jsonl
 KEV_SUITES := train/core.jsonl train/dates-unknowable.jsonl train/documents.jsonl train/skills.jsonl train/devtools.jsonl
+# What shipped runs fit T on: Kev's calibration set plus every source's calibration split (`den normalize`), one T per
+# question type. Read when a target runs, so it sees the data that data-download placed.
+CALIB = --calibration calibration/core.jsonl $(patsubst data/clean/%,%,$(sort $(wildcard data/clean/calibration/sources/*/*.jsonl))) \
+	--calibrate-by-type
+NEXT_SOURCES ?= 500
 TRAIN = $(UV) den train --model $(MODEL)
 DATA_REPO ?= $(or $(DEN_DATA_REPO),a1i6ek/den-datasets)
 GIVEN_DATA_REPO := $(filter command line environment,$(origin DATA_REPO))$(DEN_DATA_REPO)
@@ -48,7 +53,7 @@ SPENT ?= 75
 
 .PHONY: help setup setup-gpu check doctor test-model test-cuda models model list env smoke serve \
 	data-download data-upload data-verify data-check data-licences data-breadth data-normalize data-clean data-audit \
-	train train-round1 train-round2 train-next eval-dev eval-test release release-list \
+	train train-round1 train-round2 train-next train-rebuild eval-dev eval-test release release-list \
 	local local-setup local-doctor local-gates local-train local-eval local-clean \
 	h100-setup h100-doctor h100-gates h100-timing h100-round1 h100-round2 h100-eval
 
@@ -121,7 +126,7 @@ data-licences: ## write each source's licence, evidence and texts into data/ (LI
 	$(UV) den licences $(ARGS)
 
 data-breadth: ## rebuild Kev's breadth-v1 panel -> data/{dev,test}/breadth.jsonl, sha256-checked; before data-normalize
-	$(UV) python -m scripts.breadth
+	$(UV) python -m scripts.build_breadth
 
 data-normalize: ## raw sources -> leakage-free train / dev / test under data/*/sources/ (after changing normalize.py)
 	$(UV) den normalize
@@ -147,17 +152,26 @@ train-round1: ## round 1, Kev-4B's four stages, each from the last -> RUNS/{1-ba
 	$(TRAIN) --data train/documents.jsonl --replay 2000 --init-from $(RUNS)/2-dates --lr 2e-5 --batch 2 --accum 4 \
 		$(EVAL) --dev dev/documents.jsonl dev/core.jsonl --out $(RUNS)/3-documents $(ARGS)
 	$(TRAIN) --data train/skills.jsonl train/devtools.jsonl --replay 4000 --init-from $(RUNS)/3-documents --lr 2e-5 \
-		--batch 2 --accum 4 $(EVAL) --dev dev/skills.jsonl dev/devtools.jsonl dev/core.jsonl --merge \
+		--batch 2 --accum 4 $(EVAL) --dev dev/skills.jsonl dev/devtools.jsonl dev/core.jsonl $(CALIB) --merge \
 		--out $(RUNS)/4-skills $(ARGS)
 
-train-round2: ## round 2 from round 1 -> ROUND2: the 17 public sources (CAP each) + CAP replayed from each Kev suite
+train-round2: ## round 2 from round 1 -> ROUND2: the 18 public sources (CAP each) + CAP replayed from each Kev suite
 	$(TRAIN) --data --sources-cap $(CAP) --replay $(CAP) --replay-from $(KEV_SUITES) --init-from $(RUNS)/4-skills \
-		--lr 2e-5 --batch 4 --accum 2 $(EVAL) --dev $(SHIP_DEV) --merge --out $(ROUND2) $(ARGS)
+		--lr 2e-5 --batch 4 --accum 2 $(EVAL) --dev $(SHIP_DEV) $(CALIB) --merge --out $(ROUND2) $(ARGS)
 
-train-next: ## the next version from a released one: FROM=v1 OUT=runs/v2 DATA="train/<new>.jsonl ..." [SOURCES=<cap>] [REPLAY=1500]
-	$(TRAIN) --data $(DATA) $(if $(SOURCES),--sources-cap $(SOURCES)) --replay $(or $(REPLAY),$(CAP)) \
+# A new version continues from the last release on new data, replaying Kev's suites (REPLAY each) and the public
+# sources (SOURCES each, default NEXT_SOURCES) so neither round's skills are forgotten.
+train-next: ## the next version from a released one: FROM=v1 OUT=runs/v2 DATA="train/<new>.jsonl ..." [SOURCES=500] [REPLAY=1500]
+	$(TRAIN) --data $(DATA) --sources-cap $(or $(SOURCES),$(NEXT_SOURCES)) --replay $(or $(REPLAY),$(CAP)) \
 		--replay-from $(KEV_SUITES) --init-from release:$(FROM) --lr 2e-5 --batch 4 --accum 2 $(EVAL) \
-		--dev $(SHIP_DEV) --merge --out $(OUT) $(ARGS)
+		--dev $(SHIP_DEV) $(CALIB) --merge --out $(OUT) $(ARGS)
+
+# The periodic rebuild: one run from the base on everything (Kev's suites in full, CAP of every source, any new DATA),
+# so a chain of --init-from versions can be checked against a fresh model. Ship it only if it wins on dev
+# (`den compare --paired`). Untested at full scale: the one-run mix is ours, not Kev's.
+train-rebuild: ## one run from the base on all data -> OUT: OUT=runs/v3-rebuild [DATA="train/<new>.jsonl ..."] [EPOCHS=1]
+	$(TRAIN) --data $(KEV_SUITES) $(DATA) --sources-cap $(CAP) --epochs $(or $(EPOCHS),1) --lr 5e-5 --head-lr 1e-3 \
+		--batch 4 --accum 2 --p-none-pair 0.25 $(EVAL) --dev $(SHIP_DEV) $(CALIB) --merge --out $(OUT) $(ARGS)
 
 eval-dev: ## a trained RUN on dev: integrity, metrics + Kev's robustness checks, augmentations
 	$(UV) den check-run --run $(RUN)
@@ -204,7 +218,6 @@ local-train: ## both rounds exactly as on the H100 (every stage, replay, merge) 
 
 local-eval: ## integrity of both merged rounds, dev sample scores, the ship decision, and a real request answered
 	@mkdir -p $(LOCAL_LOGS)
-	$(UV) python -m scripts.check_merged $(LOCAL_RUNS)/4-skills $(LOCAL_RUNS)/round2
 	for RUN in $(LOCAL_RUNS)/4-skills $(LOCAL_RUNS)/round2; do \
 		$(UV) den check-run --run $$RUN && $(UV) den evaluate --run $$RUN --limit 200 --no-evidence $(SHIP_DEV) || exit 1; \
 	done $(call log,$(LOCAL_LOGS)/eval.log)
@@ -236,7 +249,7 @@ h100-timing: ## phase 3's timing run: 20 steps of every stage, merge checks, the
 	$(MAKE) train-round1 MODEL=$(H100_MODEL) RUNS=runs/timing ARGS="--max-steps 20" $(call log,runs-timing.log)
 	$(MAKE) train-round2 MODEL=$(H100_MODEL) RUNS=runs/timing ROUND2=runs/timing/round2 ARGS="--max-steps 20" \
 		2>&1 | tee -a runs-timing.log
-	$(UV) python -m scripts.check_merged runs/timing/4-skills runs/timing/round2
+	$(UV) den check-run --run runs/timing/4-skills && $(UV) den check-run --run runs/timing/round2
 	$(UV) den predict --run runs/timing/round2 < /dev/null
 	$(UV) python -m scripts.estimate_time --budget-hours $(BUDGET_HOURS) --spent-minutes $(SPENT)
 	rm -rf runs/timing
