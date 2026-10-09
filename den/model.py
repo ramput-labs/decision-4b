@@ -158,7 +158,8 @@ class PointerHead(nn.Module):
         nn.init.zeros_(self.prior.bias)
 
     def forward(self, hidden: torch.Tensor, batch: Sequence[Example]) -> list[list[torch.Tensor]]:
-        """hidden (B, T, H) -> per example, per question: a (K,) float32 tensor of option logits."""
+        """hidden (B, T, H) -> per example, per question: a (K,) tensor of option logits (float32, or the autocast
+        dtype under autocast: the projections run there)."""
         rows, finals, spans = _positions(batch)
         n_options = max(len(s) for s in spans)
         n_tokens = max(c - s + 1 for span in spans for s, c in span)

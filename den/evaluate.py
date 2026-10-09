@@ -27,6 +27,7 @@ from tokenizers import Tokenizer
 
 from . import evidence
 from .api import Json, Question, Record, RecordError, parse, read
+from .catalog import record_path, role
 from .device import load
 from .fetch import digest
 from .metrics import Answer, Row, robustness, summarize
@@ -276,14 +277,15 @@ def evaluate_main(argv: list[str] | None = None) -> int:
     p.add_argument("--backend")
     p.add_argument("--no-evidence", action="store_true", help="don't write reports/runs/<run>/ (a throwaway check)")
     args = p.parse_args(argv)
-    if not args.final and any(Path(f).parts[0] == "test" for f in args.files):
+    args.files = [record_path(f) for f in args.files]  # `dev/../test/x` is test, and must match the record of reads
+    if not args.final and any(role(f) == "test" for f in args.files):
         raise SystemExit("test partitions are read once per release candidate: pass --final for that one read")
     remote = args.run.startswith(("hf:", "release:"))
     report_path = None if remote else Path(args.run) / "eval.json"  # never into the Hub cache
     report = json.loads(report_path.read_text(encoding="utf-8")) if report_path and report_path.is_file() else {}
     suffix = (f"+{args.augment}" if args.augment else "") + (f"+max{args.max_options}" if args.max_options else "")
     read_before = set(report) | set(evidence.keys(args.run))  # local eval.json, or the committed evidence of any run
-    if again := [f + suffix for f in args.files if Path(f).parts[0] == "test" and f + suffix in read_before]:
+    if again := [f + suffix for f in args.files if role(f) == "test" and f + suffix in read_before]:
         raise SystemExit(f"{args.run} has already read {again}: the locked test set is read once per run")
     path = locate(args.run)
     model = Model(path, args.backend)

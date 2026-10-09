@@ -4,7 +4,21 @@ from pathlib import PurePosixPath
 
 import pytest
 
-from den.catalog import USE_ROOTS, File, Hub, Item, SetName, Url, Use, hub_model, rev, sha256, validate
+from den.catalog import (
+    USE_ROOTS,
+    File,
+    Hub,
+    Item,
+    SetName,
+    Url,
+    Use,
+    hub_model,
+    record_path,
+    rev,
+    role,
+    sha256,
+    validate,
+)
 from den.pins import DEFAULT_MODEL, ITEMS, MODELS, SUITES
 
 GOOD_REV = "0" * 40
@@ -113,3 +127,11 @@ def test_any_hub_model_can_be_named_with_a_full_commit() -> None:
         hub_model("hf:Qwen/Qwen3-1.7B-Base@main")
     with pytest.raises(ValueError):
         hub_model("Qwen/Qwen3-1.7B-Base")
+
+
+def test_role_resolves_dotdot_and_refuses_paths_outside_clean() -> None:
+    assert role("calibration/../dev/core.jsonl") == "dev" and record_path("./dev//core.jsonl") == "dev/core.jsonl"
+    assert role("train/x/../../test/core.jsonl") == "test"
+    for outside in ("../test/core.jsonl", "/data/test/core.jsonl", "..", ".", "dev/../../test/core.jsonl"):
+        with pytest.raises(SystemExit, match="data/clean"):
+            record_path(outside)

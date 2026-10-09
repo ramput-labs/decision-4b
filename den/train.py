@@ -38,11 +38,24 @@ from typing import Any
 
 from tokenizers import Tokenizer
 
-from .api import Record, read
+from .api import Record, option_text, read
+from .catalog import record_path, role
 from .device import hidden_size
 from .fetch import digest
 from .licences import RANK, Kind, record_kind
-from .prompt import LETTERS, MAX_STATE_TOKENS, Example, Style, augment, encode, none_pair, shuffle_options, split
+from .prompt import (
+    DISTRACTORS,
+    LETTERS,
+    MAX_STATE_TOKENS,
+    NONE_OPTIONS,
+    Example,
+    Style,
+    augment,
+    encode,
+    none_pair,
+    shuffle_options,
+    split,
+)
 
 CLEAN = Path("data/clean")
 KEV_TRAIN = ("core", "dates-unknowable", "documents", "skills", "devtools")  # Kev's stages 1-4
@@ -215,13 +228,25 @@ def commit() -> str:
     return sha + ("+dirty" if dirty.strip() else "")
 
 
+def added(tokenizer: Tokenizer, style: Style) -> int:
+    """The most tokens Kev's augmentation adds to a question: its longest "none" or distractor option line, plus one
+    for a merge across the line boundary."""
+    marker = "Z) " if style == "letters" else "- "
+    lines = [f"{marker}{option_text(k, d)}\n" for k, d in (*NONE_OPTIONS, *DISTRACTORS)]
+    return 1 + max(len(tokenizer.encode(line, add_special_tokens=False).ids) for line in lines)
+
+
 class Shuffled:
-    """Training items encoded on access, a fresh variant on every visit, so each epoch sees new option orders.
+    """Training items encoded on access, a fresh variant each epoch, so each epoch sees new option orders.
 
     `augment`: "kev" (Kev's augmentation: none-of-the-above and distractor options, shuffled order), "shuffle" (order
     only) or "none". With `p_none_pair`, that share of the records with an eligible choice question also yields Kev's
     minimal pair: two more items, the question with the true option present and removed, sharing one "none" option
-    and one order per visit. Records whose state is too long are dropped; `lengths` feeds the length-grouped sampler.
+    and one order per epoch. Records whose state is too long are dropped; `lengths` feeds the length-grouped sampler.
+
+    The variant is a function of (seed, item, epoch) alone, never of how often an item was read: a resumed run skips
+    batches without reading them, and dataloader workers read copies, so a visit count would drift from the
+    uninterrupted run. The Trainer sets the epoch (`set_epoch`, through `Epochs`) before each epoch's batches.
     """
 
     def __init__(
@@ -235,9 +260,11 @@ class Shuffled:
         style: Style = "dash",
     ) -> None:
         self.records: list[Record] = []
+        self.longest = 0  # the longest an item can get once augmented: the backbone's max_seq_length
         self.items: list[tuple[int, int]] = []  # (record, part): part 0 the record, 1 and 2 its pair's halves
         self.lengths: list[int] = []
         self.tokenizer, self.seed, self.augment, self.style = tokenizer, seed, augment, style
+        grown = added(tokenizer, style) if augment == "kev" else 0
         for record in records:
             if (example := encode(record, tokenizer, max_state, style)) is None:
                 continue
@@ -245,20 +272,27 @@ class Shuffled:
             self.records.append(record)
             self.items.append((i, 0))
             self.lengths.append(len(example.ids))
+            self.longest = max(self.longest, len(example.ids) + grown)
             draw = random.Random(f"{seed}:{i}:pair").random()
             if draw < p_none_pair and (pair := none_pair(record, random.Random(0))) is not None:
-                for part, half in enumerate(pair, 1):
-                    self.items.append((i, part))
-                    self.lengths.append(len(encode(half, tokenizer, 1 << 30, style).ids))  # type: ignore[union-attr]
-        self.visits = [0] * len(self.items)
+                halves = [encode(half, tokenizer, 1 << 30, style) for half in pair]
+                if all(halves):  # letters: the added option can take a 26-option question past Z
+                    for part, half in enumerate(halves, 1):
+                        assert half is not None
+                        self.items.append((i, part))
+                        self.lengths.append(len(half.ids))
+                        self.longest = max(self.longest, len(half.ids))
+        self.epoch = 0
+
+    def set_epoch(self, epoch: int) -> None:
+        self.epoch = epoch
 
     def __len__(self) -> int:
         return len(self.items)
 
     def __getitem__(self, n: int) -> Example:
         i, part = self.items[n]
-        rng = random.Random(f"{self.seed}:{i}:{part and 'pair'}:{self.visits[n]}")  # both halves share one stream
-        self.visits[n] += 1
+        rng = random.Random(f"{self.seed}:{i}:{part and 'pair'}:{self.epoch}")  # both halves share one stream
         record = self.records[i]
         if part:
             pair = none_pair(record, rng)
@@ -294,7 +328,7 @@ def train(
     config = HeadConfig(
         args.head_kind, args.head_dim, args.head_layers, args.head_heads, rep=args.option_rep, proj=args.head_proj
     )
-    longest = max([*data.lengths, *(len(e.ids) for e in dev + calibration)])
+    longest = max([data.longest, *(len(e.ids) for e in dev + calibration)])
     backbone = load_backbone(model_dir, lora, longest, args.seed, args.engine)  # unsloth before transformers
 
     import torch
@@ -415,6 +449,14 @@ def train(
                     consider(state.global_step, nll, acc)
                 print(f"\nepoch dev  nll {nll:.4f}  acc {acc:.4f}", flush=True)
 
+    class Epochs(TrainerCallback):
+        """Tells the data which epoch is starting (a resumed one too: `state.epoch` is restored from the checkpoint)."""
+
+        def on_epoch_begin(
+            self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs: object
+        ) -> None:
+            data.set_epoch(int(state.epoch or 0))
+
     started, limit = time.time(), args.max_minutes
     stopped: list[int] = []  # the step at which --max-minutes ended training, if it did
 
@@ -466,7 +508,7 @@ def train(
             ),
             train_dataset=data,
             data_collator=lambda rows: collate(rows, pad),
-            callbacks=[Dev(), Deadline()],
+            callbacks=[Epochs(), Dev(), Deadline()],
         )
     )
     resume = None
@@ -510,8 +552,8 @@ def train(
             fitted = predict(calibration)
             temperature = fit_temperature(*fitted)
             if args.calibrate_by_type:  # one T per question type with enough calibration questions; the rest share T
-                for kind in sorted(set(kinds(calibration))):
-                    pick = [i for i, k in enumerate(kinds(calibration)) if k == kind and fitted[2][i] is None]
+                for kind in sorted(set(kinds(calibration))):  # on the same rows as the shared T, soft targets too
+                    pick = [i for i, k in enumerate(kinds(calibration)) if k == kind]
                     if len(pick) >= 50:
                         temperatures[kind] = fit_temperature(
                             [fitted[0][i] for i in pick], [fitted[1][i] for i in pick], [fitted[2][i] for i in pick]
@@ -668,6 +710,30 @@ def continued(spec: str) -> Path:
     return Path(snapshot_download(repo, revision=revision or None, allow_patterns=keep))  # no merged weights needed
 
 
+def gather(args: argparse.Namespace, data_used: list[dict[str, object]]) -> list[Record]:
+    """The run's training records, one per question: `--data`, a capped slice of every public source, and `--replay`
+    from each `--replay-from` suite; each file and its lines go into `data_used`. A source text that is in any of the
+    suites this run trains on or replays from is left out of the sources, the whole suite and not only the lines
+    sampled now: a run continued from round 1 has already trained on all of core."""
+    worst: Kind | None = args.max_licence
+    if args.limit:  # a rehearsal (the local GPU): a seeded slice of every file, its lines recorded like replay's
+        args.replay, args.sources_cap = min(args.replay, args.limit), min(args.sources_cap, args.limit)
+        records = [r for d in args.data for r in sample(CLEAN / d, args.limit, args.seed, data_used, worst)]
+    elif worst:  # every record the licence allows, its lines recorded (sampling all of them keeps every one)
+        records = [r for d in args.data for r in sample(CLEAN / d, 1 << 62, args.seed, data_used, worst)]
+    else:
+        records = load([CLEAN / d for d in args.data])
+        data_used += [{"path": d, "sha256": digest(CLEAN / d), "lines": "all"} for d in args.data]
+    suites = args.replay_from if args.replay else []
+    replayed = [r for f in suites for r in sample(CLEAN / f, args.replay, args.seed, data_used, worst)]
+    if args.sources_cap:
+        if not (CLEAN / "train" / "sources").is_dir():
+            raise SystemExit(f"{CLEAN}/train/sources is missing: make data-download")
+        known = load([CLEAN / f for f in [*args.data, *suites]])
+        records += sources(args.sources_cap, args.seed, known, data_used, worst)
+    return [one for r in [*records, *replayed] for one in split(r)]  # one row per question, as served
+
+
 def parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="den train")
     p.add_argument("--model", default="qwen3.5-4b")
@@ -776,13 +842,15 @@ def parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = parser().parse_args(argv)
-    if any(Path(d).parts[0] == "test" for d in [*args.data, *args.dev, *args.calibration]):
+    for name in ("data", "dev", "calibration", "replay_from"):  # `..` resolved, so the guards below see the real role
+        setattr(args, name, [record_path(d) for d in getattr(args, name)])
+    if any(role(d) == "test" for d in [*args.data, *args.dev, *args.calibration]):
         raise SystemExit("test partitions are read once per release candidate, never while training")
-    if any(Path(d).parts[0] != "calibration" for d in args.calibration):
+    if any(role(d) != "calibration" for d in args.calibration):
         raise SystemExit("T is fitted on calibration files only, never on train or dev")
     if args.replay and (twice := set(args.replay_from) & set(args.data)):
         raise SystemExit(f"--replay samples {sorted(twice)}, which --data already trains on in full")
-    if any(Path(f).parts[0] != "train" for f in args.replay_from):
+    if any(role(f) != "train" for f in args.replay_from):
         raise SystemExit("--replay-from takes train/ files only")
     args.init_spec = args.init_from  # as given: a path, hf:<repo>@<rev> or release:<version>; recorded in run.json
     if args.init_from and not args.dry_run:
@@ -798,32 +866,17 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit(f"missing under {CLEAN}: {missing} (make data-download)")
     tokenizer = Tokenizer.from_file(str(model_dir / "tokenizer.json"))
     data_used: list[dict[str, object]] = []
-    worst: Kind | None = args.max_licence
-    if args.limit:  # a rehearsal (the local GPU): a seeded slice of every file, its lines recorded like replay's
-        args.replay, args.sources_cap = min(args.replay, args.limit), min(args.sources_cap, args.limit)
-        records = [r for d in args.data for r in sample(CLEAN / d, args.limit, args.seed, data_used, worst)]
-    elif worst:  # every record the licence allows, its lines recorded (sampling all of them keeps every one)
-        records = [r for d in args.data for r in sample(CLEAN / d, 1 << 62, args.seed, data_used, worst)]
-    else:
-        records = load([CLEAN / d for d in args.data])
-        data_used += [{"path": d, "sha256": digest(CLEAN / d), "lines": "all"} for d in args.data]
-    if args.sources_cap:
-        if not (CLEAN / "train" / "sources").is_dir():
-            raise SystemExit(f"{CLEAN}/train/sources is missing: make data-download")
-        records += sources(args.sources_cap, args.seed, records, data_used, worst)
-    for replayed in args.replay_from if args.replay else []:
-        records += sample(CLEAN / replayed, args.replay, args.seed, data_used, worst)
-    records = [one for r in records for one in split(r)]  # one row per question, as served
+    records = gather(args, data_used)
     style: Style = "letters" if args.head_kind == "letters" else "dash"
     if args.overfit:  # a fixed slice, unaugmented, scored on itself: a model that can't fit it can't learn
         records = random.Random(args.seed).sample(records, min(args.overfit, len(records)))
         args.augment, args.p_none_pair = "none", 0.0
     data = Shuffled(records, tokenizer, args.max_state, args.seed, args.augment, args.p_none_pair, style)
     dev_records = data.records if args.overfit else load([CLEAN / d for d in args.dev])
-    dev, dev_skipped = examples(dev_records, tokenizer, args.max_state, style=style)
-    calibration, cal_skipped = examples(
-        load([CLEAN / d for d in args.calibration]), tokenizer, args.max_state, style=style
-    )
+    # dev and calibration are scored as `den evaluate` and `den serve` score them, with no cap on the state:
+    # --max-state is a training limit, and T and the dev numbers should describe what ships
+    dev, dev_skipped = examples(dev_records, tokenizer, 1 << 30, style=style)
+    calibration, cal_skipped = examples(load([CLEAN / d for d in args.calibration]), tokenizer, 1 << 30, style=style)
     questions = sum(len(r.questions) for r in data.records)
     print(describe("train", data.lengths, questions, len(records) - len(data.records)))
     for name, rows, skipped in (("dev", dev, dev_skipped), ("calib", calibration, cal_skipped)):

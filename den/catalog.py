@@ -3,6 +3,7 @@ only under `USE_ROOTS`, and no repository is both trainable and eval-only (`NEVE
 
 from __future__ import annotations
 
+import posixpath
 import re
 from collections import Counter
 from dataclasses import dataclass
@@ -21,6 +22,20 @@ type ModelRole = Literal["base", "reference"]
 NOTICE_FILE = "SOURCE-LICENSE.md"  # `den licences` writes one into every raw source directory; never data, never locked
 SET_NAMES: tuple[SetName, ...] = get_args(SetName.__value__)
 ROLES = ("train", "calibration", "dev", "test")  # record directories under data/, least to most held out
+
+
+def record_path(path: str) -> str:
+    """A path under data/clean with `.` and `..` resolved, so a guard on its first part sees its real role:
+    `calibration/../dev/core.jsonl` is dev. Refuses one that leaves data/clean (`../test/...` is the pinned test)."""
+    normal = posixpath.normpath(path)
+    if normal == "." or normal.startswith(("/", "../")) or normal == "..":
+        raise SystemExit(f"{path}: not a file under data/clean")
+    return normal
+
+
+def role(path: str) -> str:
+    """The partition a data/clean path reads: its first directory once `..` is resolved (`record_path`)."""
+    return PurePosixPath(record_path(path)).parts[0]
 
 
 def sha256(value: str) -> Sha256:

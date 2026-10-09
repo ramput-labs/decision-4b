@@ -137,8 +137,10 @@ data-audit: ## check every record and source is fit to train on; writes reports/
 train: ## LoRA + pointer-head fine-tune of MODEL with Unsloth; ARGS="--epochs 2 ..."
 	$(TRAIN) $(ARGS)
 
+# Stage 1's head is fresh, so it trains at --head-lr 1e-3 (the overfit gate's rate and mode C's), not at the
+# adapters' 5e-5: our change to Kev's recipe, which records no head rate. Later stages continue it at --lr.
 train-round1: ## round 1, Kev-4B's four stages, each from the last -> RUNS/{1-base,...,4-skills}; ARGS go to every stage
-	$(TRAIN) --data train/core.jsonl --epochs 2 --lr 5e-5 --batch 4 --accum 2 --p-none-pair 0.25 $(EVAL) \
+	$(TRAIN) --data train/core.jsonl --epochs 2 --lr 5e-5 --head-lr 1e-3 --batch 4 --accum 2 --p-none-pair 0.25 $(EVAL) \
 		--dev dev/core.jsonl --out $(RUNS)/1-base $(ARGS)
 	$(TRAIN) --data train/dates-unknowable.jsonl --replay 2000 --init-from $(RUNS)/1-base --lr 2e-5 --batch 4 --accum 2 \
 		$(EVAL) --dev dev/core.jsonl --out $(RUNS)/2-dates $(ARGS)

@@ -173,8 +173,12 @@ def test_shuffled_reorders_options_on_every_visit() -> None:
     long = parse({"state": "x" * 50, "questions": {"n": {"type": "noul", "instructions": "?", "label": True}}}, "l")
     data = Shuffled([record, long], Chars(), max_state=10, seed=0, augment="shuffle")  # type: ignore[arg-type]
     assert len(data) == 1 and data.lengths == [len(data[0].ids)]
-    picks = [data[0] for _ in range(8)]
-    assert len({e.ids for e in picks}) > 1  # a new order on each visit
+    picks = []
+    for epoch in range(8):
+        data.set_epoch(epoch)
+        picks.append(data[0])
+        assert data[0] == picks[-1]  # a second read in the same epoch is the same variant: resume and workers agree
+    assert len({e.ids for e in picks}) > 1  # a new order each epoch
     assert all(chr(e.ids[e.starts[0][e.labels[0]] + 2]) == "d" for e in picks)  # the label follows its option
 
 
@@ -676,3 +680,95 @@ def test_new_training_flags_default_to_kevs_recipe() -> None:
 
     args = parser().parse_args([])
     assert (args.lora, args.lora_alpha, args.rslora, args.max_licence, args.report_to) == (16, 0, False, None, ["none"])
+
+
+class Chars:
+    """A tokenizer with one token per character."""
+
+    def encode(self, text: str, add_special_tokens: bool = False) -> object:
+        return type("Encoding", (), {"ids": [ord(c) for c in text], "offsets": [(i, i + 1) for i in range(len(text))]})
+
+
+def test_shuffled_longest_covers_every_augmented_item() -> None:
+    """The backbone's max_seq_length comes from `longest`, so no augmented variant may run past it."""
+    from den.train import Shuffled
+
+    data = Shuffled([_choice(), _choice(3)], Chars(), max_state=99, seed=0, augment="kev", p_none_pair=1.0)  # type: ignore[arg-type]
+    assert data.longest > max(data.lengths)
+    for epoch in range(50):
+        data.set_epoch(epoch)
+        assert all(len(data[n].ids) <= data.longest for n in range(len(data)))
+
+
+def test_letters_pairs_never_pass_z() -> None:
+    """A 26-option question gains a 27th in its pair, which the letter prompt can't hold: no pair, no crash."""
+    from den.prompt import LETTERS
+    from den.train import Shuffled
+
+    keys = [f"k{i}" for i in range(len(LETTERS))]
+    record = parse(
+        {"state": "s", "questions": {"q": {"type": "choice", "instructions": "Pick", "criteria": dict.fromkeys(keys),
+                                           "label": "k3"}}},
+        "r",
+    )  # fmt: skip
+    data = Shuffled([record], Chars(), max_state=99, seed=0, augment="kev", p_none_pair=1.0, style="letters")  # type: ignore[arg-type]
+    assert data.items == [(0, 0)]
+
+
+def test_none_pair_needs_room_for_one_more_option() -> None:
+    from den.api import MAX_OPTIONS
+    from den.prompt import none_pair
+
+    keys = [f"k{i}" for i in range(MAX_OPTIONS)]
+    full = parse(
+        {"state": "s", "questions": {"q": {"type": "choice", "instructions": "Pick", "criteria": dict.fromkeys(keys),
+                                           "label": "k3"}}},
+        "r",
+    )  # fmt: skip
+    assert none_pair(full, random.Random(0)) is None
+    assert none_pair(_choice(), random.Random(0)) is not None
+
+
+@pytest.mark.parametrize(
+    "argv",
+    [
+        ["--calibration", "calibration/../dev/core.jsonl"],  # T fitted on dev
+        ["--data", "../test/core.jsonl"],  # the pinned test set, outside data/clean
+        ["--data", "train/../test/core.jsonl"],
+        ["--dev", "dev/../test/core.jsonl"],
+        ["--replay", "5", "--replay-from", "train/../dev/core.jsonl"],
+    ],
+)
+def test_train_guards_see_through_dotdot(argv: list[str]) -> None:
+    from den.train import main
+
+    with pytest.raises(SystemExit, match=r"test|calibration|train/|data/clean"):
+        main(["--dry-run", *argv])
+
+
+def _jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
+    import json
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+
+
+def test_sources_leave_out_every_text_of_the_replayed_suites(tmp_path: Path, monkeypatch: Any) -> None:  # noqa: ANN401
+    """Round 2 trains on no --data: the public sources must still skip what Kev's core holds, all of it (round 1
+    trained on the whole suite), not only the lines replayed now. Regression: they were checked against --data only."""
+    import argparse
+
+    from den import train
+
+    def row(text: str) -> dict[str, Any]:
+        return {"state": text, "questions": {"q": {"type": "noul", "instructions": "?", "label": True}}}
+
+    _jsonl(tmp_path / "train/core.jsonl", [row(f"core {i}") for i in range(10)])
+    _jsonl(tmp_path / "train/sources/x/train.jsonl", [row(f"core {i}") for i in range(10)] + [row("fresh")])
+    monkeypatch.setattr(train, "CLEAN", tmp_path)
+    args = argparse.Namespace(data=[], replay=2, replay_from=["train/core.jsonl"], sources_cap=100, limit=0,
+                              max_licence=None, seed=0)  # fmt: skip
+    used: list[dict[str, object]] = []
+    states = [r.state for r in train.gather(args, used)]
+    assert sorted(s for s in states if s == "fresh") == ["fresh"]
+    assert len(states) == 2 + 1  # two replayed core rows, and the one source text core doesn't hold

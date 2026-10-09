@@ -243,8 +243,11 @@ def perturb(record: Record, rng: random.Random, mode: Perturbation) -> Record:
 def none_pair(record: Record, rng: random.Random) -> tuple[Record, Record] | None:
     """Kev's minimal pair: one choice question, twice, in the same order with the same added "none" option: once with
     the true option present (none is wrong), once with it removed (none is right). The only difference the model can
-    use is whether the evidence matches an option. None when no choice question has >= 3 options and a hard label."""
-    eligible = [q for q in record.questions if q.type == "choice" and len(q.options) >= 3 and q.target is None]
+    use is whether the evidence matches an option. None when no choice question has >= 3 options and a hard label, and
+    room for one more option (`MAX_OPTIONS`)."""
+    eligible = [
+        q for q in record.questions if q.type == "choice" and 3 <= len(q.options) < MAX_OPTIONS and q.target is None
+    ]
     if not eligible:
         return None
     q = rng.choice(eligible)
