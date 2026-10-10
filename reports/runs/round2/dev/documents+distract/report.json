@@ -1,0 +1,37 @@
+{
+  "accuracy": 0.8891304347826087,
+  "accuracy_by_source": {
+    "cfpb_issue_bank_account": 0.8478260869565217,
+    "cfpb_issue_card": 0.972972972972973,
+    "cfpb_issue_credit_reporting": 0.7755102040816326,
+    "cfpb_issue_debt_collection": 0.8461538461538461,
+    "cfpb_issue_money_transfer": 0.9285714285714286,
+    "cfpb_issue_mortgage": 0.7818181818181819,
+    "cfpb_issue_personal_loan": 0.76,
+    "cfpb_issue_student_loan": 0.9661016949152542,
+    "cfpb_issue_vehicle_loan": 0.7777777777777778,
+    "cfpb_product": 0.9139194139194139
+  },
+  "accuracy_by_type": {
+    "choice": 0.8891304347826087
+  },
+  "brier": 0.16179040145132936,
+  "coverage_at_5%_error": 0.8554347826086957,
+  "ece": 0.04951857487144676,
+  "ece_by_type": {
+    "choice": 0.04951857487144676
+  },
+  "locked_test": false,
+  "ms_per_question": 114.0,
+  "nll": 0.33660192098934044,
+  "questions": 920,
+  "read_at": "2026-10-10T18:33:05Z",
+  "soft_skipped": 0,
+  "uncalibrated": {
+    "accuracy": 0.8891304347826087,
+    "brier": 0.17201260209151317,
+    "ece": 0.07094448302751,
+    "nll": 0.4194796264589055
+  },
+  "unscored_questions": 0
+}

@@ -147,7 +147,7 @@ Any other count means the code or data differs from what was validated. Stop and
 
 | Stage | Data | Epochs | lr | Batch | Replay | Tokens |
 |---|---|---|---|---|---|---|
-| 1-base | `train/core` (Kev's `decision-v7`), 25% with none-of-the-above minimal pairs | 2 | 5e-5 (head 1e-3) | 4 × 2 | | 6.4M |
+| 1-base | `train/core` (Kev's `decision-v7`), 25% with none-of-the-above minimal pairs | 2 | 5e-5 (head 2e-4) | 4 × 2 | | 6.4M |
 | 2-dates | `train/dates-unknowable` | 1 | 2e-5 | 4 × 2 | 2,000 core | 0.6M |
 | 3-documents | `train/documents` (CFPB, states up to 7.4k tokens) | 1 | 2e-5 | 2 × 4 | 2,000 core | 6.3M |
 | 4-skills | `train/skills` + `train/devtools` | 1 | 2e-5 | 2 × 4 | 4,000 core | 9.9M |

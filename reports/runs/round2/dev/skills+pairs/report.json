@@ -1,0 +1,37 @@
+{
+  "accuracy": 0.7433252427184466,
+  "accuracy_absent": 0.8191747572815534,
+  "accuracy_by_source": {
+    "hard_ambiguous": 0.785,
+    "hard_judge": 0.8238636363636364,
+    "hard_long_policy": 0.7775,
+    "hard_multi_hop": 0.7903225806451613,
+    "hard_probability": 0.7678571428571429,
+    "hard_temporal_numeric": 0.57,
+    "hard_tradeoff": 0.65
+  },
+  "accuracy_by_type": {
+    "choice": 0.7433252427184466
+  },
+  "accuracy_present": 0.6674757281553398,
+  "brier": 0.3704167029351774,
+  "coverage_at_5%_error": 0.2797330097087379,
+  "ece": 0.03631976419535363,
+  "ece_by_type": {
+    "choice": 0.03631976419535363
+  },
+  "locked_test": false,
+  "ms_per_question": 119.7,
+  "nll": 0.7241983421252611,
+  "pair_accuracy": 0.6007281553398058,
+  "pairs": 824,
+  "questions": 1648,
+  "read_at": "2026-10-10T18:08:16Z",
+  "soft_skipped": 0,
+  "uncalibrated": {
+    "accuracy": 0.7433252427184466,
+    "brier": 0.3831367604089023,
+    "ece": 0.0899547295265117,
+    "nll": 0.8136532219653229
+  }
+}

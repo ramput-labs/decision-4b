@@ -1,0 +1,37 @@
+{
+  "accuracy": 0.7467411545623837,
+  "accuracy_by_source": {
+    "aegis_category": 0.84,
+    "aegis_unsafe": 0.8466666666666667,
+    "codereviewer_needs_comment": 0.64,
+    "commitpackft_message": 0.9865771812080537,
+    "commitpackft_type": 0.56,
+    "flakeflagger_flaky": 0.7133333333333334,
+    "prompt_injection": 0.7333333333333333,
+    "when2call_action": 0.7333333333333333
+  },
+  "accuracy_by_type": {
+    "choice": 0.6615384615384615,
+    "noul": 0.7837116154873164
+  },
+  "brier": 0.3487278144995121,
+  "coverage_at_5%_error": 0.34171322160148976,
+  "ece": 0.06102050469019335,
+  "ece_by_type": {
+    "choice": 0.11648517947930555,
+    "noul": 0.036953723239644076
+  },
+  "locked_test": false,
+  "ms_per_question": 95.5,
+  "nll": 0.6050763199338182,
+  "questions": 1074,
+  "read_at": "2026-10-10T16:35:51Z",
+  "soft_skipped": 0,
+  "uncalibrated": {
+    "accuracy": 0.7467411545623837,
+    "brier": 0.35488219859353703,
+    "ece": 0.07266642350280306,
+    "nll": 0.6282861726367507
+  },
+  "unscored_questions": 0
+}
