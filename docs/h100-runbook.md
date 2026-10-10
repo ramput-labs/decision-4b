@@ -6,7 +6,7 @@ upload the model with its adapters, data and logs to the Hugging Face Hub, and p
 over HTTP**. The person then downloads it, tests it against Kev, and decides whether it goes to production.
 
 - **Round 1** is Kev-4B's own four-stage recipe (`make train-round1`).
-- **Round 2** continues from round 1 on 17 public datasets Kev-4B never trained on, replaying all of Kev's suites so
+- **Round 2** continues from round 1 on 18 public datasets Kev-4B never trained on, replaying all of Kev's suites so
   nothing is forgotten (`make train-round2`). It aims past Kev on breadth.
 
 Follow the phases in order. Every phase ends in a **gate**. If a gate fails, stop, fix only what the gate names, and do
@@ -26,7 +26,7 @@ temperature only on `calibration/`, choose between runs on `dev/` only, and neve
 | `HF_TOKEN` | Hugging Face token with **write** access | |
 | `HF_REPO` | where the model goes (created **private**) | `ramput-labs/den-qwen3.5-4b` |
 | `BUDGET_HOURS` | hard ceiling for the whole session | `5` |
-| `DATA_REPO` | the `make data-upload` copy of `data/` (optional; default `a1i6ek/den-datasets`) | `a1i6ek/den-datasets@data-v1` |
+| `DATA_REPO` | the `make data-upload` copy of `data/` (optional; default `a1i6ek/duck-datasets`) | `a1i6ek/duck-datasets@data-v1` |
 
 If any input is missing, ask for it before renting time.
 
@@ -43,7 +43,7 @@ If the session dies, the next agent starts from that log.
 | 3 | overfit gates, then the timing run: both rounds, 20 steps per stage | 25 min |
 | 4 | round 1: Kev-4B's four stages (23.3M tokens) | measured in phase 3; expect 1.6–2.5 h |
 | 5 | upload round 1 (safety copy) | 5–10 min |
-| 6 | round 2: public sources + replay (8.8M tokens) | measured in phase 3; expect 50–70 min |
+| 6 | round 2: public sources + replay (10.2M tokens) | measured in phase 3; expect 60–80 min |
 | 7 | evaluate both rounds on dev, choose one | 20 min |
 | 8 | test the chosen run once, publish everything | 15 min |
 | 9 | prove the uploaded model works (CLI and HTTP) | 5 min |
@@ -113,7 +113,7 @@ rerun the gate. If Unsloth then refuses to import, stop and report both versions
 
 ```bash
 uvx hf auth login --token "$HF_TOKEN"     # faster, rate-limit-free downloads; also used by `den publish`
-make h100-setup DATA_REPO="${DATA_REPO:-a1i6ek/den-datasets}" 2>&1 | tee ~/setup.log
+make h100-setup DATA_REPO="${DATA_REPO:-a1i6ek/duck-datasets}" 2>&1 | tee ~/setup.log
 ```
 
 `make h100-setup` reruns `setup-gpu` (a no-op when nothing changed), downloads `qwen3.5-4b` (9.3 GB, every shard
@@ -137,7 +137,7 @@ calib       1148 records     1148 questions  tokens median 120 p99 774 max 815 t
 ```
 
 and the second's (round 2's) first line is
-`train      37459 records    37459 questions  tokens median 118 p99 2481 max 6058 total 8.8M  skipped 0`.
+`train      42528 records    42528 questions  tokens median 126 p99 2191 max 6058 total 10.2M  skipped 0`.
 Any other count means the code or data differs from what was validated. Stop and report the difference.
 
 ## The recipe
@@ -152,9 +152,10 @@ Any other count means the code or data differs from what was validated. Stop and
 | 3-documents | `train/documents` (CFPB, states up to 7.4k tokens) | 1 | 2e-5 | 2 × 4 | 2,000 core | 6.3M |
 | 4-skills | `train/skills` + `train/devtools` | 1 | 2e-5 | 2 × 4 | 4,000 core | 9.9M |
 
-**Round 2** (`make train-round2`) starts from round 1's `4-skills`: 1,500 records from each of the 17 normalized
-public sources (intent, topic, reading, sentiment, knowledge, safety, tools; records whose text is already in Kev's
-suites are skipped), plus 1,500 replayed from each of Kev's five suites. 1 epoch, lr 2e-5, batch 4 × 2, 8.8M tokens.
+**Round 2** (`make train-round2`) starts from round 1's `4-skills`: 1,500 records from each of the 18 normalized
+public sources (intent, topic, reading, sentiment, knowledge, safety, tools, and typed-decisions, the set Laya
+fine-tunes on, which trains on its teacher's distributions; records whose text is already in Kev's suites are
+skipped), plus 1,500 replayed from each of Kev's five suites. 1 epoch, lr 2e-5, batch 4 × 2, 10.2M tokens.
 
 Both rounds:
 - **One row per question:** the state plus that one question, never the record's other questions (Kev's "one row
@@ -166,7 +167,9 @@ Both rounds:
 - **Validation while training:** a fixed 600-question dev sample every 400 steps (`step N dev(600) nll .. acc ..`),
   all of the stage's dev files at each epoch's end (`epoch dev ...`). The curve is saved in each stage's `run.json`
   (`dev_history`). The test set is never touched while training.
-- **Calibration:** each stage fits T on `calibration/core`.
+- **Calibration:** stages 1–3 fit T on `calibration/core`. The two runs that can ship (`4-skills`, `round2`) fit T on
+  `calibration/core` plus the 18 per-source calibration splits (9,312 questions), one T per question type
+  (`--calibrate-by-type`; `run.json` `calibration_report.temperatures`).
 - **Merge:** the last stage of each round writes `merged/`, the base checkpoint's own files with all 248 adapted
   weights replaced by W + scale × B·A.
 

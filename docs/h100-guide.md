@@ -50,14 +50,14 @@ If `data/` was regenerated since the last upload (a change to `sources.py`, `nor
 before renting the box. Otherwise the box downloads the old copy and trains on it:
 
 ```bash
-make data-upload DATA_REPO=a1i6ek/den-datasets TAG=data-v1
+make data-upload DATA_REPO=a1i6ek/duck-datasets TAG=data-v1
 ```
 
 ### A.2 Tokens and names
 - [ ] **Hugging Face token** with *write* access: <https://huggingface.co/settings/tokens>
 - [ ] **GitHub token** if the repo is private (read is enough to clone; *write* to push results back from the box)
 - [ ] **Model repo** name, created **private** by the first upload. Suggested: `a1i6ek/den-qwen3.5-4b`
-- [ ] **Data copy** to train from: `a1i6ek/den-datasets` (the default), or a pinned `<repo>@<tag>`
+- [ ] **Data copy** to train from: `a1i6ek/duck-datasets` (the default), or a pinned `<repo>@<tag>`
 - [ ] Your **budget** in hours, e.g. 6
 
 - [ ] `make check` passed, branch pushed, tokens and names written down
@@ -95,7 +95,7 @@ tmux new -s den           # an SSH drop can't kill a run; reconnect with: tmux a
 export GITHUB_TOKEN=ghp_...
 export HF_TOKEN=hf_...
 export HF_REPO=a1i6ek/den-qwen3.5-4b
-export DATA_REPO=a1i6ek/den-datasets
+export DATA_REPO=a1i6ek/duck-datasets
 export BUDGET_HOURS=6
 echo "export HF_REPO=$HF_REPO DATA_REPO=$DATA_REPO BUDGET_HOURS=$BUDGET_HOURS" >> ~/.bashrc
 ```

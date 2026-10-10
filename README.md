@@ -195,7 +195,7 @@ public copies; Kev's `core` suite holds Yelp and Amazon reviews, so `make data-d
 other left-out file, from its pinned original (`NO_REBUILD=1` skips that).
 
 `data/` and `models/` are gitignored. `make data-download [DATA_REPO=<org>/<name>[@commit]]` (default
-`a1i6ek/den-datasets`) is the one way to get `data/`: it downloads the copy `make data-upload DATA_REPO=<org>/<name>`
+`a1i6ek/duck-datasets`) is the one way to get `data/`: it downloads the copy `make data-upload DATA_REPO=<org>/<name>`
 made, checks every file against its sha256 manifest and every pinned file against `locks/` (committed with
 `reports/`), then rebuilds only the left-out files whose step has work to do (fetch, breadth, normalize, clean),
 checking them against the uploader's hashes. A rerun skips what is already there and verified. The underlying

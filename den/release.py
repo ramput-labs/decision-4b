@@ -3,7 +3,7 @@
 that tag, so `--init-from release:v1` continues from it on any machine. A version may not drop more than `MAX_DROP` on
 any dev file its parent was evaluated on, unless `--accept-regression` records why.
 
-    den release create --version v1 --run runs/round2 --repo <org>/<name> --data-repo <org>/den-datasets@<commit>
+    den release create --version v1 --run runs/round2 --repo <org>/<name> --data-repo <org>/duck-datasets@<commit>
     den release create --version v2 --run runs/v2 --repo <org>/<name> --parent v1
     den release list
 """

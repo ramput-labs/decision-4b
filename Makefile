@@ -31,7 +31,7 @@ CALIB = --calibration calibration/core.jsonl $(patsubst data/clean/%,%,$(sort $(
 	--calibrate-by-type
 NEXT_SOURCES ?= 500
 TRAIN = $(UV) den train --model $(MODEL)
-DATA_REPO ?= $(or $(DEN_DATA_REPO),a1i6ek/den-datasets)
+DATA_REPO ?= $(or $(DEN_DATA_REPO),a1i6ek/duck-datasets)
 GIVEN_DATA_REPO := $(filter command line environment,$(origin DATA_REPO))$(DEN_DATA_REPO)
 log = 2>&1 | tee $(1)
 
@@ -55,7 +55,19 @@ SPENT ?= 75
 	data-download data-upload data-verify data-check data-licences data-breadth data-normalize data-clean data-audit \
 	train train-round1 train-round2 train-next train-rebuild eval-dev eval-test release release-list \
 	local local-setup local-doctor local-gates local-train local-eval local-clean \
-	h100-setup h100-doctor h100-gates h100-timing h100-round1 h100-round2 h100-eval
+	h100-setup h100-doctor h100-gates h100-timing h100-round1 h100-round2 h100-eval linux-gpu mac-smoke
+
+# Targets that train or test on CUDA stop at once on any other machine, instead of failing gate by gate.
+setup-gpu test-cuda local local-setup local-doctor local-gates local-train h100-setup h100-doctor h100-gates \
+	h100-timing h100-round1 h100-round2: linux-gpu
+
+linux-gpu:
+	@if [ "$$(uname -s)" != Linux ] || ! command -v nvidia-smi >/dev/null; then \
+		echo "make $(MAKECMDGOALS) runs on the Linux (or WSL2) machine with the NVIDIA GPU:"; \
+		echo "  local RTX 3070: docs/local-gpu.md    cloud GPU: docs/h100-runbook.md, docs/runpod-rtx-pro-6000.md"; \
+		echo "On this machine: make check, make data-check."; \
+		exit 1; \
+	fi
 
 help: ## show targets
 	@awk 'BEGIN {FS = ":.*## "} /^##@ / {printf "\n%s\n", substr($$0, 5)} /^[a-z0-9-]+:.*## / {printf "  %-15s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -82,6 +94,20 @@ check: ## lint, strict type-check, unit tests, claims vs evidence
 
 doctor: ## versions, GPU, BF16, driver, Unsloth, model revision; ARGS="--require cuda" to gate on them
 	$(UV) den doctor --model $(MODEL) $(ARGS)
+
+# Every code path a GPU run takes except Unsloth and the CUDA kernels, on any machine (the Mac included): 4 LoRA steps
+# on qwen3.5-0.8b through PEFT on the CPU, best/, calibration, merge, integrity, then MLX evaluation and serving.
+# About 35 min on an M5 Pro (DeltaNet's PyTorch fallback is the slow part). The pod's phase 3 covers the rest.
+mac-smoke: ## the whole pipeline at toy scale on this machine (~35 min): train, merge, check, evaluate, predict
+	$(MAKE) model MODEL=qwen3.5-0.8b
+	rm -rf runs/mac-smoke
+	$(UV) den train --model qwen3.5-0.8b --engine peft --limit 50 --overfit 8 --max-steps 4 --batch 2 --accum 1 \
+		--eval-steps 2 --eval-max 8 --calibration calibration/sources/topic/trec.jsonl --calibrate-by-type --merge \
+		--out runs/mac-smoke
+	$(UV) den check-run --run runs/mac-smoke --load
+	$(UV) den evaluate --run runs/mac-smoke --limit 30 --no-evidence dev/core.jsonl dev/sources/decisions/typed-decisions.jsonl
+	$(UV) den evaluate --run runs/mac-smoke --limit 20 --no-evidence --augment pairs dev/core.jsonl
+	$(UV) den predict --run runs/mac-smoke scripts/request.jsonl
 
 test-model: ## MLX vs PyTorch parity on the downloaded qwen3.5-4b (slow)
 	$(UV) pytest -q -m model

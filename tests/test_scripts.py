@@ -16,9 +16,9 @@ def test_estimate_time_and_the_phase_3_decision(tmp_path: Path, capsys: pytest.C
     for stage in [*estimate_time.ROUND1, "round2"]:
         (tmp_path / stage).mkdir()
         (tmp_path / stage / "run.json").write_text(json.dumps({"tokens_per_second": 10_000}))
-    # round 1: 23.2M tokens at 10k/s = 38.7 min + 4 stages x 2 min; round 2: 8.8M = 14.7 min + 2
+    # round 1: 23.2M tokens at 10k/s = 38.7 min + 4 stages x 2 min; round 2: 10.2M = 17 min + 2
     estimate_time.main(["--runs", str(tmp_path), "--budget-hours", "2.5"])
-    assert capsys.readouterr().out == "round 1 47 min, round 2 17 min\ndecision: run both rounds\n"
+    assert capsys.readouterr().out == "round 1 47 min, round 2 19 min\ndecision: run both rounds\n"
     assert estimate_time.plan(47, 17, 130) == "decision: run round 1 only, skip phase 6, and say so in the report"
     assert estimate_time.plan(47, 17, 100) == "decision: stop and report the estimate"
 

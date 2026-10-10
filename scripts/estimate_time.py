@@ -13,7 +13,7 @@ import json
 from pathlib import Path
 
 ROUND1 = {"1-base": 6.4e6, "2-dates": 0.6e6, "3-documents": 6.3e6, "4-skills": 9.9e6}  # tokens per stage
-ROUND2 = 8.8e6
+ROUND2 = 10.2e6
 PER_STAGE = 2  # minutes to load, validate and save
 OTHER_PHASES = 80  # minutes for phases 5, 7, 8 and 9
 

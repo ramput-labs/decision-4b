@@ -1,5 +1,5 @@
-"""Choosing between runs, on dev only: `den compare` (which round ships), `den compare --paired` (question by question,
-with 95% intervals) and `den baselines` (modes A/B/C/D side by side, for the model card).
+"""Choosing between runs, on dev only: `den compare` (which round ships), `den compare --paired` (question by
+question, with 95% intervals) and `den baselines` (modes A/B/C/D side by side, for the model card).
 
     den compare runs/kev-recipe/4-skills runs/round2
     den compare --paired runs/kev-recipe/4-skills runs/round2

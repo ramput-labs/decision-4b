@@ -92,7 +92,9 @@ def pinned(root: Path, present_only: bool, sha: Callable[[str], str] | None = No
 
 def upload(repo: str, root: Path = DATA, private: bool = True, tag: str | None = None) -> str:
     """Upload `root` as a dataset repo, with its manifest; returns the commit to pin a download to."""
-    from huggingface_hub import HfApi, create_repo, upload_large_folder
+    from huggingface_hub import HfApi, create_repo
+
+    from den.publish import upload_folder
 
     if problems := pinned(root, present_only=True):
         raise SystemExit("pinned files differ from locks/, not uploading:\n  " + "\n  ".join(problems[:20]))
@@ -119,7 +121,7 @@ def upload(repo: str, root: Path = DATA, private: bool = True, tag: str | None =
         api.delete_files(
             repo, delete_patterns=stale, repo_type="dataset", commit_message="den: remove files the licences exclude"
         )
-    upload_large_folder(repo, root, repo_type="dataset", private=not public, ignore_patterns=[*IGNORE, *excluded])
+    upload_folder(repo, root, "dataset", private=not public, ignore=[*IGNORE, *excluded])
     api.upload_file(  # last: a manifest on the Hub means every file before it landed
         path_or_fileobj=(json.dumps(manifest, indent=2) + "\n").encode(),
         path_in_repo=MANIFEST,
