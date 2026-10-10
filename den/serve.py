@@ -1,5 +1,5 @@
-"""`den serve`: a trained run behind Kev's `POST /v1/systemone`, so existing clients work unchanged; and `den predict`,
-the same responses for request lines. Standard library only.
+"""`den serve`: a trained run behind Kev's `POST /v1/systemone`, so existing clients work unchanged; and
+`den predict`, the same responses for request lines. Standard library only.
 
     den serve --run runs/round2               # or --run hf:<org>/<name>; listens on 127.0.0.1:8009
     curl -s localhost:8009/v1/systemone -H 'content-type: application/json' -d '{"state": "...", "questions": {...}}'

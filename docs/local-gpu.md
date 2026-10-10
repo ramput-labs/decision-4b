@@ -11,7 +11,7 @@ output (`tail -40 runs/local/logs/<log>`).
 | | Local RTX 3070 (this guide) | Cloud H100 (`h100-guide.md`) |
 |---|---|---|
 | model | `qwen3.5-0.8b` (`LOCAL_MODEL`) | `qwen3.5-4b` |
-| data | ≤ 1,000 records from any one file (`LOCAL_N`); 100 per public source in round 2 (`LOCAL_CAP`) | everything (17.6M + 8.8M tokens) |
+| data | ≤ 1,000 records from any one file (`LOCAL_N`); 100 per public source in round 2 (`LOCAL_CAP`) | everything (17.6M + 10.2M tokens) |
 | batch | 1 × 8 accumulation (the same effective batch of 8) | 4 × 2 or 2 × 4 per stage |
 | validation | every 50 steps on 200 dev questions | every 400 steps on 600 |
 | runs and logs | `runs/local/`, `runs/local/logs/` (gitignored) | `runs/kev-recipe/`, `runs/round2`, logs at the repo root |
@@ -86,7 +86,7 @@ It runs, stopping at the first failure:
    check that torch sees the GPU, then Unsloth installed on top without replacing torch or transformers, and a
    second check (`unsloth ... bf16 True`, no `BAD` line).
 2. `model`: `qwen3.5-0.8b` (1.8 GB), every file checked against `locks/`.
-3. `data-download`: `data/` from `a1i6ek/den-datasets` (~3.6 GB; it prints the exact `data commit` first), then a
+3. `data-download`: `data/` from `a1i6ek/duck-datasets` (~3.6 GB; it prints the exact `data commit` first), then a
    rebuild of the files the licences keep out of that copy (~20 min). It ends with `ok, every file matches`.
 4. `data-check`: tokenizes the rehearsal's training data and prints its shape.
 5. `local-doctor`: the readiness gate.
@@ -97,7 +97,7 @@ export UV_NO_SYNC=1 && echo 'export UV_NO_SYNC=1' >> ~/.bashrc
 ```
 
 ### 2.3 What good looks like
-- `data-download` ends with `data/ from datasets/a1i6ek/den-datasets: ok, every file matches`.
+- `data-download` ends with `data/ from datasets/a1i6ek/duck-datasets: ok, every file matches`.
 - `data-check` prints three lines, `train`, `dev` and `calib`, each ending in `skipped 0`.
 - `local-doctor` prints `ok` on every check, including `GPU memory fits qwen3.5-0.8b in bf16`.
 

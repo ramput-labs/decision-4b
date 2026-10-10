@@ -299,8 +299,25 @@ def verify(run: Path) -> None:
         raise SystemExit(f"{run} failed its integrity checks (integrity.json): not uploading it")
 
 
+def upload_folder(repo: str, folder: Path, repo_type: str, private: bool, ignore: Sequence[str]) -> None:
+    """`upload_large_folder`, resumable per repo. Its resume cache (`<folder>/.cache/huggingface/upload`) marks files
+    as committed without recording the repo, so a cache left by an upload to another repo would skip every file that
+    hasn't changed since. A marker beside the cache names the repo it belongs to; any other repo starts clean."""
+    import shutil
+
+    from huggingface_hub import upload_large_folder
+
+    cache = folder / ".cache" / "huggingface"
+    marker, target = cache / "upload-repo", f"{repo_type}:{repo}"
+    if (cache / "upload").exists() and (not marker.is_file() or marker.read_text(encoding="utf-8") != target):
+        shutil.rmtree(cache / "upload")
+    cache.mkdir(parents=True, exist_ok=True)
+    marker.write_text(target, encoding="utf-8")
+    upload_large_folder(repo, folder, repo_type=repo_type, private=private, ignore_patterns=list(ignore))
+
+
 def publish(run: Path, repo: str, private: bool = True, logs: Sequence[Path] = ()) -> list[str]:
-    from huggingface_hub import HfApi, create_repo, list_repo_files, upload_large_folder
+    from huggingface_hub import HfApi, create_repo, list_repo_files
 
     if missing := [f for f in NEEDED if not (run / f).is_file()]:
         raise SystemExit(f"{run} is missing {missing}: train with --merge first")
@@ -313,7 +330,7 @@ def publish(run: Path, repo: str, private: bool = True, logs: Sequence[Path] = (
     create_repo(repo, private=not public, repo_type="model", exist_ok=True)
     if stale := sorted(set(list_repo_files(repo)) & set(excluded)):  # an earlier upload carried them
         api.delete_files(repo, delete_patterns=stale, commit_message="den: remove data the licences exclude")
-    upload_large_folder(repo, run, repo_type="model", private=not public, ignore_patterns=[*SKIP, *excluded])
+    upload_folder(repo, run, "model", private=not public, ignore=[*SKIP, *excluded])
     files = list_repo_files(repo)
     if leaked := sorted(set(files) & set(excluded)):
         raise SystemExit(f"{repo} holds data the licences exclude: {leaked}")

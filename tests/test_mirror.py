@@ -242,3 +242,29 @@ def test_upload_sends_only_what_the_licences_allow(tmp_path: Path, monkeypatch: 
     mirror.upload("org/den-data", root, private=True)
     assert "dev/sources/topic/trec.jsonl" in public.manifest["excluded"]
     assert "dev/sources/topic/trec.jsonl" not in public.manifest["files"]
+
+
+def test_an_upload_to_another_repo_does_not_trust_the_old_resume_cache(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Regression: upload_large_folder's resume cache doesn't record the repo, so after uploading data/ to one dataset
+    repo, an upload of the same folder to another skipped every unchanged file as already committed."""
+    import huggingface_hub
+
+    from den.publish import upload_folder
+
+    calls: list[tuple[str, bool]] = []
+    cache = tmp_path / ".cache" / "huggingface" / "upload"
+
+    def upload_large_folder(repo: str, folder: Path, **kw: Any) -> None:  # noqa: ANN401
+        calls.append((repo, (cache / "a.txt.metadata").exists()))  # did the upload see the old "committed" state?
+        cache.mkdir(parents=True, exist_ok=True)
+        (cache / "a.txt.metadata").write_text("committed")
+
+    monkeypatch.setattr(huggingface_hub, "upload_large_folder", upload_large_folder)
+    cache.mkdir(parents=True)
+    (cache / "a.txt.metadata").write_text("committed")  # left by an upload from before the marker existed
+    upload_folder("org/new", tmp_path, "dataset", private=True, ignore=[])
+    upload_folder("org/new", tmp_path, "dataset", private=True, ignore=[])  # a rerun to the same repo resumes
+    upload_folder("org/other", tmp_path, "dataset", private=True, ignore=[])
+    assert calls == [("org/new", False), ("org/new", True), ("org/other", False)]

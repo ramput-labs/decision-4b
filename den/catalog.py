@@ -19,7 +19,7 @@ type SetName = Literal["suites", "raw-train", "raw-new", "raw-eval", "raw-bulk"]
 type RepoType = Literal["model", "dataset"]
 type ModelRole = Literal["base", "reference"]
 
-NOTICE_FILE = "SOURCE-LICENSE.md"  # `den licences` writes one into every raw source directory; never data, never locked
+NOTICE_FILE = "SOURCE-LICENSE.md"  # `den licences` writes one into each raw source directory; never data, never locked
 SET_NAMES: tuple[SetName, ...] = get_args(SetName.__value__)
 ROLES = ("train", "calibration", "dev", "test")  # record directories under data/, least to most held out
 
