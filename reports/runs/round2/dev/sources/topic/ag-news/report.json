@@ -1,0 +1,29 @@
+{
+  "accuracy": 0.914,
+  "accuracy_by_source": {
+    "topic/ag-news": 0.914
+  },
+  "accuracy_by_type": {
+    "choice": 0.914
+  },
+  "brier": 0.13047264830526265,
+  "coverage_at_5%_error": 0.92,
+  "ece": 0.019281492948532125,
+  "ece_by_type": {
+    "choice": 0.019281492948532125
+  },
+  "locked_test": false,
+  "ms_per_question": 78.3,
+  "nll": 0.2600303780630598,
+  "questions": 500,
+  "read_at": "2026-10-10T18:48:42Z",
+  "sampled_records": 500,
+  "soft_skipped": 0,
+  "uncalibrated": {
+    "accuracy": 0.914,
+    "brier": 0.13727332379226723,
+    "ece": 0.054875563681125644,
+    "nll": 0.29665168704276207
+  },
+  "unscored_questions": 0
+}

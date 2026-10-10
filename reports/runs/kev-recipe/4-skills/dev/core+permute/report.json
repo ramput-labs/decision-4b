@@ -1,0 +1,48 @@
+{
+  "accuracy": 0.9206349206349206,
+  "accuracy_by_source": {
+    "agnews": 0.896551724137931,
+    "banking77": 0.8793103448275862,
+    "composition_atom": 1.0,
+    "composition_conditional": 0.8125,
+    "composition_conjunction": 1.0,
+    "composition_disjunction": 0.9375,
+    "composition_exception": 1.0,
+    "composition_negation": 1.0,
+    "composition_nested_and": 0.8125,
+    "composition_nested_or": 1.0,
+    "contrastive_quantity_limit": 1.0,
+    "contrastive_spend_threshold": 1.0,
+    "dbpedia14": 0.9482758620689655,
+    "mnli": 0.8879310344827587,
+    "trec": 0.9310344827586207
+  },
+  "accuracy_by_type": {
+    "choice": 0.9206349206349206
+  },
+  "brier": 0.13082942421341753,
+  "coverage_at_5%_error": 0.9087301587301587,
+  "ece": 0.03992021659379273,
+  "ece_by_type": {
+    "choice": 0.03992021659379273
+  },
+  "locked_test": false,
+  "ms_per_question": 187.4,
+  "nll": 0.3206903953242415,
+  "questions": 756,
+  "read_at": "2026-10-10T16:55:21Z",
+  "robustness": {
+    "permutation": {
+      "flip_rate": 0.01984126984126984,
+      "mean_max_delta": 0.0167359879605809,
+      "n": 756
+    }
+  },
+  "soft_skipped": 0,
+  "uncalibrated": {
+    "accuracy": 0.9206349206349206,
+    "brier": 0.13568549771936927,
+    "ece": 0.05747662867030138,
+    "nll": 0.5125749012397817
+  }
+}

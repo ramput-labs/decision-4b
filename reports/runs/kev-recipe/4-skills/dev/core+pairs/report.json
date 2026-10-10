@@ -1,0 +1,37 @@
+{
+  "accuracy": 0.8622611464968153,
+  "accuracy_absent": 0.8853503184713376,
+  "accuracy_by_source": {
+    "agnews": 0.8448275862068966,
+    "banking77": 0.8146551724137931,
+    "contrastive_quantity_limit": 1.0,
+    "contrastive_spend_threshold": 1.0,
+    "dbpedia14": 0.8922413793103449,
+    "mnli": 0.8405172413793104,
+    "trec": 0.8620689655172413
+  },
+  "accuracy_by_type": {
+    "choice": 0.8622611464968153
+  },
+  "accuracy_present": 0.839171974522293,
+  "brier": 0.20075636601197014,
+  "coverage_at_5%_error": 0.7101910828025477,
+  "ece": 0.03113259473566411,
+  "ece_by_type": {
+    "choice": 0.03113259473566411
+  },
+  "locked_test": false,
+  "ms_per_question": 85.5,
+  "nll": 0.43066440927264216,
+  "pair_accuracy": 0.785031847133758,
+  "pairs": 628,
+  "questions": 1256,
+  "read_at": "2026-10-10T16:46:15Z",
+  "soft_skipped": 0,
+  "uncalibrated": {
+    "accuracy": 0.8622611464968153,
+    "brier": 0.2088214415609203,
+    "ece": 0.07472667897677732,
+    "nll": 0.5984942155288688
+  }
+}

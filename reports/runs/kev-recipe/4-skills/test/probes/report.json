@@ -1,0 +1,165 @@
+{
+  "accuracy": 0.7159810126582279,
+  "accuracy_by_source": {
+    "buried_emotion": 0.6,
+    "buried_paws": 0.7,
+    "buried_qnli": 0.9,
+    "buried_tweet_offensive": 0.6,
+    "composition_final_combination": 0.78125,
+    "composition_final_exception": 0.875,
+    "composition_final_negation": 0.90625,
+    "contrastive_authorization": 1.0,
+    "contrastive_deadline": 0.65,
+    "emotion": 0.6293103448275862,
+    "mmlu": 0.6293103448275862,
+    "mmlu_pro": 0.48,
+    "paws": 0.875,
+    "qnli": 0.9,
+    "sciq": 0.9827586206896551,
+    "tweet_offensive": 0.7875,
+    "unknowable_age_eligibility": 0.5,
+    "unknowable_authorization": 0.5,
+    "unknowable_control_age_eligibility": 1.0,
+    "unknowable_control_authorization": 1.0,
+    "unknowable_control_deadline": 0.6,
+    "unknowable_control_late_fee": 1.0,
+    "unknowable_control_quantity_limit": 1.0,
+    "unknowable_control_return_window": 0.8,
+    "unknowable_control_shipping_delay": 0.9,
+    "unknowable_control_sla_response": 1.0,
+    "unknowable_control_spend_threshold": 1.0,
+    "unknowable_control_volume_discount": 1.0,
+    "unknowable_control_warranty_claim": 0.8,
+    "unknowable_deadline": 0.4,
+    "unknowable_late_fee": 0.3,
+    "unknowable_quantity_limit": 0.2,
+    "unknowable_return_window": 0.5,
+    "unknowable_shipping_delay": 0.1,
+    "unknowable_sla_response": 0.5,
+    "unknowable_spend_threshold": 0.2,
+    "unknowable_volume_discount": 0.4,
+    "unknowable_warranty_claim": 0.3
+  },
+  "accuracy_by_type": {
+    "choice": 0.6732954545454546,
+    "noul": 0.83,
+    "score": 0.61875
+  },
+  "brier": 0.35214657474097727,
+  "coverage_at_5%_error": 0.49604430379746833,
+  "ece": 0.05112904352666459,
+  "ece_by_type": {
+    "choice": 0.06095755553211674,
+    "noul": 0.04011247470974923,
+    "score": 0.0835363196209073
+  },
+  "locked_test": true,
+  "ms_per_question": 95.9,
+  "nll": 0.7037861618669816,
+  "questions": 1264,
+  "read_at": "2026-10-10T19:20:27Z",
+  "robustness": {
+    "clean": {
+      "accuracy": 0.754302103250478,
+      "accuracy_by_source": {
+        "buried_emotion": 0.6,
+        "buried_paws": 0.7,
+        "buried_qnli": 0.9,
+        "buried_tweet_offensive": 0.6,
+        "composition_final_combination": 0.78125,
+        "composition_final_exception": 0.875,
+        "composition_final_negation": 0.90625,
+        "contrastive_authorization": 1.0,
+        "contrastive_deadline": 0.65,
+        "emotion": 0.625,
+        "mmlu": 0.6625,
+        "mmlu_pro": 0.48,
+        "paws": 0.875,
+        "qnli": 0.9,
+        "sciq": 1.0,
+        "tweet_offensive": 0.7875,
+        "unknowable_control_age_eligibility": 1.0,
+        "unknowable_control_authorization": 1.0,
+        "unknowable_control_deadline": 0.6,
+        "unknowable_control_late_fee": 1.0,
+        "unknowable_control_quantity_limit": 1.0,
+        "unknowable_control_return_window": 0.8,
+        "unknowable_control_shipping_delay": 0.9,
+        "unknowable_control_sla_response": 1.0,
+        "unknowable_control_spend_threshold": 1.0,
+        "unknowable_control_volume_discount": 1.0,
+        "unknowable_control_warranty_claim": 0.8
+      },
+      "accuracy_by_type": {
+        "choice": 0.6822916666666666,
+        "noul": 0.8567567567567568,
+        "score": 0.79
+      },
+      "brier": 0.3164515648994645,
+      "coverage_at_5%_error": 0.5602294455066922,
+      "ece": 0.045140205303751985,
+      "ece_by_type": {
+        "choice": 0.05421713248102206,
+        "noul": 0.03434968751830023,
+        "score": 0.10976011157035825
+      },
+      "nll": 0.6562554246085172,
+      "questions": 1046,
+      "score_level_mae": 0.25546698172576726,
+      "score_rps": 0.0682331173831243,
+      "soft_skipped": 0
+    },
+    "paired_flip": {
+      "both_correct_rate": 0.734375,
+      "flip_rate": 0.796875,
+      "incomplete_pairs": 0,
+      "invariance_rate": 1.0,
+      "invariant_both_correct_rate": 0.8333333333333334,
+      "invariant_pairs": 24,
+      "pairs": 64
+    },
+    "permutation": {
+      "flip_rate": 0.05555555555555555,
+      "mean_max_delta": 0.06569750865067665,
+      "n": 36
+    },
+    "unknowable": {
+      "control_acc": 0.9181818181818182,
+      "control_mean_max_p": 0.9099617584185167,
+      "control_share_at_0_9": 0.7636363636363637,
+      "mean_max_p": 0.44466973895376377,
+      "n": 110,
+      "paired_confidence_drop": 0.4652920194647529,
+      "share_at_0_9": 0.0,
+      "share_less_confident_than_control": 0.990909090909091
+    },
+    "variants": {
+      "clean": {
+        "accuracy": 0.7162629757785467,
+        "n": 1156
+      },
+      "none_absent": {
+        "accuracy": 0.8055555555555556,
+        "n": 36
+      },
+      "none_present": {
+        "accuracy": 0.5555555555555556,
+        "n": 36
+      },
+      "permuted": {
+        "accuracy": 0.7777777777777778,
+        "n": 36
+      }
+    }
+  },
+  "score_level_mae": 0.4066375400230754,
+  "score_rps": 0.12425444216509185,
+  "soft_skipped": 0,
+  "uncalibrated": {
+    "accuracy": 0.7159810126582279,
+    "brier": 0.3944181758451931,
+    "ece": 0.14394545973620457,
+    "nll": 0.9463441768864077
+  },
+  "unscored_questions": 0
+}

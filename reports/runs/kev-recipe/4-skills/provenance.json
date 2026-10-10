@@ -1,0 +1,528 @@
+{
+  "base": "qwen3.5-4b",
+  "evaluated_commit": "1476410d123e10d7a2681bebc7a0dc3559cdffc2+dirty",
+  "files": {
+    "dev/binding.jsonl": {
+      "questions": 560,
+      "read_at": "2026-10-10T16:43:57Z",
+      "sampled_records": null,
+      "sha256": "0b00da23a732db87bddb3c582a02c8d0de9f76cb26d20f8453f73141bbfdacc8"
+    },
+    "dev/breadth.jsonl": {
+      "questions": 3075,
+      "read_at": "2026-10-10T16:43:15Z",
+      "sampled_records": null,
+      "sha256": "75e2f8d2ea3982f70c5f926ba10567af8bcd47cd33d9ccb7416956321e63062f"
+    },
+    "dev/core.jsonl": {
+      "questions": 1468,
+      "read_at": "2026-10-10T16:30:09Z",
+      "sampled_records": null,
+      "sha256": "cd78d8843de0dd7d242a57cb74680119cb8a845a9b0edbb510c8eba6c12ff4df"
+    },
+    "dev/core.jsonl+distract": {
+      "questions": 1468,
+      "read_at": "2026-10-10T17:16:27Z",
+      "sampled_records": null,
+      "sha256": "cd78d8843de0dd7d242a57cb74680119cb8a845a9b0edbb510c8eba6c12ff4df"
+    },
+    "dev/core.jsonl+none-add": {
+      "questions": 1468,
+      "read_at": "2026-10-10T17:10:19Z",
+      "sampled_records": null,
+      "sha256": "cd78d8843de0dd7d242a57cb74680119cb8a845a9b0edbb510c8eba6c12ff4df"
+    },
+    "dev/core.jsonl+none-replace": {
+      "questions": 1468,
+      "read_at": "2026-10-10T17:04:10Z",
+      "sampled_records": null,
+      "sha256": "cd78d8843de0dd7d242a57cb74680119cb8a845a9b0edbb510c8eba6c12ff4df"
+    },
+    "dev/core.jsonl+pairs": {
+      "questions": 1256,
+      "read_at": "2026-10-10T16:46:15Z",
+      "sampled_records": null,
+      "sha256": "cd78d8843de0dd7d242a57cb74680119cb8a845a9b0edbb510c8eba6c12ff4df"
+    },
+    "dev/core.jsonl+permute": {
+      "questions": 1512,
+      "read_at": "2026-10-10T16:55:21Z",
+      "sampled_records": null,
+      "sha256": "cd78d8843de0dd7d242a57cb74680119cb8a845a9b0edbb510c8eba6c12ff4df"
+    },
+    "dev/devtools.jsonl": {
+      "questions": 1074,
+      "read_at": "2026-10-10T16:35:51Z",
+      "sampled_records": null,
+      "sha256": "a77441262c56edbe0adf70bd9ad0eab2ef29a7eb1f258a01cc5cc7377aed93d6"
+    },
+    "dev/documents.jsonl": {
+      "questions": 920,
+      "read_at": "2026-10-10T16:32:11Z",
+      "sampled_records": null,
+      "sha256": "fa88de9ea9a912df833726688739744091394c06d1862335acff867e0b8677a0"
+    },
+    "dev/documents.jsonl+distract": {
+      "questions": 920,
+      "read_at": "2026-10-10T17:18:12Z",
+      "sampled_records": null,
+      "sha256": "fa88de9ea9a912df833726688739744091394c06d1862335acff867e0b8677a0"
+    },
+    "dev/documents.jsonl+none-add": {
+      "questions": 920,
+      "read_at": "2026-10-10T17:12:03Z",
+      "sampled_records": null,
+      "sha256": "fa88de9ea9a912df833726688739744091394c06d1862335acff867e0b8677a0"
+    },
+    "dev/documents.jsonl+none-replace": {
+      "questions": 920,
+      "read_at": "2026-10-10T17:05:53Z",
+      "sampled_records": null,
+      "sha256": "fa88de9ea9a912df833726688739744091394c06d1862335acff867e0b8677a0"
+    },
+    "dev/documents.jsonl+pairs": {
+      "questions": 1840,
+      "read_at": "2026-10-10T16:49:36Z",
+      "sampled_records": null,
+      "sha256": "fa88de9ea9a912df833726688739744091394c06d1862335acff867e0b8677a0"
+    },
+    "dev/documents.jsonl+permute": {
+      "questions": 1840,
+      "read_at": "2026-10-10T16:58:41Z",
+      "sampled_records": null,
+      "sha256": "fa88de9ea9a912df833726688739744091394c06d1862335acff867e0b8677a0"
+    },
+    "dev/probes.jsonl": {
+      "questions": 1264,
+      "read_at": "2026-10-10T16:38:30Z",
+      "sampled_records": null,
+      "sha256": "314bb146fc0d24fc5ca1938f5dee580b819f94d66478f813240484ab4f2f55bb"
+    },
+    "dev/semif.jsonl": {
+      "questions": 252,
+      "read_at": "2026-10-10T16:44:18Z",
+      "sampled_records": null,
+      "sha256": "b9e0c7939a25a04a7ef7bc12334b5fa45b2027d04904d32021295b5539a97303"
+    },
+    "dev/skills.jsonl": {
+      "questions": 1083,
+      "read_at": "2026-10-10T16:34:08Z",
+      "sampled_records": null,
+      "sha256": "3cdbf12a6b7c3b70c73e8c39f2677127ea61ef32f0ea75b55a43556d884b2d98"
+    },
+    "dev/skills.jsonl+distract": {
+      "questions": 1083,
+      "read_at": "2026-10-10T17:20:14Z",
+      "sampled_records": null,
+      "sha256": "3cdbf12a6b7c3b70c73e8c39f2677127ea61ef32f0ea75b55a43556d884b2d98"
+    },
+    "dev/skills.jsonl+none-add": {
+      "questions": 1083,
+      "read_at": "2026-10-10T17:14:02Z",
+      "sampled_records": null,
+      "sha256": "3cdbf12a6b7c3b70c73e8c39f2677127ea61ef32f0ea75b55a43556d884b2d98"
+    },
+    "dev/skills.jsonl+none-replace": {
+      "questions": 1083,
+      "read_at": "2026-10-10T17:07:52Z",
+      "sampled_records": null,
+      "sha256": "3cdbf12a6b7c3b70c73e8c39f2677127ea61ef32f0ea75b55a43556d884b2d98"
+    },
+    "dev/skills.jsonl+pairs": {
+      "questions": 1648,
+      "read_at": "2026-10-10T16:52:49Z",
+      "sampled_records": null,
+      "sha256": "3cdbf12a6b7c3b70c73e8c39f2677127ea61ef32f0ea75b55a43556d884b2d98"
+    },
+    "dev/skills.jsonl+permute": {
+      "questions": 1648,
+      "read_at": "2026-10-10T17:01:43Z",
+      "sampled_records": null,
+      "sha256": "3cdbf12a6b7c3b70c73e8c39f2677127ea61ef32f0ea75b55a43556d884b2d98"
+    },
+    "dev/sources/decisions/typed-decisions.jsonl": {
+      "questions": 565,
+      "read_at": "2026-10-10T17:21:23Z",
+      "sampled_records": 113,
+      "sha256": "d84cdfcef4bc6333cda534a2a887caab4839245a6433892d4421ff097d8856dd"
+    },
+    "dev/sources/devtools/prompt-injection.jsonl": {
+      "questions": 500,
+      "read_at": "2026-10-10T17:22:08Z",
+      "sampled_records": 500,
+      "sha256": "39b4988ac02c5c33c80b51bd1451bc97a0fdb2d2e47cae2c1d0ecfa30398da09"
+    },
+    "dev/sources/devtools/when2call.jsonl": {
+      "questions": 500,
+      "read_at": "2026-10-10T17:22:55Z",
+      "sampled_records": 500,
+      "sha256": "1b53aece1fd82884b6b84664b707a541097d1e4d3c62725224b49fc2ffbbc69c"
+    },
+    "dev/sources/intent/banking77.jsonl": {
+      "questions": 500,
+      "read_at": "2026-10-10T17:23:45Z",
+      "sampled_records": 500,
+      "sha256": "7d3f2759e8d4a2061d93d8a557daf4662f88528264a62bde12ececdd76e2061b"
+    },
+    "dev/sources/intent/massive-en.jsonl": {
+      "questions": 1000,
+      "read_at": "2026-10-10T17:25:20Z",
+      "sampled_records": 500,
+      "sha256": "59da89d4dfbef110f1febf0d033d7d63f512d97c9d3cf76116bf98b5fff06ae6"
+    },
+    "dev/sources/knowledge/arc.jsonl": {
+      "questions": 500,
+      "read_at": "2026-10-10T17:26:04Z",
+      "sampled_records": 500,
+      "sha256": "f1db9061d6c422412ebfd33b5d5ac3c1159ad0a43f0096806a5393631bacc1f8"
+    },
+    "dev/sources/knowledge/commonsenseqa.jsonl": {
+      "questions": 500,
+      "read_at": "2026-10-10T17:26:50Z",
+      "sampled_records": 500,
+      "sha256": "1552de12718fc9958564f627f2e6b61e0e551ea9a89c120813744f7de776801e"
+    },
+    "dev/sources/knowledge/openbookqa.jsonl": {
+      "questions": 500,
+      "read_at": "2026-10-10T17:27:37Z",
+      "sampled_records": 500,
+      "sha256": "de5a442eadedf63a6e2e2982e488541c570ad4233972a046eb132d404b008f06"
+    },
+    "dev/sources/knowledge/qasc.jsonl": {
+      "questions": 500,
+      "read_at": "2026-10-10T17:28:18Z",
+      "sampled_records": 500,
+      "sha256": "2130968e613f848391075aab6ae2a1b6aac87cc3c34b3443238f57bff9b5ccca"
+    },
+    "dev/sources/reading/boolq.jsonl": {
+      "questions": 500,
+      "read_at": "2026-10-10T17:29:01Z",
+      "sampled_records": 500,
+      "sha256": "5804adca99931b794b143a000cf40d16f319fe5b5817b5b0ea1d4b7dcf36923c"
+    },
+    "dev/sources/reading/multinli.jsonl": {
+      "questions": 500,
+      "read_at": "2026-10-10T17:29:47Z",
+      "sampled_records": 500,
+      "sha256": "ae06e94bc6d968b06315c22cb117c2d752a4f50df694485fc9a59bb8c2f5a7a3"
+    },
+    "dev/sources/safety/aegis.jsonl": {
+      "questions": 555,
+      "read_at": "2026-10-10T17:30:38Z",
+      "sampled_records": 500,
+      "sha256": "6cf35674829cbbc57a5eb2e7c94f2b3764906111fc10378c772cf1b0a06f2e36"
+    },
+    "dev/sources/sentiment/amazon-reviews.jsonl": {
+      "questions": 500,
+      "read_at": "2026-10-10T17:31:22Z",
+      "sampled_records": 500,
+      "sha256": "57ab702f1141690f0021ddb1c0e30ce9711e1e33a10e6998d5439528e1957b29"
+    },
+    "dev/sources/sentiment/imdb.jsonl": {
+      "questions": 500,
+      "read_at": "2026-10-10T17:32:09Z",
+      "sampled_records": 500,
+      "sha256": "0badd626094523b3b83f69e49a5bc68e342264853efd7779ad02d9bd5fc889dd"
+    },
+    "dev/sources/sentiment/sst5.jsonl": {
+      "questions": 500,
+      "read_at": "2026-10-10T17:32:55Z",
+      "sampled_records": 500,
+      "sha256": "536760a64a13264c78e52f21af58f5d14fd80e2f7deaeeda084fb73c51430983"
+    },
+    "dev/sources/sentiment/yelp-full.jsonl": {
+      "questions": 500,
+      "read_at": "2026-10-10T17:33:41Z",
+      "sampled_records": 500,
+      "sha256": "5971d5af5890d12c41eda773faf3013e2d8e32cb1ed6326f038e962438a29f92"
+    },
+    "dev/sources/tools/glaive-function-calling.jsonl": {
+      "questions": 1004,
+      "read_at": "2026-10-10T17:35:05Z",
+      "sampled_records": 500,
+      "sha256": "dcc0cc9c2bb78d6842778019e0e6c34a0f0651e18d48e8a0afefa2860e86fd75"
+    },
+    "dev/sources/topic/ag-news.jsonl": {
+      "questions": 500,
+      "read_at": "2026-10-10T17:35:46Z",
+      "sampled_records": 500,
+      "sha256": "d5c8b401f8f47ab3e3ea279f1464d8a2200595f68a1540104f99d623f75a2b1d"
+    },
+    "dev/sources/topic/dbpedia14.jsonl": {
+      "questions": 500,
+      "read_at": "2026-10-10T17:36:30Z",
+      "sampled_records": 500,
+      "sha256": "1a9e23d89cb5799f86c9a7f2ed20c8e3e5f6194680b2d9d612dbdfa43ab9cd6a"
+    },
+    "dev/sources/topic/trec.jsonl": {
+      "questions": 454,
+      "read_at": "2026-10-10T17:37:08Z",
+      "sampled_records": 454,
+      "sha256": "0d0690eb3f6f3c60bfcbc624386bcb2e7ae6e8199a8f54f7de5ebcb343537c8d"
+    },
+    "dev/sources/transfer/emotion.jsonl": {
+      "questions": 500,
+      "read_at": "2026-10-10T17:37:51Z",
+      "sampled_records": 500,
+      "sha256": "66ac8bbee14cdc7a694f4b54e0a1b99573df26d6771380a6a5b0bebdce44d683"
+    },
+    "dev/sources/transfer/mmlu-pro.jsonl": {
+      "questions": 70,
+      "read_at": "2026-10-10T17:37:57Z",
+      "sampled_records": 70,
+      "sha256": "c74ae9b9672e991991cabd6b5c53ac040e43ef00e936d7ae5b7e58717923fa8c"
+    },
+    "dev/sources/transfer/mmlu.jsonl": {
+      "questions": 500,
+      "read_at": "2026-10-10T17:38:44Z",
+      "sampled_records": 500,
+      "sha256": "1102f0d1e07efc1544159d43e3a04dc324f61bf2454409c4506bfafb7f0b7e4c"
+    },
+    "dev/sources/transfer/paws.jsonl": {
+      "questions": 500,
+      "read_at": "2026-10-10T17:39:27Z",
+      "sampled_records": 500,
+      "sha256": "3024b5a3c54871ee0e05caecc7f5fe78a95d19ecfc5843b87999a564de8fd9c7"
+    },
+    "dev/sources/transfer/qnli.jsonl": {
+      "questions": 500,
+      "read_at": "2026-10-10T17:40:11Z",
+      "sampled_records": 500,
+      "sha256": "2195c2b09151838a5f9bc954dbe4af795692e265bfa3541e8ea689089d73e0b5"
+    },
+    "dev/sources/transfer/sciq.jsonl": {
+      "questions": 500,
+      "read_at": "2026-10-10T17:40:57Z",
+      "sampled_records": 500,
+      "sha256": "6f78059e27f5f22e5190ae4f41e2f4346452cfecb5b214cbd893b60e2d8ede43"
+    },
+    "dev/sources/transfer/tweeteval-offensive.jsonl": {
+      "questions": 500,
+      "read_at": "2026-10-10T17:41:41Z",
+      "sampled_records": 500,
+      "sha256": "8318af4fda81d8145dc68d58aecbbfe69e70af5b456d53eccff48537b2b026ec"
+    },
+    "dev/transfer.jsonl": {
+      "questions": 764,
+      "read_at": "2026-10-10T16:36:59Z",
+      "sampled_records": null,
+      "sha256": "11eb88f027c59cc0731c60fa0364f052fb0219b30064052572f441a736e67b34"
+    },
+    "test/breadth.jsonl": {
+      "questions": 3089,
+      "read_at": "2026-10-10T19:25:46Z",
+      "sampled_records": null,
+      "sha256": "49d05c50494cfc51a8cc1f00e37a347c32d18005fed9c6d7a636401171ec50f5"
+    },
+    "test/core.jsonl": {
+      "questions": 1440,
+      "read_at": "2026-10-10T19:11:44Z",
+      "sampled_records": null,
+      "sha256": "7d1f1acc5dbf7d4a667c9a0c8ec67fcf420106ae8802f627075a45116ee9d9c7"
+    },
+    "test/devtools.jsonl": {
+      "questions": 1073,
+      "read_at": "2026-10-10T19:17:14Z",
+      "sampled_records": null,
+      "sha256": "514513b14e2205c733e53e5abf7fc56eac4e7fa56d02afd4a577d19386b7611f"
+    },
+    "test/documents.jsonl": {
+      "questions": 936,
+      "read_at": "2026-10-10T19:13:24Z",
+      "sampled_records": null,
+      "sha256": "fda998ab5c249c8a6d1ae38de17523cb17835e7557d984104d4d824783f62f48"
+    },
+    "test/probes.jsonl": {
+      "questions": 1264,
+      "read_at": "2026-10-10T19:20:27Z",
+      "sampled_records": null,
+      "sha256": "48b8bd67faf4ca46cc247c84a2467219e5afc1bbf8d2728e1c8e11ee98161592"
+    },
+    "test/skills.jsonl": {
+      "questions": 1088,
+      "read_at": "2026-10-10T19:15:30Z",
+      "sampled_records": null,
+      "sha256": "246ee92234d33f8e3f10ac6e1542651531b128fd7cc66f3a9964589b77dfa22b"
+    },
+    "test/sources/decisions/typed-decisions.jsonl": {
+      "questions": 2000,
+      "read_at": "2026-10-10T19:29:18Z",
+      "sampled_records": 400,
+      "sha256": "fa17c17ed71771a3569c7e828f987ca50796c2e25f28fa2f18160711c0b0eec0"
+    },
+    "test/sources/devtools/prompt-injection.jsonl": {
+      "questions": 208,
+      "read_at": "2026-10-10T19:29:39Z",
+      "sampled_records": 208,
+      "sha256": "b8fa7f31a43fd2db76e3a8dc5a71d8c6d4af671aff9b0f5b22eee043f0464041"
+    },
+    "test/sources/devtools/when2call.jsonl": {
+      "questions": 1000,
+      "read_at": "2026-10-10T19:31:15Z",
+      "sampled_records": 1000,
+      "sha256": "521f29520170b83a78f218e31d4a61873984b7ff722b16c4999b32860f88423e"
+    },
+    "test/sources/intent/banking77.jsonl": {
+      "questions": 1000,
+      "read_at": "2026-10-10T19:32:55Z",
+      "sampled_records": 1000,
+      "sha256": "9aa717dade9c852d47a46051fffe77f63c3c5d019d26c7a83be1274c6229e907"
+    },
+    "test/sources/intent/massive-en.jsonl": {
+      "questions": 2000,
+      "read_at": "2026-10-10T19:36:15Z",
+      "sampled_records": 1000,
+      "sha256": "668c3acc77113b87defb3ad984e8418446802967d47703d90a54e87ae01df83e"
+    },
+    "test/sources/knowledge/arc.jsonl": {
+      "questions": 1000,
+      "read_at": "2026-10-10T19:37:48Z",
+      "sampled_records": 1000,
+      "sha256": "e5703b599e59a9d7a67c1ee9827c753fa17f42a42158ec5789a2bf1016367aa0"
+    },
+    "test/sources/knowledge/commonsenseqa.jsonl": {
+      "questions": 1000,
+      "read_at": "2026-10-10T19:39:24Z",
+      "sampled_records": 1000,
+      "sha256": "11dfb51b8fb664e1644906e6807092232ad86e815de192b405708c83b22b7d73"
+    },
+    "test/sources/knowledge/openbookqa.jsonl": {
+      "questions": 500,
+      "read_at": "2026-10-10T19:40:12Z",
+      "sampled_records": 500,
+      "sha256": "161a084df84f7a70b74072b2ac821604a631d2073903f1591752468c0078fe6a"
+    },
+    "test/sources/knowledge/qasc.jsonl": {
+      "questions": 926,
+      "read_at": "2026-10-10T19:41:38Z",
+      "sampled_records": 926,
+      "sha256": "ddafcbc3fd3a9fc1cf87e161044c8fbdd408d08ded1477b6293264c44c8e0d04"
+    },
+    "test/sources/reading/boolq.jsonl": {
+      "questions": 1000,
+      "read_at": "2026-10-10T19:43:12Z",
+      "sampled_records": 1000,
+      "sha256": "85f843546336d3837d98350b1a4c339f1fb16c5409d72db6c663d95e33115ea9"
+    },
+    "test/sources/reading/multinli.jsonl": {
+      "questions": 1000,
+      "read_at": "2026-10-10T19:44:45Z",
+      "sampled_records": 1000,
+      "sha256": "b8fdd9f9f36186063af5ee85c4fa1cff56c1d5fe9d68c9cda179b6dbfcdaf930"
+    },
+    "test/sources/safety/aegis.jsonl": {
+      "questions": 1121,
+      "read_at": "2026-10-10T19:46:32Z",
+      "sampled_records": 1000,
+      "sha256": "098b086a49d2912878cf5e697bcda61d757299c6a54a7345728319003c8bc2b2"
+    },
+    "test/sources/sentiment/amazon-reviews.jsonl": {
+      "questions": 1000,
+      "read_at": "2026-10-10T19:48:05Z",
+      "sampled_records": 1000,
+      "sha256": "0a4f7e10fa4884b17a408901d455a345d84c0f921a04aad53f9b7aea581d7819"
+    },
+    "test/sources/sentiment/imdb.jsonl": {
+      "questions": 1000,
+      "read_at": "2026-10-10T19:49:45Z",
+      "sampled_records": 1000,
+      "sha256": "82fba72a3afa7036fbcb8c6dbc682d913bf00b251c71cc191ad0d7d39577d572"
+    },
+    "test/sources/sentiment/sst5.jsonl": {
+      "questions": 1000,
+      "read_at": "2026-10-10T19:51:23Z",
+      "sampled_records": 1000,
+      "sha256": "5a2446db9a3ff9d238303dd3135f4c479401f8155d0cc8578c4a48500726fec8"
+    },
+    "test/sources/sentiment/yelp-full.jsonl": {
+      "questions": 1000,
+      "read_at": "2026-10-10T19:53:00Z",
+      "sampled_records": 1000,
+      "sha256": "8bf1f54d8838a564f76a8d518dd173e38d56bd4757fc2bc9437dca3fc9752a68"
+    },
+    "test/sources/tools/glaive-function-calling.jsonl": {
+      "questions": 1964,
+      "read_at": "2026-10-10T19:55:59Z",
+      "sampled_records": 1000,
+      "sha256": "2f35cbb679d07d8887e485812b4f19149c401c6f19531d6e595d03dca6d1d7f4"
+    },
+    "test/sources/topic/ag-news.jsonl": {
+      "questions": 1000,
+      "read_at": "2026-10-10T19:57:33Z",
+      "sampled_records": 1000,
+      "sha256": "4806d5949d9ddab9c71b0ba01d3a3a3edda81816811edf3052541a47f30d1f65"
+    },
+    "test/sources/topic/dbpedia14.jsonl": {
+      "questions": 1000,
+      "read_at": "2026-10-10T19:59:07Z",
+      "sampled_records": 1000,
+      "sha256": "cd04f6d92488c546c1295925a420587f057eff64454c7c4504ff9cc0d166db6c"
+    },
+    "test/sources/topic/trec.jsonl": {
+      "questions": 419,
+      "read_at": "2026-10-10T19:59:46Z",
+      "sampled_records": 419,
+      "sha256": "a01ce2d403d5ccb0cf7d070522625e2fbec34c95922b6889013d18382f83ebd5"
+    },
+    "test/sources/transfer/emotion.jsonl": {
+      "questions": 1000,
+      "read_at": "2026-10-10T20:01:20Z",
+      "sampled_records": 1000,
+      "sha256": "c2b368dc7173746d12666c6bf3c9e7082988f5c68489fc1f1c92313a279d59fa"
+    },
+    "test/sources/transfer/mmlu-pro.jsonl": {
+      "questions": 1000,
+      "read_at": "2026-10-10T20:02:58Z",
+      "sampled_records": 1000,
+      "sha256": "a0988ea6576441d715feaee6ad07772a108188c70d230e6121cc837bf820a5a9"
+    },
+    "test/sources/transfer/mmlu.jsonl": {
+      "questions": 1000,
+      "read_at": "2026-10-10T20:04:32Z",
+      "sampled_records": 1000,
+      "sha256": "b4b5385aa7cefc3399e2e9cb983f961a6506ef3281a3f5ccba91fc55d04c5b8b"
+    },
+    "test/sources/transfer/paws.jsonl": {
+      "questions": 1000,
+      "read_at": "2026-10-10T20:06:01Z",
+      "sampled_records": 1000,
+      "sha256": "f50845c9b0aa30c4be1f21b5aa7d059b731b32f702b21fd35e4acafa2cd2fa90"
+    },
+    "test/sources/transfer/qnli.jsonl": {
+      "questions": 1000,
+      "read_at": "2026-10-10T20:07:35Z",
+      "sampled_records": 1000,
+      "sha256": "137a585b02ecd19b39a9dc9ecea70dc9f979f034d59bffa459fe7f89a2441f26"
+    },
+    "test/sources/transfer/sciq.jsonl": {
+      "questions": 859,
+      "read_at": "2026-10-10T20:08:56Z",
+      "sampled_records": 859,
+      "sha256": "56affbacdcc0f5534348426fdc5a40d03add1a4dbba51ebe493a6b7008b61363"
+    },
+    "test/sources/transfer/tweeteval-offensive.jsonl": {
+      "questions": 707,
+      "read_at": "2026-10-10T20:10:02Z",
+      "sampled_records": 707,
+      "sha256": "70d3d0235b8c2295df3049d1beeafc1a2588f5e28acc90a5136dae619661fda5"
+    },
+    "test/transfer.jsonl": {
+      "questions": 764,
+      "read_at": "2026-10-10T19:18:26Z",
+      "sampled_records": null,
+      "sha256": "a53762fa83806ff2b73286110bae0b088a4f9959f244adfe4b06ca85d6b33b59"
+    }
+  },
+  "head": {
+    "dim": 256,
+    "heads": 4,
+    "kind": "set",
+    "layers": 1,
+    "proj": "linear",
+    "rep": "attn"
+  },
+  "lora": 16,
+  "run": "runs/kev-recipe/4-skills",
+  "temperature": 2.179655432856728,
+  "trained_commit": "1476410d123e10d7a2681bebc7a0dc3559cdffc2+dirty"
+}

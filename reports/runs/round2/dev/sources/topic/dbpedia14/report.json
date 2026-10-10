@@ -1,0 +1,29 @@
+{
+  "accuracy": 0.98,
+  "accuracy_by_source": {
+    "topic/dbpedia14": 0.98
+  },
+  "accuracy_by_type": {
+    "choice": 0.98
+  },
+  "brier": 0.02749442808931834,
+  "coverage_at_5%_error": 1.0,
+  "ece": 0.011710857570171346,
+  "ece_by_type": {
+    "choice": 0.011710857570171346
+  },
+  "locked_test": false,
+  "ms_per_question": 79.5,
+  "nll": 0.06501135027102466,
+  "questions": 500,
+  "read_at": "2026-10-10T18:49:21Z",
+  "sampled_records": 500,
+  "soft_skipped": 0,
+  "uncalibrated": {
+    "accuracy": 0.98,
+    "brier": 0.02984535165379226,
+    "ece": 0.015369398593902578,
+    "nll": 0.08429368683167703
+  },
+  "unscored_questions": 0
+}

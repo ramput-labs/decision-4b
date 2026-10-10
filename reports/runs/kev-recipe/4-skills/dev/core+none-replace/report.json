@@ -1,0 +1,57 @@
+{
+  "accuracy": 0.8658038147138964,
+  "accuracy_by_source": {
+    "agnews": 0.8879310344827587,
+    "agnews_yn": 0.9184782608695652,
+    "amazon": 0.6875,
+    "banking77": 0.8706896551724138,
+    "boolq": 0.8625,
+    "composition_atom": 1.0,
+    "composition_conditional": 0.8125,
+    "composition_conjunction": 1.0,
+    "composition_disjunction": 0.9375,
+    "composition_exception": 1.0,
+    "composition_negation": 1.0,
+    "composition_nested_and": 0.8125,
+    "composition_nested_or": 1.0,
+    "contrastive_age_eligibility": 1.0,
+    "contrastive_quantity_limit": 1.0,
+    "contrastive_return_window": 0.9166666666666666,
+    "contrastive_spend_threshold": 1.0,
+    "dbpedia14": 0.9137931034482759,
+    "imdb": 0.95,
+    "mnli": 0.8362068965517241,
+    "sst5": 0.6125,
+    "trec": 0.8879310344827587,
+    "yelp": 0.6875,
+    "yelp_yn": 0.9125
+  },
+  "accuracy_by_type": {
+    "choice": 0.8981481481481481,
+    "noul": 0.9173728813559322,
+    "score": 0.6625
+  },
+  "brier": 0.1957195548041607,
+  "coverage_at_5%_error": 0.7404632152588556,
+  "ece": 0.03137757495167469,
+  "ece_by_type": {
+    "choice": 0.0361102763464842,
+    "noul": 0.03905876359697117,
+    "score": 0.030386868740121482
+  },
+  "locked_test": false,
+  "ms_per_question": 93.4,
+  "nll": 0.35207958617496943,
+  "questions": 1468,
+  "read_at": "2026-10-10T17:04:10Z",
+  "score_level_mae": 0.4707801816048838,
+  "score_rps": 0.07178776502858925,
+  "soft_skipped": 0,
+  "uncalibrated": {
+    "accuracy": 0.8658038147138964,
+    "brier": 0.21808623338228939,
+    "ece": 0.08407095689783303,
+    "nll": 0.5368581270956565
+  },
+  "unscored_questions": 0
+}

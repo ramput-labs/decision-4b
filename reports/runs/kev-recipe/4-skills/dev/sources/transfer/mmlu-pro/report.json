@@ -1,0 +1,29 @@
+{
+  "accuracy": 0.5571428571428572,
+  "accuracy_by_source": {
+    "transfer/mmlu-pro": 0.5571428571428572
+  },
+  "accuracy_by_type": {
+    "choice": 0.5571428571428572
+  },
+  "brier": 0.5652907800741195,
+  "coverage_at_5%_error": 0.05714285714285714,
+  "ece": 0.12744467705488205,
+  "ece_by_type": {
+    "choice": 0.12744467705488205
+  },
+  "locked_test": false,
+  "ms_per_question": 81.5,
+  "nll": 1.225845210657721,
+  "questions": 70,
+  "read_at": "2026-10-10T17:37:57Z",
+  "sampled_records": 70,
+  "soft_skipped": 0,
+  "uncalibrated": {
+    "accuracy": 0.5571428571428572,
+    "brier": 0.6288660135441375,
+    "ece": 0.22377256623336247,
+    "nll": 1.5597699213366858
+  },
+  "unscored_questions": 0
+}

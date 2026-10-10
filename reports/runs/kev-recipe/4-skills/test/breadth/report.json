@@ -1,0 +1,54 @@
+{
+  "accuracy": 0.7008740692780835,
+  "accuracy_by_source": {
+    "apibank": 0.9266666666666666,
+    "bfcl_irrelevance": 0.9411764705882353,
+    "bfcl_live_irrelevance": 0.717948717948718,
+    "bfcl_live_multiple": 0.9473684210526315,
+    "bfcl_live_parallel": 1.0,
+    "bfcl_live_parallel_multiple": 0.9545454545454546,
+    "bfcl_live_simple": 1.0,
+    "bfcl_multiple": 0.9795918367346939,
+    "bfcl_parallel": 1.0,
+    "bfcl_parallel_multiple": 1.0,
+    "bfcl_simple": 1.0,
+    "bright": 0.54,
+    "cfcolor": 0.4866666666666667,
+    "chessbench": 0.18,
+    "clinc150": 0.8266666666666667,
+    "contractnli": 0.6125,
+    "hellaswag": 0.72,
+    "humicroedit": 0.5933333333333334,
+    "musr_murder_mystery": 0.6724137931034483,
+    "musr_object_placements": 0.42857142857142855,
+    "musr_team_allocation": 0.631578947368421,
+    "routerbench": 0.32,
+    "sata_bench": 0.839835728952772,
+    "sgd": 0.6333333333333333,
+    "toolret": 0.5866666666666667
+  },
+  "accuracy_by_type": {
+    "choice": 0.585635359116022,
+    "noul": 0.8639562157935887
+  },
+  "brier": 0.38788212100819214,
+  "coverage_at_5%_error": 0.3243768209776627,
+  "ece": 0.03280867429738988,
+  "ece_by_type": {
+    "choice": 0.05842880212305658,
+    "noul": 0.012183332089058
+  },
+  "locked_test": true,
+  "ms_per_question": 103.2,
+  "nll": 0.702327687889852,
+  "questions": 3089,
+  "read_at": "2026-10-10T19:25:46Z",
+  "soft_skipped": 0,
+  "uncalibrated": {
+    "accuracy": 0.7008740692780835,
+    "brier": 0.4227750536705768,
+    "ece": 0.1248065426188327,
+    "nll": 0.8607436592594129
+  },
+  "unscored_questions": 0
+}

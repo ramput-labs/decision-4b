@@ -1,0 +1,37 @@
+{
+  "accuracy": 0.8053097345132744,
+  "accuracy_by_source": {
+    "decisions/typed-decisions": 0.8053097345132744
+  },
+  "accuracy_by_type": {
+    "choice": 0.764367816091954,
+    "noul": 0.8424242424242424,
+    "score": 0.8097345132743363
+  },
+  "brier": 0.37250976292738713,
+  "coverage_at_5%_error": 0.336283185840708,
+  "ece": 0.23691683685885068,
+  "ece_by_type": {
+    "choice": 0.22378817080766306,
+    "noul": 0.13419036359497993,
+    "score": 0.32202416421037866
+  },
+  "kl_to_target": 0.11209853614847148,
+  "locked_test": false,
+  "ms_per_question": 98.0,
+  "nll": 0.6704786455736392,
+  "questions": 565,
+  "read_at": "2026-10-10T18:36:01Z",
+  "sampled_records": 113,
+  "score_level_mae": 0.48499162174530525,
+  "score_rps": 0.08186573558346416,
+  "soft_skipped": 0,
+  "teacher_questions": 565,
+  "uncalibrated": {
+    "accuracy": 0.8053097345132744,
+    "brier": 0.32259250288414926,
+    "ece": 0.1625297738914996,
+    "nll": 0.5741588010897865
+  },
+  "unscored_questions": 0
+}

@@ -1,0 +1,29 @@
+{
+  "accuracy": 0.845,
+  "accuracy_by_source": {
+    "intent/banking77": 0.845
+  },
+  "accuracy_by_type": {
+    "choice": 0.845
+  },
+  "brier": 0.2338191116261292,
+  "coverage_at_5%_error": 0.716,
+  "ece": 0.03372747693955902,
+  "ece_by_type": {
+    "choice": 0.03372747693955902
+  },
+  "locked_test": true,
+  "ms_per_question": 100.0,
+  "nll": 0.5798438023301193,
+  "questions": 1000,
+  "read_at": "2026-10-10T19:32:55Z",
+  "sampled_records": 1000,
+  "soft_skipped": 0,
+  "uncalibrated": {
+    "accuracy": 0.845,
+    "brier": 0.24702898252537137,
+    "ece": 0.09177633605897423,
+    "nll": 0.7159577452947278
+  },
+  "unscored_questions": 0
+}

@@ -1,0 +1,70 @@
+{
+  "accuracy": 0.8928571428571429,
+  "accuracy_by_source": {
+    "semif_candidate_selection": 0.9047619047619048,
+    "semif_evidence_interpretation": 0.9285714285714286,
+    "semif_rule_application": 0.8452380952380952
+  },
+  "accuracy_by_type": {
+    "choice": 0.8928571428571429
+  },
+  "brier": 0.1405557667713223,
+  "coverage_at_5%_error": 0.9007936507936508,
+  "ece": 0.03725254405585543,
+  "ece_by_type": {
+    "choice": 0.03725254405585543
+  },
+  "locked_test": false,
+  "ms_per_question": 93.6,
+  "nll": 0.2627070075079695,
+  "questions": 252,
+  "read_at": "2026-10-10T17:59:27Z",
+  "robustness": {
+    "clean": {
+      "accuracy": 0.875,
+      "accuracy_by_source": {
+        "semif_candidate_selection": 0.875,
+        "semif_evidence_interpretation": 0.8958333333333334,
+        "semif_rule_application": 0.8541666666666666
+      },
+      "accuracy_by_type": {
+        "choice": 0.875
+      },
+      "brier": 0.1522973182935994,
+      "coverage_at_5%_error": 0.8888888888888888,
+      "ece": 0.045576661411258906,
+      "ece_by_type": {
+        "choice": 0.045576661411258906
+      },
+      "nll": 0.27307319376236694,
+      "questions": 144,
+      "soft_skipped": 0
+    },
+    "variants": {
+      "clean": {
+        "accuracy": 0.875,
+        "n": 144
+      },
+      "criterion_wrapper": {
+        "accuracy": 0.9166666666666666,
+        "n": 36
+      },
+      "irrelevant_context": {
+        "accuracy": 0.9166666666666666,
+        "n": 36
+      },
+      "option_reversal": {
+        "accuracy": 0.9166666666666666,
+        "n": 36
+      }
+    }
+  },
+  "soft_skipped": 0,
+  "uncalibrated": {
+    "accuracy": 0.8928571428571429,
+    "brier": 0.14617531405122058,
+    "ece": 0.042326175740786946,
+    "nll": 0.2753558279748282
+  },
+  "unscored_questions": 0
+}

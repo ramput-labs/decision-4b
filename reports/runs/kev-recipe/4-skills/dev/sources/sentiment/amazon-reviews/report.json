@@ -1,0 +1,31 @@
+{
+  "accuracy": 0.626,
+  "accuracy_by_source": {
+    "sentiment/amazon-reviews": 0.626
+  },
+  "accuracy_by_type": {
+    "score": 0.626
+  },
+  "brier": 0.5141265961324831,
+  "coverage_at_5%_error": 0.062,
+  "ece": 0.05914538699388504,
+  "ece_by_type": {
+    "score": 0.05914538699388504
+  },
+  "locked_test": false,
+  "ms_per_question": 87.8,
+  "nll": 0.9434026304231764,
+  "questions": 500,
+  "read_at": "2026-10-10T17:31:22Z",
+  "sampled_records": 500,
+  "score_level_mae": 0.5537086606891826,
+  "score_rps": 0.08617799844552927,
+  "soft_skipped": 0,
+  "uncalibrated": {
+    "accuracy": 0.626,
+    "brier": 0.6171585584659691,
+    "ece": 0.2405989545583725,
+    "nll": 1.6497645185450074
+  },
+  "unscored_questions": 0
+}

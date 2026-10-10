@@ -1,0 +1,29 @@
+{
+  "accuracy": 0.938,
+  "accuracy_by_source": {
+    "knowledge/arc": 0.938
+  },
+  "accuracy_by_type": {
+    "choice": 0.938
+  },
+  "brier": 0.0887224113457603,
+  "coverage_at_5%_error": 0.984,
+  "ece": 0.04794839984178539,
+  "ece_by_type": {
+    "choice": 0.04794839984178539
+  },
+  "locked_test": false,
+  "ms_per_question": 88.4,
+  "nll": 0.19396403506196577,
+  "questions": 500,
+  "read_at": "2026-10-10T17:26:04Z",
+  "sampled_records": 500,
+  "soft_skipped": 0,
+  "uncalibrated": {
+    "accuracy": 0.938,
+    "brier": 0.08421340854210473,
+    "ece": 0.027183053791522967,
+    "nll": 0.18718521880680922
+  },
+  "unscored_questions": 0
+}

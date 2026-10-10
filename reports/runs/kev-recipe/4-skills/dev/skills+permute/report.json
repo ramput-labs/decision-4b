@@ -1,0 +1,40 @@
+{
+  "accuracy": 0.7864077669902912,
+  "accuracy_by_source": {
+    "hard_ambiguous": 0.84,
+    "hard_judge": 0.8522727272727273,
+    "hard_long_policy": 0.855,
+    "hard_multi_hop": 0.8548387096774194,
+    "hard_probability": 0.7678571428571429,
+    "hard_temporal_numeric": 0.58,
+    "hard_tradeoff": 0.68
+  },
+  "accuracy_by_type": {
+    "choice": 0.7864077669902912
+  },
+  "brier": 0.2972137509791842,
+  "coverage_at_5%_error": 0.5364077669902912,
+  "ece": 0.060761523116560794,
+  "ece_by_type": {
+    "choice": 0.060761523116560794
+  },
+  "locked_test": false,
+  "ms_per_question": 221.5,
+  "nll": 0.5621157322613062,
+  "questions": 824,
+  "read_at": "2026-10-10T17:01:43Z",
+  "robustness": {
+    "permutation": {
+      "flip_rate": 0.13349514563106796,
+      "mean_max_delta": 0.08153196040328695,
+      "n": 824
+    }
+  },
+  "soft_skipped": 0,
+  "uncalibrated": {
+    "accuracy": 0.7864077669902912,
+    "brier": 0.2908965768373865,
+    "ece": 0.05995728415482257,
+    "nll": 0.5772896556642878
+  }
+}

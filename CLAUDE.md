@@ -266,8 +266,9 @@ import `scripts` from `den`. ruff and mypy cover it like `den/`.
 - The release recipe is Kev-4B's, `make train-round1`: four stages (core ×2 at 5e-5 with 25% none minimal pairs →
   dates → documents → skills+devtools, at 2e-5 with 2k/2k/4k `core` replay), each `--init-from` the last. It is
   sourced from Kev's model card and `kev/train.py`/`kev/data.py`; change it only with evidence, and say so. One
-  deliberate change: stage 1's fresh head trains at `--head-lr 1e-3` (Kev records no head rate; at 5e-5 the gate
-  and the recipe disagreed). Later stages continue the head at `--lr`.
+  deliberate change: stage 1's fresh head trains at `--head-lr 2e-4` (Kev records no head rate; at 5e-5 the gate
+  and the recipe disagreed; at 1e-3 the H100's 1-base diverged at step ~1450 of 4450, the head's weights growing while
+  the LoRA's held). Later stages continue the head at `--lr`.
 - `prompt.augment`/`prompt.none_pair` port Kev's augmentation (none-of-the-above 10%/12%, distractor 15%, minimal
   pairs). Soft-target questions are only shuffled, and score/noul are never touched. `--augment shuffle|none` for
   ablations.
